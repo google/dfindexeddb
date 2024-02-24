@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dfindexeddb"
+version = "20240224"
+requires-python = ">=3.8"
+description = "dfindexeddb is an experimental Python tool for performing digital forensic analysis of IndexedDB and leveldb files."
+license = {file = "LICENSE"}
+authors = [{name = "Syd Pleno", email = "sydp@google.com"}]
+maintainers = [
+  {name = "dfIndexeddb Developers", email = "dfindexeddb-dev@googlegroups.com"},
+]
+dependencies = [
+  'python-snappy==0.6.1',
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+classifiers = [
+  'Development Status :: 3 - Alpha',
+  'Programming Language :: Python',
+]
+
+[tool.setuptools.packages.find]
+where = ["dfindexeddb/"]
+
+[project.urls]
+Homepage = "https://github.com/google/dfindexeddb"
+Documentation = "https://github.com/google/dfindexeddb/docs"
+Repository = "https://github.com/google/dfindexeddb"
+"Bug Tracker" = "https://github.com/google/dfindexeddb/issues"
