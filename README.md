@@ -1,13 +1,15 @@
 # dfIndexeddb
 
 dfindexeddb is an experimental Python tool for performing digital forensic
-analysis of IndexedDB files.
+analysis of IndexedDB and leveldb files.
 
 It parses leveldb, IndexedDB and javascript structures from these files without
 requiring native libraries.
 
 The content of IndexedDB files is dependent on what a web application stores
-locally/offline using the web browser's [IndexedDB API](https://www.w3.org/TR/IndexedDB/).  Examples of content might include:
+locally/offline using the web browser's 
+[IndexedDB API](https://www.w3.org/TR/IndexedDB/).  Examples of content might 
+include:
 * text from a text/source-code editor application,
 * emails and contact information from an e-mail application,
 * images and metadata from a photo gallery application
