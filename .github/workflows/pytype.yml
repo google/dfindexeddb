@@ -23,4 +23,4 @@ jobs:
         pip install pytype
     - name: Analysing the code with pytype
       run: |
-        pytype indexeddb_parsers tests
+        pytype dfindexeddb tests
