@@ -21,8 +21,8 @@ classifiers = [
   'Programming Language :: Python',
 ]
 
-[tool.setuptools.packages.find]
-where = ["dfindexeddb/"]
+[tool.setuptools]
+packages = ["dfindexeddb"]
 
 [project.urls]
 Homepage = "https://github.com/google/dfindexeddb"
