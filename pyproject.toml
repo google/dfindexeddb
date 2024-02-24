@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [tool.setuptools]
-packages = ["dfindexeddb"]
+packages = ["dfindexeddb", "dfindexeddb.indexeddb", "dfindexeddb.leveldb"]
 
 [project.urls]
 Homepage = "https://github.com/google/dfindexeddb"
