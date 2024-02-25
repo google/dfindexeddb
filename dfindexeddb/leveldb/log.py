@@ -20,7 +20,6 @@ from enum import IntEnum
 import io
 from typing import BinaryIO, Generator, Iterable, Optional
 
-from dfindexeddb import errors
 from dfindexeddb import utils
 
 
