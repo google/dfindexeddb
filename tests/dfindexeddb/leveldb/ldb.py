@@ -35,7 +35,7 @@ class LDBTest(unittest.TestCase):
     self.assertIsInstance(first_block, ldb.LdbBlock)
     self.assertEqual(first_block.block_offset, 0)
     self.assertEqual(first_block.length, 1721)
-    self.assertTrue(first_block.IsCompressed())
+    self.assertTrue(first_block.IsSnappyCompressed())
 
   def test_records(self):
     """Tests the records method."""

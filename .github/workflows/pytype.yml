@@ -20,6 +20,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install python-snappy
+        pip install zstd
         pip install pytype
     - name: Analysing the code with pytype
       run: |

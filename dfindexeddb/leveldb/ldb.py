@@ -21,6 +21,7 @@ import os
 from typing import BinaryIO, Iterable, Tuple
 
 import snappy
+import zstd
 
 from dfindexeddb import utils
 
@@ -90,17 +91,24 @@ class LdbBlock:
   data: bytes = field(repr=False)
   footer: bytes  # 5 bytes = 1 byte compressed flag + 4 bytes checksum.
 
-  COMPRESSED = 1
+  SNAPPY_COMPRESSED = 1
+  ZSTD_COMPRESSED = 2
   RESTART_ENTRY_LENGTH = 4
 
-  def IsCompressed(self) -> bool:
-    """Returns true if the block is compressed."""
-    return self.footer[0] == self.COMPRESSED
+  def IsSnappyCompressed(self) -> bool:
+    """Returns true if the block is snappy compressed."""
+    return self.footer[0] == self.SNAPPY_COMPRESSED
+
+  def IsZstdCompressed(self) -> bool:
+    """Returns true if the block is zstd compressed."""
+    return self.footer[0] == self.ZSTD_COMPRESSED
 
   def GetBuffer(self) -> bytes:
     """Returns the block buffer, decompressing if required."""
-    if self.IsCompressed():
+    if self.IsSnappyCompressed():
       return snappy.decompress(self.data)
+    if self.IsZstdCompressed():
+      return zstd.decompress(self.data)
     return self.data
 
   def GetRecords(self) -> Iterable[LdbKeyValueRecord]:
