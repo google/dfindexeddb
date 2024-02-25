@@ -102,12 +102,12 @@ class LdbBlock:
   def IsZstdCompressed(self) -> bool:
     """Returns true if the block is zstd compressed."""
     return self.footer[0] == self.ZSTD_COMPRESSED
-  
+
   def GetBuffer(self) -> bytes:
     """Returns the block buffer, decompressing if required."""
     if self.IsSnappyCompressed():
       return snappy.decompress(self.data)
-    elif self.IsZstdCompressed():
+    if self.IsZstdCompressed():
       return zstd.decompress(self.data)
     return self.data
 
