@@ -198,11 +198,10 @@ class Block:
       LogFileRecord
     """
     buffer = io.BytesIO(self.data)
-    while True:
-      try:
-        yield PhysicalRecord.FromStream(buffer, base_offset=self.offset)
-      except errors.DecoderError:
-        return
+    buffer_length = len(self.data)
+
+    while buffer.tell() < buffer_length:
+      yield PhysicalRecord.FromStream(buffer, base_offset=self.offset)
 
   @classmethod
   def FromStream(cls, stream: BinaryIO) -> Optional[Block]:
@@ -212,7 +211,8 @@ class Block:
       stream: the binary stream to be parsed.
 
     Returns:
-      the Block or None if there is no data to read from the stream."""
+      the Block or None if there is no data to read from the stream.
+    """
     offset = stream.tell()
     data = stream.read(cls.BLOCK_SIZE)  # reads full and partial blocks
     if not data:

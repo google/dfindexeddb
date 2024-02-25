@@ -68,10 +68,10 @@ class StreamDecoder:
     offset = self.stream.tell()
     buffer = self.stream.read(count)
     if count == -1 and not buffer:
-      raise errors.DecoderError('No bytes available')
+      raise errors.DecoderError(f'No bytes available at offset {offset}')
     if count != -1 and len(buffer) != count:
       raise errors.DecoderError(
-          f'Read {len(buffer)}, wanted {count}, at stream offset {offset}')
+          f'Read {len(buffer)} bytes, but wanted {count} at offset {offset}')
     return offset, buffer
 
   def PeekBytes(self, count: int) -> Tuple[int, bytes]:
@@ -225,7 +225,8 @@ class LevelDBDecoder(StreamDecoder):
     offset = self.stream.tell()
     buffer = self.stream.read()
     if len(buffer) % 2:
-      raise errors.DecoderError('Odd number of bytes encountered')
+      raise errors.DecoderError(
+          f'Odd number of bytes encountered at offset {offset}')
     return offset, buffer.decode('utf-16-be')
 
   def DecodeBlobWithLength(self) -> Tuple[int, bytes]:
