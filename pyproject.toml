@@ -14,6 +14,7 @@ maintainers = [
 ]
 dependencies = [
   'python-snappy==0.6.1',
+  'ztsd==1.5.5.1',
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 classifiers = [
