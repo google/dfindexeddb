@@ -35,6 +35,7 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/dfindexeddb
+ 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
