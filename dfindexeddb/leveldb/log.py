@@ -265,8 +265,7 @@ class LogFileReader:
       PhysicalRecord
     """
     for block in self.GetBlocks():
-      for physical_record in block.GetPhysicalRecords():
-        yield physical_record
+      yield from block.GetPhysicalRecords()
 
   def GetWriteBatches(self) -> Generator[WriteBatch, None, None]:
     """Returns an iterator of WriteBatch instances.
@@ -303,5 +302,4 @@ class LogFileReader:
       KeyValueRecord
     """
     for batch in self.GetWriteBatches():
-      for record in batch.records:
-        yield record
+      yield from batch.records

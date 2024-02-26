@@ -254,8 +254,7 @@ class LdbFileReader:
       LdbKeyValueRecords.
     """
     for block in self.GetBlocks():
-      for record in block.GetRecords():
-        yield record
+      yield from block.GetRecords()
 
   def RangeIter(self) -> Iterable[Tuple[bytes, bytes]]:  #pylint: disable=C0103
     """Returns an iterator of key-value pairs.
