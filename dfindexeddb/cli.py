@@ -15,7 +15,6 @@
 """A CLI tool for dfindexeddb."""
 import argparse
 import pathlib
-import sys
 import traceback
 
 from dfindexeddb.leveldb import log
