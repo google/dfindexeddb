@@ -14,6 +14,12 @@ include:
 * emails and contact information from an e-mail application,
 * images and metadata from a photo gallery application
 
+## Installation
+
+```
+$ pip install dfindexeddb
+```
+
 ## Installation from source
 
 ### Linux
@@ -34,23 +40,56 @@ include:
     $ pip install .
 ```
 
-## Tools
+## Usage
 
-This repository contains a number of scripts which demonstrate how one can use
-this library.  To run these tools, please install the `click` python package.
-
-* `tools/indexeddb_dump.py` - parses structures from an IndexedDB and prints
-them to standard output.
-  - Optionally, you can also install the `leveldb` python package if you
-  would prefer to use a native leveldb library instead of the leveldb parser in
-  this repository.
-* `tools/ldb_dump.py` - parses structures from a LevelDB .ldb file and prints
-them to standard output.
-* `tools/log_dump.py` - parses structures from a LevelDB .log file and prints
-them to standard output.
-
-
+A CLI tool is available after installation:
 
 ```
-    $ pip install click leveldb
+$ dfindexeddb -h
+usage: dfindexeddb [-h] -s SOURCE {log,ldb,indexeddb} ...
+
+A cli tool for the dfindexeddb package
+
+positional arguments:
+  {log,ldb,indexeddb}
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+```
+
+To parse a LevelDB .log file:
+
+```
+$ dfindexeddb -s <SOURCE> log -h
+usage: dfindexeddb log [-h] {blocks,physical_records,write_batches,parsed_internal_key,records}
+
+positional arguments:
+  {blocks,physical_records,write_batches,parsed_internal_key,records}
+
+options:
+  -h, --help            show this help message and exit
+```
+
+To parse a LevelDB .ldb file:
+
+```
+$ dfindexeddb -s <SOURCE> ldb -h
+usage: dfindexeddb ldb [-h] {blocks,records}
+
+positional arguments:
+  {blocks,records}
+
+options:
+  -h, --help        show this help message and exit
+```
+
+To parse a LevelDB .ldb or .log file as IndexedDB:
+
+```
+$ dfindexeddb -s <SOURCE> indexeddb -h
+usage: dfindexeddb indexeddb [-h]
+
+options:
+  -h, --help  show this help message and exit
 ```

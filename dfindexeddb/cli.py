@@ -106,7 +106,7 @@ def LogCommand(args):
       print(records)
 
 
-def App(argv=sys.argv):
+def App():
   """The CLI app entrypoint."""
   parser = argparse.ArgumentParser(
       prog='dfindexeddb',
@@ -137,6 +137,6 @@ def App(argv=sys.argv):
   parser_log = subparsers.add_parser('indexeddb')
   parser_log.set_defaults(func=IndexeddbCommand)
 
-  args = parser.parse_args(argv)
+  args = parser.parse_args()
 
   args.func(args)
