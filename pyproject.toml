@@ -22,6 +22,9 @@ classifiers = [
   'Programming Language :: Python',
 ]
 
+[project.scripts]
+dfindexeddb = "dfindexeddb.cli:App"
+
 [tool.setuptools]
 packages = ["dfindexeddb", "dfindexeddb.indexeddb", "dfindexeddb.leveldb"]
 
