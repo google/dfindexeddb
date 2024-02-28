@@ -17,11 +17,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
+import sys
+import traceback
 from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
+from dfindexeddb.indexeddb import blink
 from dfindexeddb.indexeddb import definitions
+from dfindexeddb.leveldb import ldb
+from dfindexeddb.leveldb import log
 
 
 T = TypeVar('T')
@@ -1281,3 +1286,52 @@ class ObjectStore:
   id: int
   name: str
   records: list = field(default_factory=list, repr=False)
+
+
+@dataclass
+class IndexedDBRecord:
+  """An IndexedDB Record.
+
+  Attributes:
+    offset: the offset of the record.
+    key: the key of the record.
+    value: the value of the record.
+    sequence_number: if available, the sequence number of the record.
+    type: the type of the record.
+  """
+  offset: int
+  key: Any
+  value: Any
+  sequence_number: int
+  type: int
+
+  @classmethod
+  def FromLevelDBRecord(
+      cls, record: Union[ldb.LdbKeyValueRecord, log.ParsedInternalKey]
+  ) -> IndexedDBRecord:
+    """Returns an IndexedDBRecord from a ParsedInternalKey."""
+    idb_key = IndexedDbKey.FromBytes(
+        record.key, base_offset=record.offset)
+
+    idb_value = idb_key.ParseValue(record.value)
+    if isinstance(idb_key, ObjectStoreDataKey):
+
+      # The ObjectStoreDataKey value should decode as a 2-tuple comprising
+      # a version integer and a SSV as a raw byte string
+      if (isinstance(idb_value, tuple) and len(idb_value) == 2 and
+          isinstance(idb_value[1], bytes)):
+
+        try:
+          blink_value = blink.V8ScriptValueDecoder.FromBytes(idb_value[1])
+          idb_value = idb_value[0], blink_value
+        except (errors.ParserError, errors.DecoderError) as err:
+          print(f'Error parsing blink value: {err}', file=sys.stderr)
+          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+
+    return cls(
+      offset=record.offset,
+      key=idb_key,
+      value=idb_value,
+      sequence_number=record.sequence_number if hasattr(
+          record, 'sequence_number') else None,
+      type=record.type)
