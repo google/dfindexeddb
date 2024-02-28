@@ -14,14 +14,43 @@
 # limitations under the License.
 """A CLI tool for dfindexeddb."""
 import argparse
+import dataclasses
+from datetime import datetime
+import json
 import pathlib
-import traceback
+import sys
 
 from dfindexeddb.leveldb import log
 from dfindexeddb.leveldb import ldb
-from dfindexeddb import errors
-from dfindexeddb.indexeddb import blink
 from dfindexeddb.indexeddb import chromium
+from dfindexeddb.indexeddb import v8
+
+
+class Encoder(json.JSONEncoder):
+  """A JSON encoder class for dfindexeddb fields."""
+  def default(self, o):
+    if isinstance(o, bytes):
+      return o.decode(encoding='ascii', errors='backslashreplace')
+    if isinstance(o, datetime):
+      return o.isoformat()
+    if isinstance(o, v8.Undefined):
+      return "<undefined>"
+    if isinstance(o, v8.Null):
+      return "<null>"
+    if isinstance(o, set):
+      return list(o)
+    if isinstance(o, v8.RegExp):
+      return str(o)
+    return json.JSONEncoder.default(self, o)
+
+
+def _Output(structure, to_json=False):
+  """Helper method to output parsed structure to stdout."""
+  if to_json:
+    structure_dict = dataclasses.asdict(structure)
+    print(json.dumps(structure_dict, indent=2, cls=Encoder))
+  else:
+    print(structure)
 
 
 def IndexeddbCommand(args):
@@ -33,36 +62,12 @@ def IndexeddbCommand(args):
     records = list(
         ldb.LdbFileReader(args.source).GetKeyValueRecords())
   else:
-    print('Unsupported file type.')
+    print('Unsupported file type.', file=sys.stderr)
     return
 
   for record in records:
-    idbkey = chromium.IndexedDbKey.FromBytes(
-        record.key, base_offset=record.offset)
-
-    if record.type == 0:
-      print(f'[Deleted LevelDB Key offset={record.offset}]', idbkey)
-    else:
-      print(f'[LevelDB Key offset={record.offset}]', idbkey)
-
-      value = idbkey.ParseValue(record.value)
-      print(f'[LevelDB Value offset={record.offset}]', value)
-
-      if not isinstance(idbkey, chromium.ObjectStoreDataKey):
-        continue
-
-      # The ObjectStoreDataKey value should decode as a 2-tuple comprising
-      # a version integer and a SSV as a raw byte string
-      if not (isinstance(value, tuple) and len(value) == 2 and
-          isinstance(value[1], bytes)):
-        continue
-
-      try:
-        value = blink.V8ScriptValueDecoder.FromBytes(value[1])
-        print('[Blink]', value)
-      except (errors.ParserError, errors.DecoderError) as err:
-        print(f'Error parsing blink value: {err}')
-        print(f'Traceback: {traceback.format_exc()}')
+    record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
+    _Output(record, to_json=args.json)
 
 
 def LdbCommand(args):
@@ -72,12 +77,12 @@ def LdbCommand(args):
   if args.structure_type == 'blocks':
     # Prints block information.
     for block in ldb_file.GetBlocks():
-      print(block)
+      _Output(block, to_json=args.json)
 
   elif args.structure_type == 'records':
     # Prints key value record information.
-    for records in ldb_file.GetKeyValueRecords():
-      print(records)
+    for record in ldb_file.GetKeyValueRecords():
+      _Output(record, to_json=args.json)
 
 
 def LogCommand(args):
@@ -87,22 +92,22 @@ def LogCommand(args):
   if args.structure_type == 'blocks':
     # Prints block information.
     for block in log_file.GetBlocks():
-      print(block)
+      _Output(block, to_json=args.json)
 
   elif args.structure_type == 'physical_records':
     # Prints log file physical record information.
     for log_file_record in log_file.GetPhysicalRecords():
-      print(log_file_record)
+      _Output(log_file_record, to_json=args.json)
 
   elif args.structure_type == 'write_batches':
     # Prints log file batch information.
     for batch in log_file.GetWriteBatches():
-      print(batch)
+      _Output(batch, to_json=args.json)
 
   elif args.structure_type in ('parsed_internal_key', 'records'):
     # Prints key value record information.
-    for records in log_file.GetKeyValueRecords():
-      print(records)
+    for record in log_file.GetKeyValueRecords():
+      _Output(record, to_json=args.json)
 
 
 def App():
@@ -112,8 +117,9 @@ def App():
       description='A cli tool for the dfindexeddb package')
 
   parser.add_argument(
-      '-s', '--source', required=True, type=pathlib.Path)
-
+      '-s', '--source', required=True, type=pathlib.Path, 
+      help='The source leveldb file')
+  parser.add_argument('--json', action='store_true', help='Output as JSON')
   subparsers = parser.add_subparsers(required=True)
 
   parser_log = subparsers.add_parser('log')
