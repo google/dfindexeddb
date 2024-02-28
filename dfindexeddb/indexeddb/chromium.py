@@ -1307,7 +1307,7 @@ class IndexedDBRecord:
 
   @classmethod
   def FromLevelDBRecord(
-      cls, record: ldb.LdbKeyValueRecord | log.ParsedInternalKey
+      cls, record: Union[ldb.LdbKeyValueRecord, log.ParsedInternalKey]
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
