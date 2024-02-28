@@ -46,7 +46,7 @@ A CLI tool is available after installation:
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] -s SOURCE {log,ldb,indexeddb} ...
+usage: dfindexeddb [-h] -s SOURCE [--json] {log,ldb,indexeddb} ...
 
 A cli tool for the dfindexeddb package
 
@@ -54,8 +54,9 @@ positional arguments:
   {log,ldb,indexeddb}
 
 options:
-  -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
+                        The source leveldb file
+  --json                Output as JSON
 ```
 
 To parse a LevelDB .log file:
