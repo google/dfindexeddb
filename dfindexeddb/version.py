@@ -14,7 +14,7 @@
 # limitations under the License.
 """Version information for dfIndexeddb."""
 
-__version__ = "20240225"
+__version__ = "20240229"
 
 
 def GetVersion():
