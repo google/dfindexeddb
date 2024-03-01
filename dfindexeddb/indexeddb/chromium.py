@@ -963,6 +963,23 @@ class ObjectStoreMetaDataKey(BaseIndexedDBKey):
         offset=base_offset + offset, key_prefix=key_prefix,
         object_store_id=object_store_id, metadata_type=metadata_type)
 
+@dataclass
+class ObjectStoreDataValue:
+  """The parsed values from an ObjectStoreDataKey.
+  
+  Attributes:
+    unknown: an unknown integer (possibly a sequence number?).
+    is_wrapped: True if the value was wrapped.
+    blob_size: the blob size, only valid if wrapped.
+    blob_offset: the blob offset, only valid if wrapped.
+    value: the blink serialized value, only valid if not wrapped.
+  """
+  unkown: int
+  is_wrapped: bool
+  blob_size: int
+  blob_offset: int
+  value: Any
+
 
 @dataclass
 class ObjectStoreDataKey(BaseIndexedDBKey):
@@ -974,11 +991,33 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
   encoded_user_key: IDBKey
 
   def DecodeValue(
-      self, decoder: utils.LevelDBDecoder) -> Tuple[int, bytes]:
+      self, decoder: utils.LevelDBDecoder) -> ObjectStoreDataValue:
     """Decodes the object store data value."""
-    _, version = decoder.DecodeVarint()
-    _, encoded_string = decoder.ReadBytes()
-    return version, encoded_string
+    _, unknown_integer = decoder.DecodeVarint()
+
+    _, wrapped_header_bytes = decoder.PeekBytes(3)
+    if len(wrapped_header_bytes) != 3:
+      raise errors.DecoderError('Insufficient bytes')
+    
+    if (wrapped_header_bytes[0] == definitions.BlinkSerializationTag.VERSION and
+        wrapped_header_bytes[1] == 0x11 and 
+        wrapped_header_bytes[2] == 0x01):
+      _, blob_size = decoder.DecodeVarint()
+      _, blob_offset = decoder.DecodeVarint()
+      return ObjectStoreDataValue(
+          unkown=unknown_integer,
+          is_wrapped=True,
+          blob_size=blob_size,
+          blob_offset=blob_offset,
+          value=None)
+    _, blink_bytes = decoder.ReadBytes()
+    blink_value = blink.V8ScriptValueDecoder.FromBytes(blink_bytes)
+    return ObjectStoreDataValue(
+        unkown=unknown_integer,
+        is_wrapped=False,
+        blob_size=None,
+        blob_offset=None,
+        value=blink_value)
 
   @classmethod
   def FromDecoder(
@@ -1310,24 +1349,8 @@ class IndexedDBRecord:
       cls, record: Union[ldb.LdbKeyValueRecord, log.ParsedInternalKey]
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
-    idb_key = IndexedDbKey.FromBytes(
-        record.key, base_offset=record.offset)
-
+    idb_key = IndexedDbKey.FromBytes(record.key, base_offset=record.offset)
     idb_value = idb_key.ParseValue(record.value)
-    if isinstance(idb_key, ObjectStoreDataKey):
-
-      # The ObjectStoreDataKey value should decode as a 2-tuple comprising
-      # a version integer and a SSV as a raw byte string
-      if (isinstance(idb_value, tuple) and len(idb_value) == 2 and
-          isinstance(idb_value[1], bytes)):
-
-        try:
-          blink_value = blink.V8ScriptValueDecoder.FromBytes(idb_value[1])
-          idb_value = idb_value[0], blink_value
-        except (errors.ParserError, errors.DecoderError) as err:
-          print(f'Error parsing blink value: {err}', file=sys.stderr)
-          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-
     return cls(
       offset=record.offset,
       key=idb_key,
