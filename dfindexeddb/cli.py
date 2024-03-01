@@ -72,8 +72,8 @@ def IndexeddbCommand(args):
       record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
     except (errors.ParserError, errors.DecoderError) as err:
       print(
-          (f'Error parsing blink value: {err} for {record.__class__.__name__} at offset ' +
-          f'{record.offset}'), file=sys.stderr)
+          (f'Error parsing blink value: {err} for {record.__class__.__name__} '
+           f'at offset {record.offset}'), file=sys.stderr)
       print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
     _Output(record, to_json=args.json)
 

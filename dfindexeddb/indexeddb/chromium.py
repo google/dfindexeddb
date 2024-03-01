@@ -17,8 +17,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
-import sys
-import traceback
 from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
 
 from dfindexeddb import errors
@@ -966,7 +964,7 @@ class ObjectStoreMetaDataKey(BaseIndexedDBKey):
 @dataclass
 class ObjectStoreDataValue:
   """The parsed values from an ObjectStoreDataKey.
-  
+
   Attributes:
     unknown: an unknown integer (possibly a sequence number?).
     is_wrapped: True if the value was wrapped.
@@ -976,8 +974,8 @@ class ObjectStoreDataValue:
   """
   unkown: int
   is_wrapped: bool
-  blob_size: int
-  blob_offset: int
+  blob_size: Optional[int]
+  blob_offset: Optional[int]
   value: Any
 
 
@@ -998,9 +996,9 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
     _, wrapped_header_bytes = decoder.PeekBytes(3)
     if len(wrapped_header_bytes) != 3:
       raise errors.DecoderError('Insufficient bytes')
-    
+
     if (wrapped_header_bytes[0] == definitions.BlinkSerializationTag.VERSION and
-        wrapped_header_bytes[1] == 0x11 and 
+        wrapped_header_bytes[1] == 0x11 and
         wrapped_header_bytes[2] == 0x01):
       _, blob_size = decoder.DecodeVarint()
       _, blob_offset = decoder.DecodeVarint()
