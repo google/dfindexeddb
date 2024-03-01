@@ -404,7 +404,7 @@ class BaseIndexedDBKey:
       The decoded key.
     """
     decoder = utils.LevelDBDecoder(stream)
-    key_prefix = KeyPrefix.FromDecoder(decoder)
+    key_prefix = KeyPrefix.FromDecoder(decoder, base_offset=base_offset)
     return cls.FromDecoder(
         decoder=decoder, key_prefix=key_prefix, base_offset=base_offset)
 
@@ -1027,7 +1027,7 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
         definitions.KeyPrefixType.OBJECT_STORE_DATA):
       raise errors.ParserError('Invalid KeyPrefix for ObjectStoreDataKey')
     offset = decoder.stream.tell()
-    encoded_user_key = IDBKey.FromDecoder(decoder, base_offset)
+    encoded_user_key = IDBKey.FromDecoder(decoder, offset)
     return cls(
         offset=base_offset + offset,
         key_prefix=key_prefix, encoded_user_key=encoded_user_key)
@@ -1054,7 +1054,7 @@ class ExistsEntryKey(BaseIndexedDBKey):
   ) -> ExistsEntryKey:
     """Decodes the exists entry key."""
     offset = decoder.stream.tell()
-    encoded_user_key = IDBKey.FromDecoder(decoder, base_offset)
+    encoded_user_key = IDBKey.FromDecoder(decoder, offset)
 
     return cls(
         offset=base_offset + offset,
@@ -1085,7 +1085,7 @@ class IndexDataKey(BaseIndexedDBKey):
                  base_offset: int = 0) -> IndexDataKey:
     """Decodes the index data key."""
     offset = decoder.stream.tell()
-    encoded_user_key = IDBKey.FromDecoder(decoder, base_offset)
+    encoded_user_key = IDBKey.FromDecoder(decoder, offset)
 
     if decoder.NumRemainingBytes() > 0:
       _, sequence_number = decoder.DecodeVarint()
@@ -1093,7 +1093,9 @@ class IndexDataKey(BaseIndexedDBKey):
       sequence_number = None
 
     if decoder.NumRemainingBytes() > 0:
-      encoded_primary_key = IDBKey.FromDecoder(decoder, base_offset)
+      encoded_primary_key_offset = decoder.stream.tell()
+      encoded_primary_key = IDBKey.FromDecoder(
+          decoder, encoded_primary_key_offset)
     else:
       encoded_primary_key = None
 
@@ -1126,7 +1128,7 @@ class BlobEntryKey(BaseIndexedDBKey):
   ) -> BlobEntryKey:
     """Decodes the blob entry key."""
     offset = decoder.stream.tell()
-    user_key = IDBKey.FromDecoder(decoder, base_offset)
+    user_key = IDBKey.FromDecoder(decoder, offset)
 
     return cls(key_prefix=key_prefix, user_key=user_key,
                offset=base_offset + offset)
