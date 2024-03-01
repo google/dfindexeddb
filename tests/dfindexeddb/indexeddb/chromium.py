@@ -578,7 +578,12 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=1, object_store_id=1, index_id=1),
         encoded_user_key=chromium.IDBKey(
             offset=4, type=definitions.IDBKeyType.NUMBER, value=3.0))
-    expected_value = (4, b'\xff\x11\x01\xd0\xa0\x06\x00')
+    expected_value = chromium.ObjectStoreDataValue(
+        unkown=4,
+        is_wrapped=True,
+        blob_offset=1,
+        blob_size=2303,
+        value=None)
     record = (
         b'\x00\x01\x01\x01\x03\x00\x00\x00\x00\x00\x00\x08@',
         b'\x04\xff\x11\x01\xd0\xa0\x06\x00')

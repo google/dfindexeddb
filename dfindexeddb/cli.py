@@ -19,10 +19,12 @@ from datetime import datetime
 import json
 import pathlib
 import sys
+import traceback
 
 from dfindexeddb.leveldb import log
 from dfindexeddb.leveldb import ldb
 from dfindexeddb.indexeddb import chromium
+from dfindexeddb import errors
 from dfindexeddb.indexeddb import v8
 
 
@@ -66,7 +68,13 @@ def IndexeddbCommand(args):
     return
 
   for record in records:
-    record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
+    try:
+      record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
+    except (errors.ParserError, errors.DecoderError) as err:
+      print(
+          (f'Error parsing blink value: {err} for {record.__class__.__name__} '
+           f'at offset {record.offset}'), file=sys.stderr)
+      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
     _Output(record, to_json=args.json)
 
 
