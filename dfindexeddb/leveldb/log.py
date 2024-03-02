@@ -38,11 +38,13 @@ class ParsedInternalKey:
   Attributes:
     offset: the offset of the record.
     type: the record type.
+    sequence_number: the sequence number.
     key: the record key.
     value: the record value.
   """
   offset: int
   type: int
+  sequence_number: int
   key: bytes
   value: bytes
 
@@ -50,16 +52,19 @@ class ParsedInternalKey:
   def FromDecoder(
       cls,
       decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      base_offset: int = 0,
+      sequence_number: int = 0,
   ) -> ParsedInternalKey:
     """Decodes an internal key value record.
 
     Args:
       decoder: the leveldb decoder.
-      base_offset: the base offset for the parsed key value record.
-
+      base_offset: the base offset for the parsed internal key value record.
+      sequence_number: the sequence number for the parsed internal key value
+          record.
+    
     Returns:
-      a ParsedInternalKey
+      A ParsedInternalKey
 
     Raises:
       ValueError: if there is an invalid record type encountered.
@@ -72,7 +77,12 @@ class ParsedInternalKey:
       value =  b''
     else:
       raise ValueError(f'Invalid record type {record_type}')
-    return cls(base_offset + offset, record_type, key, value)
+    return cls(
+        offset=base_offset + offset,
+        type=record_type,
+        key=key,
+        value=value,
+        sequence_number=sequence_number)
 
 
 @dataclass
@@ -80,7 +90,7 @@ class WriteBatch:
   """A write batch from a leveldb log file.
 
   Attributes:
-    offset: the batch offset.
+    offset: the write batch offset.
     sequence_number: the batch sequence number.
     count: the number of ParsedInternalKey in the batch.
     records: the ParsedInternalKey parsed from the batch.
@@ -105,14 +115,19 @@ class WriteBatch:
       A WriteBatch.
     """
     decoder = utils.LevelDBDecoder(stream)
-    _, sequence_number = decoder.DecodeUint64()
+    offset, sequence_number = decoder.DecodeUint64()
     _, count = decoder.DecodeUint32()
 
     records = []
-    for _ in range(count):
-      record = ParsedInternalKey.FromDecoder(decoder, base_offset)
+    for relative_sequence_number in range(count):
+      record = ParsedInternalKey.FromDecoder(
+          decoder, base_offset + offset, relative_sequence_number + sequence_number)
       records.append(record)
-    return cls(base_offset, sequence_number, count, records)
+    return cls(
+        offset=base_offset + offset,
+        sequence_number=sequence_number, 
+        count=count, 
+        records=records)
 
   @classmethod
   def FromBytes(cls, data: bytes, base_offset: int = 0) -> WriteBatch:
