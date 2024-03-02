@@ -87,6 +87,7 @@ class LogTest(unittest.TestCase):
     self.assertEqual(records[0].offset, 19)
     self.assertEqual(records[0].value, b'')
     self.assertEqual(records[0].type, 0)  # deleted
+    self.assertEqual(records[0].sequence_number, 3)
 
 
 if __name__ == '__main__':

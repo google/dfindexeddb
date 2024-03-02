@@ -41,7 +41,6 @@ from google.protobuf.json_format import MessageToJson
 @dataclasses.dataclass
 class ChromeNotificationRecord:
   src_file: str = None
-  record_type: str = None
   offset: int = None
   key: str = None
   sequence_number: int = None
@@ -75,11 +74,9 @@ class ChromeNotificationRecord:
       ldb_record: Union[log.ParsedInternalKey, ldb.LdbKeyValueRecord]
   ) -> ChromeNotificationRecord:
     record = cls()
-    record.record_type = ldb_record.__class__.__name__
     record.offset = ldb_record.offset
     record.key = ldb_record.key.decode()
-    if hasattr(ldb_record, 'sequence_number'):
-      record.sequence_number = ldb_record.sequence_number  
+    record.sequence_number = ldb_record.sequence_number  
     record.type = ldb_record.type
 
     if not ldb_record.value:
@@ -112,7 +109,8 @@ class ChromeNotificationRecord:
     record.replaced_existing_notification = (
         notification_proto.replaced_existing_notification)
     record.num_clicks = notification_proto.num_clicks
-    record.num_action_button_clicks = notification_proto.num_action_button_clicks
+    record.num_action_button_clicks = (
+        notification_proto.num_action_button_clicks)
     record.creation_time = webkit_time.WebKitTime(
         timestamp=notification_proto.creation_time_millis
     ).CopyToDateTimeString()
