@@ -62,7 +62,7 @@ class ParsedInternalKey:
       base_offset: the base offset for the parsed internal key value record.
       sequence_number: the sequence number for the parsed internal key value
           record.
-    
+
     Returns:
       A ParsedInternalKey
 
@@ -121,12 +121,14 @@ class WriteBatch:
     records = []
     for relative_sequence_number in range(count):
       record = ParsedInternalKey.FromDecoder(
-          decoder, base_offset + offset, relative_sequence_number + sequence_number)
+          decoder, base_offset + offset,
+          relative_sequence_number + sequence_number
+      )
       records.append(record)
     return cls(
         offset=base_offset + offset,
-        sequence_number=sequence_number, 
-        count=count, 
+        sequence_number=sequence_number,
+        count=count,
         records=records)
 
   @classmethod
