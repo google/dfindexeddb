@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dfindexeddb"
-version = "20240301"
+version = "20240305"
 requires-python = ">=3.8"
 description = "dfindexeddb is an experimental Python tool for performing digital forensic analysis of IndexedDB and leveldb files."
 license = {file = "LICENSE"}
