@@ -71,7 +71,7 @@ class ChromeNotificationRecord:
   @classmethod
   def FromLeveldbRecord(
       cls,
-      ldb_record: Union[log.ParsedInternalKey, ldb.LdbKeyValueRecord]
+      ldb_record: Union[log.ParsedInternalKey, ldb.KeyValueRecord]
   ) -> ChromeNotificationRecord:
     record = cls()
     record.offset = ldb_record.offset
@@ -133,10 +133,10 @@ def Main(indexeddb_path):
       continue
     if filename.name.endswith('.log'):
       leveldb_records = list(
-          log.LogFileReader(filename.as_posix()).GetKeyValueRecords())
+          log.FileReader(filename.as_posix()).GetKeyValueRecords())
     elif filename.name.endswith('.ldb'):
       leveldb_records = list(
-          ldb.LdbFileReader(filename.as_posix()).GetKeyValueRecords())
+          ldb.FileReader(filename.as_posix()).GetKeyValueRecords())
     else:
       continue
 

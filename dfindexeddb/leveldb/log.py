@@ -16,19 +16,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import IntEnum
 import io
 from typing import BinaryIO, Generator, Iterable, Optional
 
 from dfindexeddb import utils
-
-
-class LogFilePhysicalRecordType(IntEnum):
-  """LevelDB log file physical record types."""
-  FULL = 1
-  FIRST = 2
-  MIDDLE = 3
-  LAST = 4
+from dfindexeddb.leveldb import definitions
 
 
 @dataclass
@@ -38,7 +30,8 @@ class ParsedInternalKey:
   Attributes:
     offset: the offset of the record.
     type: the record type.
-    sequence_number: the sequence number.
+    sequence_number: the sequence number (inferred from the relative location
+        the ParsedInternalKey in a WriteBatch.)
     key: the record key.
     value: the record value.
   """
@@ -47,6 +40,7 @@ class ParsedInternalKey:
   sequence_number: int
   key: bytes
   value: bytes
+  __type__: str = 'ParsedInternalKey'
 
   @classmethod
   def FromDecoder(
@@ -86,7 +80,7 @@ class ParsedInternalKey:
 
 
 @dataclass
-class WriteBatch:
+class WriteBatch(utils.FromDecoderMixin):
   """A write batch from a leveldb log file.
 
   Attributes:
@@ -101,20 +95,19 @@ class WriteBatch:
   records: Iterable[ParsedInternalKey] = field(repr=False)
 
   @classmethod
-  def FromStream(
-    cls, stream: BinaryIO, base_offset: int = 0
+  def FromDecoder(
+    cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> WriteBatch:
     """Parses a WriteBatch from a binary stream.
 
     Args:
-      stream: the binary stream to be parsed.
+      decoder: the LevelDBDecoder
       base_offset: the base offset of the Block from which the data is
           read from.
 
     Returns:
       A WriteBatch.
     """
-    decoder = utils.LevelDBDecoder(stream)
     offset, sequence_number = decoder.DecodeUint64()
     _, count = decoder.DecodeUint32()
 
@@ -131,23 +124,9 @@ class WriteBatch:
         count=count,
         records=records)
 
-  @classmethod
-  def FromBytes(cls, data: bytes, base_offset: int = 0) -> WriteBatch:
-    """Parses a WriteBatch from bytes.
-
-    Args:
-      data: the bytes to be parsed.
-      base_offset: the base offset of the Block from which the data is
-          read from.
-
-    Returns:
-      A WriteBatch.
-    """
-    return cls.FromStream(io.BytesIO(data), base_offset)
-
 
 @dataclass
-class PhysicalRecord:
+class PhysicalRecord(utils.FromDecoderMixin):
   """A physical record from a leveldb log file.
 
   Attributes:
@@ -162,27 +141,30 @@ class PhysicalRecord:
   offset: int
   checksum: int
   length: int
-  record_type: LogFilePhysicalRecordType
+  record_type: definitions.LogFilePhysicalRecordType
   contents: bytes = field(repr=False)
   contents_offset: int
 
+  PHYSICAL_HEADER_LENGTH = 7
+
   @classmethod
-  def FromStream(
-      cls, stream: BinaryIO, base_offset: int = 0) -> PhysicalRecord:
-    """Parses a PhysicalRecord from a binary stream.
+  def FromDecoder(
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
+  ) -> PhysicalRecord:
+    """Decodes a PhysicalRecord from the current position of a LevelDBDecoder.
 
     Args:
-      stream: the binary stream to be parsed.
+      decoder: the LevelDBDecoder.
       base_offset: the base offset of the WriteBatch from which the data is
           read from.
 
     Returns:
       A PhysicalRecord.
     """
-    decoder = utils.StreamDecoder(stream)
     offset, checksum = decoder.DecodeUint32()
     _, length = decoder.DecodeUint16()
-    record_type = LogFilePhysicalRecordType(decoder.DecodeUint8()[1])
+    record_type = definitions.LogFilePhysicalRecordType(
+        decoder.DecodeUint8()[1])
     contents_offset, contents = decoder.ReadBytes(length)
     return cls(
         base_offset=base_offset,
@@ -216,7 +198,7 @@ class Block:
     buffer = io.BytesIO(self.data)
     buffer_length = len(self.data)
 
-    while buffer.tell() < buffer_length:
+    while buffer.tell() + PhysicalRecord.PHYSICAL_HEADER_LENGTH < buffer_length:
       yield PhysicalRecord.FromStream(buffer, base_offset=self.offset)
 
   @classmethod
@@ -236,10 +218,10 @@ class Block:
     return cls(offset, data)
 
 
-class LogFileReader:
+class FileReader:
   """A leveldb log file reader.
 
-  A LogFileReader provides read-only sequential iteration of serialized
+  A Log FileReader provides read-only sequential iteration of serialized
   structures in a leveldb logfile.  These structures include:
   * blocks (Block)
   * phyiscal records (PhysicalRecord)
@@ -267,11 +249,10 @@ class LogFileReader:
       a Block
     """
     with open(self.filename, 'rb') as fh:
-      while True:
-        block = Block.FromStream(fh)
-        if not block:
-          break
+      block = Block.FromStream(fh)
+      while block:
         yield block
+        block = Block.FromStream(fh)
 
   def GetPhysicalRecords(self) -> Generator[PhysicalRecord, None, None]:
     """Returns an iterator of PhysicalRecord instances.
@@ -295,17 +276,21 @@ class LogFileReader:
     """
     buffer = bytearray()
     for physical_record in self.GetPhysicalRecords():
-      if physical_record.record_type == LogFilePhysicalRecordType.FULL:
+      if(physical_record.record_type ==
+         definitions.LogFilePhysicalRecordType.FULL):
         buffer = physical_record.contents
         offset = physical_record.contents_offset + physical_record.base_offset
         yield WriteBatch.FromBytes(buffer, base_offset=offset)
         buffer = bytearray()
-      elif physical_record.record_type == LogFilePhysicalRecordType.FIRST:
+      elif (physical_record.record_type
+            == definitions.LogFilePhysicalRecordType.FIRST):
         offset = physical_record.contents_offset + physical_record.base_offset
         buffer = bytearray(physical_record.contents)
-      elif physical_record.record_type == LogFilePhysicalRecordType.MIDDLE:
+      elif (physical_record.record_type ==
+            definitions.LogFilePhysicalRecordType.MIDDLE):
         buffer.extend(bytearray(physical_record.contents))
-      elif physical_record.record_type == LogFilePhysicalRecordType.LAST:
+      elif (physical_record.record_type ==
+            definitions.LogFilePhysicalRecordType.LAST):
         buffer.extend(bytearray(physical_record.contents))
         yield WriteBatch.FromBytes(buffer, base_offset=offset)
         buffer = bytearray()

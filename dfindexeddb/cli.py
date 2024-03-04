@@ -21,18 +21,31 @@ import pathlib
 import sys
 import traceback
 
-from dfindexeddb.leveldb import log
-from dfindexeddb.leveldb import ldb
-from dfindexeddb.indexeddb import chromium
 from dfindexeddb import errors
+from dfindexeddb import version
+from dfindexeddb.leveldb import descriptor
+from dfindexeddb.leveldb import ldb
+from dfindexeddb.leveldb import log
+from dfindexeddb.indexeddb import chromium
 from dfindexeddb.indexeddb import v8
+
+
+_VALID_PRINTABLE_CHARACTERS = (
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' +
+    '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~.')
 
 
 class Encoder(json.JSONEncoder):
   """A JSON encoder class for dfindexeddb fields."""
   def default(self, o):
     if isinstance(o, bytes):
-      return o.decode(encoding='ascii', errors='backslashreplace')
+      out = []
+      for x in o:
+        if chr(x) not in _VALID_PRINTABLE_CHARACTERS:
+          out.append(f'\\x{x:02X}')
+        else:
+          out.append(chr(x))
+      return ''.join(out)
     if isinstance(o, datetime):
       return o.isoformat()
     if isinstance(o, v8.Undefined):
@@ -59,10 +72,10 @@ def IndexeddbCommand(args):
   """The CLI for processing a log/ldb file as indexeddb."""
   if args.source.name.endswith('.log'):
     records = list(
-        log.LogFileReader(args.source).GetKeyValueRecords())
+        log.FileReader(args.source).GetKeyValueRecords())
   elif args.source.name.endswith('.ldb'):
     records = list(
-        ldb.LdbFileReader(args.source).GetKeyValueRecords())
+        ldb.FileReader(args.source).GetKeyValueRecords())
   else:
     print('Unsupported file type.', file=sys.stderr)
     return
@@ -78,9 +91,17 @@ def IndexeddbCommand(args):
     _Output(record, to_json=args.json)
 
 
+def ManifestCommand(args):
+  """The CLI for processing MANIFEST aka Descriptor files."""
+  manifest_file = descriptor.FileReader(args.source)
+
+  for version_edit in manifest_file.GetVersionEdits():
+    _Output(version_edit, to_json=args.json)
+
+
 def LdbCommand(args):
   """The CLI for processing ldb files."""
-  ldb_file = ldb.LdbFileReader(args.source)
+  ldb_file = ldb.FileReader(args.source)
 
   if args.structure_type == 'blocks':
     # Prints block information.
@@ -95,7 +116,7 @@ def LdbCommand(args):
 
 def LogCommand(args):
   """The CLI for processing log files."""
-  log_file = log.LogFileReader(args.source)
+  log_file = log.FileReader(args.source)
 
   if args.structure_type == 'blocks':
     # Prints block information.
@@ -122,7 +143,8 @@ def App():
   """The CLI app entrypoint."""
   parser = argparse.ArgumentParser(
       prog='dfindexeddb',
-      description='A cli tool for the dfindexeddb package')
+      description='A cli tool for the dfindexeddb package',
+      epilog=f'Version {version.GetVersion()}')
 
   parser.add_argument(
       '-s', '--source', required=True, type=pathlib.Path, 
@@ -146,6 +168,9 @@ def App():
           'blocks',
           'records'])
   parser_log.set_defaults(func=LdbCommand)
+
+  parser_log = subparsers.add_parser('manifest')
+  parser_log.set_defaults(func=ManifestCommand)
 
   parser_log = subparsers.add_parser('indexeddb')
   parser_log.set_defaults(func=IndexeddbCommand)

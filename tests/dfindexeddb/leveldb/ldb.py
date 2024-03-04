@@ -22,27 +22,27 @@ class LDBTest(unittest.TestCase):
   """Unit tests for the leveldb ldb parser."""
 
   def test_init_ldb(self):
-    """Tests initializing a LdbFile."""
-    ldb_file = ldb.LdbFileReader('./test_data/leveldb/100k keys/000005.ldb')
+    """Tests initializing a Ldb FileReader."""
+    ldb_file = ldb.FileReader('./test_data/leveldb/100k keys/000005.ldb')
     self.assertIsNotNone(ldb_file)
 
   def test_blocks(self):
     """Tests the blocks method."""
-    ldb_file = ldb.LdbFileReader('./test_data/leveldb/100k keys/000005.ldb')
+    ldb_file = ldb.FileReader('./test_data/leveldb/100k keys/000005.ldb')
     blocks = list(ldb_file.GetBlocks())
     first_block = blocks[0]
 
-    self.assertIsInstance(first_block, ldb.LdbBlock)
+    self.assertIsInstance(first_block, ldb.Block)
     self.assertEqual(first_block.block_offset, 0)
     self.assertEqual(first_block.length, 1721)
     self.assertTrue(first_block.IsSnappyCompressed())
 
   def test_records(self):
     """Tests the records method."""
-    ldb_file = ldb.LdbFileReader('./test_data/leveldb/100k keys/000005.ldb')
+    ldb_file = ldb.FileReader('./test_data/leveldb/100k keys/000005.ldb')
 
     records = list(ldb_file.GetKeyValueRecords())
-    self.assertIsInstance(records[0], ldb.LdbKeyValueRecord)
+    self.assertIsInstance(records[0], ldb.KeyValueRecord)
     self.assertEqual(records[0].key, b'\x00\x00\x00\x00')
     self.assertEqual(records[0].value, b'test value\x00\x00\x00\x00')
     self.assertEqual(records[0].sequence_number, 0)
@@ -50,7 +50,7 @@ class LDBTest(unittest.TestCase):
 
   def test_range_iter(self):
     """Tests the RangeIter method."""
-    ldb_file = ldb.LdbFileReader('./test_data/leveldb/100k keys/000005.ldb')
+    ldb_file = ldb.FileReader('./test_data/leveldb/100k keys/000005.ldb')
 
     range_iter_records = list(ldb_file.RangeIter())
     self.assertIsInstance(range_iter_records[0], tuple)

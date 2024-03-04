@@ -24,10 +24,11 @@ import snappy
 import zstd
 
 from dfindexeddb import utils
+from dfindexeddb.leveldb import definitions
 
 
 @dataclass
-class LdbKeyValueRecord:
+class KeyValueRecord:
   """A leveldb table key-value record.
 
   Attributes:
@@ -43,14 +44,10 @@ class LdbKeyValueRecord:
   sequence_number: int
   type: int
 
-  PACKED_SEQUENCE_AND_TYPE_LENGTH = 8
-  SEQUENCE_LENGTH = 7
-  TYPE_LENGTH = 1
-
   @classmethod
   def FromDecoder(
       cls, decoder: utils.LevelDBDecoder, block_offset: int, shared_key: bytes
-  ) -> Tuple[LdbKeyValueRecord, bytes]:
+  ) -> Tuple[KeyValueRecord, bytes]:
     """Decodes a ldb key value record.
 
     Args:
@@ -59,7 +56,7 @@ class LdbKeyValueRecord:
       shared_key: the shared key bytes.
 
     Returns:
-      A tuple of the parsed LdbKeyValueRecord and the updated shared key bytes.
+      A tuple of the parsed KeyValueRecord and the updated shared key bytes.
     """
     offset, shared_bytes = decoder.DecodeUint32Varint()
     _, unshared_bytes = decoder.DecodeUint32Varint()
@@ -68,17 +65,17 @@ class LdbKeyValueRecord:
     _, value = decoder.ReadBytes(value_length)
 
     shared_key = shared_key[:shared_bytes] + key_delta
-    key = shared_key[:-cls.PACKED_SEQUENCE_AND_TYPE_LENGTH]
+    key = shared_key[:-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
     sequence_number = int.from_bytes(
-        key[-cls.SEQUENCE_LENGTH:], byteorder='little', signed=False)
-    key_type = shared_key[-cls.PACKED_SEQUENCE_AND_TYPE_LENGTH]
+        key[-definitions.SEQUENCE_LENGTH:], byteorder='little', signed=False)
+    key_type = shared_key[-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
 
     return cls(offset + block_offset, key, value, sequence_number,
                key_type), shared_key
 
 
 @dataclass
-class LdbBlock:
+class Block:
   """A leveldb table block.
 
   Attributes:
@@ -111,11 +108,11 @@ class LdbBlock:
       return zstd.decompress(self.data)
     return self.data
 
-  def GetRecords(self) -> Iterable[LdbKeyValueRecord]:
+  def GetRecords(self) -> Iterable[KeyValueRecord]:
     """Returns an iterator over the key value records in the block.
 
     Yields:
-      LdbKeyValueRecords
+      KeyValueRecords
     """
     # get underlying block content, decompressing if required
     buffer = self.GetBuffer()
@@ -135,7 +132,7 @@ class LdbBlock:
     key = b''
 
     while decoder.stream.tell() < restarts_offset:
-      key_value_record, key = LdbKeyValueRecord.FromDecoder(
+      key_value_record, key = KeyValueRecord.FromDecoder(
           decoder, self.block_offset, key)
       yield key_value_record
 
@@ -145,7 +142,7 @@ class LdbBlock:
 
 
 @dataclass
-class BlockHandle:
+class BlockHandle(utils.FromDecoderMixin):
   """A handle to a block in the ldb file.
 
   Attributes:
@@ -159,14 +156,14 @@ class BlockHandle:
 
   BLOCK_TRAILER_SIZE = 5
 
-  def Load(self, stream: BinaryIO) -> LdbBlock:
+  def Load(self, stream: BinaryIO) -> Block:
     """Loads the block data.
 
     Args:
       stream: the binary stream of the ldb file.
 
     Returns:
-      a LdbBlock.
+      a Block.
 
     Raises:
       ValueError: if it could not read all of the block or block footer.
@@ -180,32 +177,35 @@ class BlockHandle:
     if len(footer) != self.BLOCK_TRAILER_SIZE:
       raise ValueError('Could not read all of the block footer')
 
-    return LdbBlock(self.offset, self.block_offset, self.length, data, footer)
+    return Block(self.offset, self.block_offset, self.length, data, footer)
 
   @classmethod
-  def FromStream(cls, stream: BinaryIO, base_offset: int = 0) -> BlockHandle:
-    """Reads a block handle from a binary stream.
+  def FromDecoder(
+      cls: BlockHandle,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+    ) -> BlockHandle:
+    """Decodes a BlockHandle from the current position of a LevelDBDecoder.
 
     Args:
-      stream: the binary stream.
+      decoder: the LevelDBDecoder.
       base_offset: the base offset.
 
     Returns:
-      A BlockHandle.
+      The BlockHandle instance.
     """
-    decoder = utils.LevelDBDecoder(stream)
     offset, block_offset = decoder.DecodeUint64Varint()
     _, length = decoder.DecodeUint64Varint()
     return cls(offset + base_offset, block_offset, length)
 
 
-class LdbFileReader:
+class FileReader:
   """A leveldb table (.ldb or .sst) file reader.
 
-  A LdbFileReader provides read-only sequential iteration of serialized
+  A Ldb FileReader provides read-only sequential iteration of serialized
   structures in a leveldb ldb file.  These structures include:
-  * blocks (LdbBlock)
-  * records (LdbKeyValueRecord)
+  * blocks (Block)
+  * records (KeyValueRecord)
   """
 
   FOOTER_SIZE = 48
@@ -234,11 +234,11 @@ class LdbFileReader:
       # self.meta_block = meta_handle.load(fh)  # TODO: support meta blocks
       self.index_block = index_handle.Load(fh)
 
-  def GetBlocks(self) -> Iterable[LdbBlock]:
-    """Returns an iterator of LdbBlocks.
+  def GetBlocks(self) -> Iterable[Block]:
+    """Returns an iterator of Blocks.
 
     Yields:
-      LdbBlock.
+      Block.
     """
     with open(self.filename, 'rb') as fh:
       for key_value_record in self.index_block.GetRecords():
@@ -247,11 +247,11 @@ class LdbFileReader:
             base_offset=key_value_record.offset)
         yield block_handle.Load(fh)
 
-  def GetKeyValueRecords(self) -> Iterable[LdbKeyValueRecord]:
-    """Returns an iterator of LdbKeyValueRecords.
+  def GetKeyValueRecords(self) -> Iterable[KeyValueRecord]:
+    """Returns an iterator of KeyValueRecords.
 
     Yields:
-      LdbKeyValueRecords.
+      KeyValueRecords.
     """
     for block in self.GetBlocks():
       yield from block.GetRecords()

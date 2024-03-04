@@ -15,6 +15,7 @@
 """Unit tests for LevelDB Log (.log) files."""
 import unittest
 
+from dfindexeddb.leveldb import definitions
 from dfindexeddb.leveldb import log
 
 
@@ -23,12 +24,12 @@ class LogTest(unittest.TestCase):
 
   def test_open_log(self):
     """Tests the log file can be opened."""
-    log_file = log.LogFileReader('./test_data/leveldb/create key/000003.log')
+    log_file = log.FileReader('./test_data/leveldb/create key/000003.log')
     self.assertIsNotNone(log_file)
 
   def test_blocks(self):
     """Tests the GetBlocks method."""
-    log_file = log.LogFileReader(
+    log_file = log.FileReader(
         './test_data/leveldb/large logfilerecord/000003.log')
     blocks = list(log_file.GetBlocks())
     for block_number, block in enumerate(blocks):
@@ -39,33 +40,39 @@ class LogTest(unittest.TestCase):
 
   def test_log_file_record(self):
     """Tests the GetPhysicalRecords method."""
-    log_file = log.LogFileReader(
+    log_file = log.FileReader(
         './test_data/leveldb/large logfilerecord/000003.log')
     physical_records = list(log_file.GetPhysicalRecords())
     self.assertIsInstance(physical_records[0], log.PhysicalRecord)
     self.assertEqual(physical_records[0].base_offset, 0)
     self.assertEqual(
-        physical_records[0].record_type, log.LogFilePhysicalRecordType.FULL)
+        physical_records[0].record_type,
+        definitions.LogFilePhysicalRecordType.FULL)
 
     self.assertEqual(physical_records[1].base_offset, 0)
     self.assertEqual(
-        physical_records[1].record_type, log.LogFilePhysicalRecordType.FIRST)
+        physical_records[1].record_type,
+        definitions.LogFilePhysicalRecordType.FIRST)
     self.assertEqual(physical_records[2].base_offset, 32768)
     self.assertEqual(
-        physical_records[2].record_type, log.LogFilePhysicalRecordType.MIDDLE)
+        physical_records[2].record_type,
+        definitions.LogFilePhysicalRecordType.MIDDLE)
     self.assertEqual(physical_records[3].base_offset, 65536)
     self.assertEqual(
-        physical_records[3].record_type, log.LogFilePhysicalRecordType.MIDDLE)
+        physical_records[3].record_type,
+        definitions.LogFilePhysicalRecordType.MIDDLE)
     self.assertEqual(physical_records[4].base_offset, 98304)
     self.assertEqual(
-        physical_records[4].record_type, log.LogFilePhysicalRecordType.LAST)
+        physical_records[4].record_type,
+        definitions.LogFilePhysicalRecordType.LAST)
     self.assertEqual(physical_records[5].base_offset, 98304)
     self.assertEqual(
-        physical_records[5].record_type, log.LogFilePhysicalRecordType.FULL)
+        physical_records[5].record_type,
+        definitions.LogFilePhysicalRecordType.FULL)
 
   def test_batches(self):
     """Tests the GetWriteBatches method."""
-    log_file = log.LogFileReader('./test_data/leveldb/100k keys/000004.log')
+    log_file = log.FileReader('./test_data/leveldb/100k keys/000004.log')
     batches = list(log_file.GetWriteBatches())
     self.assertIsInstance(batches[0], log.WriteBatch)
 
@@ -78,7 +85,7 @@ class LogTest(unittest.TestCase):
 
   def test_key_value_records(self):
     """Tests the GetKeyValueRecords method."""
-    log_file = log.LogFileReader(
+    log_file = log.FileReader(
         './test_data/leveldb/delete large key/000006.log')
     records = list(log_file.GetKeyValueRecords())
     self.assertIsInstance(records[0], log.ParsedInternalKey)
