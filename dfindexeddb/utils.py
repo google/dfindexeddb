@@ -229,24 +229,30 @@ class LevelDBDecoder(StreamDecoder):
           f'Odd number of bytes encountered at offset {offset}')
     return offset, buffer.decode('utf-16-be')
 
+  def DecodeLengthPrefixedSlice(self) -> Tuple[int, bytes]:
+    """Returns a tuple of the offset of decoding and the byte 'slice'."""
+    offset, num_bytes = self.DecodeUint32Varint()
+    _, blob = self.ReadBytes(num_bytes)
+    return offset, blob
+
   def DecodeBlobWithLength(self) -> Tuple[int, bytes]:
     """Returns a tuple of a the offset of decoding and the binary blob."""
     offset, num_bytes = self.DecodeUint64Varint()
     _, blob = self.ReadBytes(num_bytes)
     return offset, blob
 
-  def DecodeStringWithLength(self) -> Tuple[int, str]:
+  def DecodeStringWithLength(self, encoding='utf-16-be') -> Tuple[int, str]:
     """Returns a tuple of the offset of decoding and the string value."""
     offset, length = self.DecodeUint64Varint()
     _, buffer = self.ReadBytes(length*2)
-    return offset, buffer.decode('utf-16-be')
+    return offset, buffer.decode(encoding=encoding)
 
 
 T = TypeVar('T')
 
 
-class FromStreamMixin:  # TODO: refactor leveldb parsers
-  """A mixin for dataclasses parsing their attributes from a binary stream."""
+class FromDecoderMixin:
+  """A mixin for parsing dataclass attributes using a LevelDBDecoder."""
 
   @classmethod
   def FromDecoder(
@@ -278,7 +284,7 @@ class FromStreamMixin:  # TODO: refactor leveldb parsers
       The class instance.
     """
     decoder = LevelDBDecoder(stream)
-    return cls.FromDecoder(decoder, base_offset)
+    return cls.FromDecoder(decoder=decoder, base_offset=base_offset)
 
   @classmethod
   def FromBytes(

@@ -31,7 +31,7 @@ T = TypeVar('T')
 
 
 @dataclass
-class KeyPrefix(utils.FromStreamMixin):
+class KeyPrefix(utils.FromDecoderMixin):
   """The IndexedDB key prefix.
 
   Attributes:
@@ -111,7 +111,7 @@ class KeyPrefix(utils.FromStreamMixin):
 
 
 @dataclass
-class IDBKey(utils.FromStreamMixin):
+class IDBKey(utils.FromDecoderMixin):
   """An IDBKey.
 
   Attributes:
@@ -199,7 +199,7 @@ class IDBKey(utils.FromStreamMixin):
 
 
 @dataclass
-class IDBKeyPath(utils.FromStreamMixin):
+class IDBKeyPath(utils.FromDecoderMixin):
   """An IDBKeyPath.
 
   Arguments:
@@ -256,7 +256,7 @@ class IDBKeyPath(utils.FromStreamMixin):
 
 
 @dataclass
-class BlobJournalEntry(utils.FromStreamMixin):
+class BlobJournalEntry(utils.FromDecoderMixin):
   """A blob journal entry.
 
   Attributes:
@@ -287,7 +287,7 @@ class BlobJournalEntry(utils.FromStreamMixin):
 
 
 @dataclass
-class BlobJournal(utils.FromStreamMixin):
+class BlobJournal(utils.FromDecoderMixin):
   """A BlobJournal.
 
   Attributes:
@@ -1226,7 +1226,7 @@ class IndexMetaDataKey(BaseIndexedDBKey):
 
 
 @dataclass
-class ExternalObjectEntry(utils.FromStreamMixin):
+class ExternalObjectEntry(utils.FromDecoderMixin):
   """An IndexedDB external object entry.
 
   Args:
@@ -1287,7 +1287,7 @@ class ExternalObjectEntry(utils.FromStreamMixin):
 
 
 @dataclass
-class IndexedDBExternalObject(utils.FromStreamMixin):
+class IndexedDBExternalObject(utils.FromDecoderMixin):
   """An IndexedDB external object.
 
   Args:
@@ -1346,7 +1346,7 @@ class IndexedDBRecord:
 
   @classmethod
   def FromLevelDBRecord(
-      cls, record: Union[ldb.LdbKeyValueRecord, log.ParsedInternalKey]
+      cls, record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(record.key, base_offset=record.offset)
