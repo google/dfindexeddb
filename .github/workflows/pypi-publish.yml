@@ -79,6 +79,7 @@ jobs:
         --verify-tag
         --repo '${{ github.repository }}'
         --notes ""
+        --prerelease
     - name: Upload artifact signatures to GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
