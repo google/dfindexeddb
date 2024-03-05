@@ -29,18 +29,17 @@ class ParsedInternalKey:
 
   Attributes:
     offset: the offset of the record.
-    type: the record type.
+    record_type: the record type.
     sequence_number: the sequence number (inferred from the relative location
         the ParsedInternalKey in a WriteBatch.)
     key: the record key.
     value: the record value.
   """
   offset: int
-  type: int
+  record_type: definitions.InternalRecordType
   sequence_number: int
   key: bytes
   value: bytes
-  __type__: str = 'ParsedInternalKey'
 
   @classmethod
   def FromDecoder(
@@ -65,15 +64,17 @@ class ParsedInternalKey:
     """
     offset, record_type = decoder.DecodeUint8()
     _, key = decoder.DecodeBlobWithLength()
-    if record_type == 1:
+    record_type = definitions.InternalRecordType(record_type)
+
+    if record_type == definitions.InternalRecordType.VALUE:
       _, value = decoder.DecodeBlobWithLength()
-    elif record_type == 0:
+    elif record_type == definitions.InternalRecordType.DELETED:
       value =  b''
     else:
       raise ValueError(f'Invalid record type {record_type}')
     return cls(
         offset=base_offset + offset,
-        type=record_type,
+        record_type=record_type,
         key=key,
         value=value,
         sequence_number=sequence_number)
