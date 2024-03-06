@@ -48,7 +48,7 @@ class LDBTest(unittest.TestCase):
     self.assertEqual(records[0].value, b'test value\x00\x00\x00\x00')
     self.assertEqual(records[0].sequence_number, 0)
     self.assertEqual(
-        records[0].record_type, definitions.InternalRecordType.DELETED)
+        records[0].record_type, definitions.InternalRecordType.VALUE)
 
   def test_range_iter(self):
     """Tests the RangeIter method."""
