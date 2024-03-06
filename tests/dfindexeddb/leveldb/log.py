@@ -93,7 +93,8 @@ class LogTest(unittest.TestCase):
     # 7 (log file record header) + 12 (log file batch header) = 19
     self.assertEqual(records[0].offset, 19)
     self.assertEqual(records[0].value, b'')
-    self.assertEqual(records[0].type, 0)  # deleted
+    self.assertEqual(
+        records[0].record_type, definitions.InternalRecordType.DELETED)
     self.assertEqual(records[0].sequence_number, 3)
 
 

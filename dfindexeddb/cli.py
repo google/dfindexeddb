@@ -38,6 +38,10 @@ _VALID_PRINTABLE_CHARACTERS = (
 class Encoder(json.JSONEncoder):
   """A JSON encoder class for dfindexeddb fields."""
   def default(self, o):
+    if dataclasses.is_dataclass(o):
+      o_dict = dataclasses.asdict(o)
+      o_dict['__type__'] = o.__class__.__name__
+      return o_dict
     if isinstance(o, bytes):
       out = []
       for x in o:
@@ -62,8 +66,7 @@ class Encoder(json.JSONEncoder):
 def _Output(structure, to_json=False):
   """Helper method to output parsed structure to stdout."""
   if to_json:
-    structure_dict = dataclasses.asdict(structure)
-    print(json.dumps(structure_dict, indent=2, cls=Encoder))
+    print(json.dumps(structure, indent=2, cls=Encoder))
   else:
     print(structure)
 

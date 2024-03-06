@@ -36,13 +36,13 @@ class KeyValueRecord:
     key: the key of the record.
     value: the value of the record.
     sequence_number: the sequence number of the record.
-    type: the type of the record.
+    record_type: the type of the record.
   """
   offset: int
   key: bytes
   value: bytes
   sequence_number: int
-  type: int
+  record_type: definitions.InternalRecordType
 
   @classmethod
   def FromDecoder(
@@ -69,9 +69,13 @@ class KeyValueRecord:
     sequence_number = int.from_bytes(
         key[-definitions.SEQUENCE_LENGTH:], byteorder='little', signed=False)
     key_type = shared_key[-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
-
-    return cls(offset + block_offset, key, value, sequence_number,
-               key_type), shared_key
+    record_type = definitions.InternalRecordType(key_type)
+    return cls(
+        offset=offset + block_offset,
+        key=key,
+        value=value,
+        sequence_number=sequence_number,
+        record_type=record_type), shared_key
 
 
 @dataclass

@@ -1357,4 +1357,4 @@ class IndexedDBRecord:
       value=idb_value,
       sequence_number=record.sequence_number if hasattr(
           record, 'sequence_number') else None,
-      type=record.type)
+      type=record.record_type)

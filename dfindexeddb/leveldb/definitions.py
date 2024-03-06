@@ -41,3 +41,9 @@ class LogFilePhysicalRecordType(enum.IntEnum):
   FIRST = 2
   MIDDLE = 3
   LAST = 4
+
+
+class InternalRecordType(enum.IntEnum):
+  """Internal record types."""
+  DELETED = 0
+  VALUE = 1
