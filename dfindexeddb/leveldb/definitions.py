@@ -16,10 +16,20 @@
 
 import enum
 
+BLOCK_RESTART_ENTRY_LENGTH = 4
+BLOCK_TRAILER_SIZE = 5
+TABLE_FOOTER_SIZE = 48
+TABLE_MAGIC = b'\x57\xfb\x80\x8b\x24\x75\x47\xdb'
 
 PACKED_SEQUENCE_AND_TYPE_LENGTH = 8
 SEQUENCE_LENGTH = 7
 TYPE_LENGTH = 1
+
+
+class BlockCompressionType(enum.IntEnum):
+  """Block compression types."""
+  SNAPPY = 1
+  ZSTD = 2
 
 
 class VersionEditTags(enum.IntEnum):
