@@ -92,17 +92,13 @@ class Block:
   data: bytes = field(repr=False)
   footer: bytes  # 5 bytes = 1 byte compressed flag + 4 bytes checksum.
 
-  SNAPPY_COMPRESSED = 1
-  ZSTD_COMPRESSED = 2
-  RESTART_ENTRY_LENGTH = 4
-
   def IsSnappyCompressed(self) -> bool:
     """Returns true if the block is snappy compressed."""
-    return self.footer[0] == self.SNAPPY_COMPRESSED
+    return self.footer[0] == definitions.BlockCompressionType.SNAPPY
 
   def IsZstdCompressed(self) -> bool:
     """Returns true if the block is zstd compressed."""
-    return self.footer[0] == self.ZSTD_COMPRESSED
+    return self.footer[0] == definitions.BlockCompressionType.ZSTD
 
   def GetBuffer(self) -> bytes:
     """Returns the block buffer, decompressing if required."""
@@ -125,10 +121,11 @@ class Block:
     # trailer of a block has the form:
     #    restarts: uint32[num_restarts]
     #    num_restarts: uint32
-    decoder.stream.seek(-self.RESTART_ENTRY_LENGTH, os.SEEK_END)
+    decoder.stream.seek(-definitions.BLOCK_RESTART_ENTRY_LENGTH, os.SEEK_END)
     _, num_restarts = decoder.DecodeUint32()
     restarts_offset = (
-        decoder.stream.tell()) - (num_restarts + 1) * self.RESTART_ENTRY_LENGTH
+        decoder.stream.tell()) - (
+            (num_restarts + 1) * definitions.BLOCK_RESTART_ENTRY_LENGTH)
 
     decoder.stream.seek(restarts_offset)
     _, offset = decoder.DecodeUint32()
@@ -158,8 +155,6 @@ class BlockHandle(utils.FromDecoderMixin):
   block_offset: int
   length: int
 
-  BLOCK_TRAILER_SIZE = 5
-
   def Load(self, stream: BinaryIO) -> Block:
     """Loads the block data.
 
@@ -177,8 +172,8 @@ class BlockHandle(utils.FromDecoderMixin):
     if len(data) != self.length:
       raise ValueError('Could not read all of the block')
 
-    footer = stream.read(self.BLOCK_TRAILER_SIZE)
-    if len(footer) != self.BLOCK_TRAILER_SIZE:
+    footer = stream.read(definitions.BLOCK_TRAILER_SIZE)
+    if len(footer) != definitions.BLOCK_TRAILER_SIZE:
       raise ValueError('Could not read all of the block footer')
 
     return Block(self.offset, self.block_offset, self.length, data, footer)
@@ -212,9 +207,6 @@ class FileReader:
   * records (KeyValueRecord)
   """
 
-  FOOTER_SIZE = 48
-  MAGIC = b'\x57\xfb\x80\x8b\x24\x75\x47\xdb'
-
   def __init__(self, filename: str):
     """Initializes the LogFile.
 
@@ -226,11 +218,11 @@ class FileReader:
     """
     self.filename = filename
     with open(self.filename, 'rb') as fh:
-      fh.seek(-len(self.MAGIC), os.SEEK_END)
-      if fh.read(len(self.MAGIC)) != self.MAGIC:
+      fh.seek(-len(definitions.TABLE_MAGIC), os.SEEK_END)
+      if fh.read(len(definitions.TABLE_MAGIC)) != definitions.TABLE_MAGIC:
         raise ValueError(f'Invalid magic number in {self.filename}')
 
-      fh.seek(-self.FOOTER_SIZE, os.SEEK_END)
+      fh.seek(-definitions.TABLE_FOOTER_SIZE, os.SEEK_END)
       # meta_handle, need to read first due to variable integers
       _ = BlockHandle.FromStream(fh)
       index_handle = BlockHandle.FromStream(fh)
