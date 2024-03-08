@@ -77,7 +77,7 @@ class ChromeNotificationRecord:
     record.offset = ldb_record.offset
     record.key = ldb_record.key.decode()
     record.sequence_number = ldb_record.sequence_number  
-    record.type = ldb_record.type
+    record.type = ldb_record.record_type
 
     if not ldb_record.value:
       return record

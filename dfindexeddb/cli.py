@@ -31,7 +31,7 @@ from dfindexeddb.indexeddb import v8
 
 
 _VALID_PRINTABLE_CHARACTERS = (
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' +
+    ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' +
     '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~.')
 
 

@@ -86,7 +86,8 @@ class V8ScriptValueDecoder:
       NotImplementedError: when called.
     """
     tag = self.ReadTag()
-    raise NotImplementedError(f'V8ScriptValueDecoder.ReadHostObject - {tag}')
+    raise NotImplementedError(
+        f'V8ScriptValueDecoder.ReadHostObject - {tag.name}')
 
   def Deserialize(self) -> Any:
     """Deserializes a Blink SSV.

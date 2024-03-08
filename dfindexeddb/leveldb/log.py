@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 import io
 from typing import BinaryIO, Generator, Iterable, Optional
 
+from dfindexeddb import errors
 from dfindexeddb import utils
 from dfindexeddb.leveldb import definitions
 
@@ -164,8 +165,13 @@ class PhysicalRecord(utils.FromDecoderMixin):
     """
     offset, checksum = decoder.DecodeUint32()
     _, length = decoder.DecodeUint16()
-    record_type = definitions.LogFilePhysicalRecordType(
-        decoder.DecodeUint8()[1])
+    _, record_type_byte = decoder.DecodeUint8()
+    try:
+      record_type = definitions.LogFilePhysicalRecordType(record_type_byte)
+    except ValueError as error:
+      raise errors.ParserError(
+          f'Error parsing record type of Physical Record at offset '
+          f'{offset + base_offset}') from error
     contents_offset, contents = decoder.ReadBytes(length)
     return cls(
         base_offset=base_offset,
