@@ -4,9 +4,9 @@ dfindexeddb is an experimental Python tool for performing digital forensic
 analysis of IndexedDB and leveldb files.
 
 It parses leveldb, IndexedDB and javascript structures from these files without
-requiring native libraries.  (Note: currently only a subset of IndexedDB key 
-types and Javascript types for Chromium-based browsers are supported.  Safari 
-and Firefox are under development.)
+requiring native libraries.  (Note: only a subset of IndexedDB key types and 
+Javascript types for Chromium-based browsers are currently supported.  Safari 
+and Firefox are under development).
 
 The content of IndexedDB files is dependent on what a web application stores
 locally/offline using the web browser's
@@ -70,48 +70,28 @@ options:
   --json                Output as JSON
 ```
 
-To parse a LevelDB .log file:
+To parse a LevelDB log (.log) file, use the following command:
 
 ```
-$ dfindexeddb -s <SOURCE> log -h
-usage: dfindexeddb log [-h] {blocks,physical_records,write_batches,parsed_internal_key,records}
-
-positional arguments:
-  {blocks,physical_records,write_batches,parsed_internal_key,records}
-
-options:
-  -h, --help            show this help message and exit
+$ dfindexeddb -s <SOURCE> [--json] log {blocks,physical_records,write_batches,parsed_internal_key,records}
 ```
 
-To parse a LevelDB .ldb file:
+Note: `records` is an alias for `parsed_internal_key`.
+
+To parse a LevelDB table (.ldb) file, use the following command:
 
 ```
-$ dfindexeddb -s <SOURCE> ldb -h
-usage: dfindexeddb ldb [-h] {blocks,records}
-
-positional arguments:
-  {blocks,records}
-
-options:
-  -h, --help        show this help message and exit
+$ dfindexeddb -s <SOURCE> [--json] ldb {blocks,records}
 ```
 
-To parse a LevelDB .ldb or .log file as IndexedDB:
+To parse a LevelDB table/log file as IndexedDB:
 
 ```
-$ dfindexeddb -s <SOURCE> indexeddb -h
-usage: dfindexeddb indexeddb [-h]
-
-options:
-  -h, --help  show this help message and exit
+$ dfindexeddb -s <SOURCE> [--json] indexeddb
 ```
 
 To parse a Descriptor (MANIFEST) file:
 
 ```
-$ dfindexeddb -s <SOURCE> manifest -h
-usage: dfindexeddb manifest [-h]
-
-options:
-  -h, --help  show this help message and exit
+$ dfindexeddb -s <SOURCE> [--json] manifest
 ```
