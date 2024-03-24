@@ -38,7 +38,6 @@ class Encoder(json.JSONEncoder):
   def default(self, o):
     if dataclasses.is_dataclass(o):
       o_dict = dataclasses.asdict(o)
-      #o_dict['__type__'] = o.__class__.__name__
       return o_dict
     if isinstance(o, bytes):
       out = []
@@ -71,19 +70,19 @@ def _Output(structure, to_json=False):
 
 def IndexeddbCommand(args):
   """The CLI for processing a log/ldb file as indexeddb."""
-  for record_path in leveldb_record.LevelDBRecord.FromDir(args.source):
+  for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
+    record = db_record.record
     try:
-      record = record_path.record
-      record_path.record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
+      db_record.record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
     except(
         errors.ParserError,
         errors.DecoderError,
         NotImplementedError) as err:
       print(
           (f'Error parsing blink value: {err} for {record.__class__.__name__} '
-           f'at offset {record.offset} in {record_path.path}'), file=sys.stderr)
+           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
       print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-    _Output(record_path, to_json=args.json)
+    _Output(db_record, to_json=args.json)
 
 
 def App():
