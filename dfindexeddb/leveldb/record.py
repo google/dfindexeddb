@@ -60,7 +60,10 @@ class LevelDBRecord:
     elif file_path.name.endswith('.ldb'):
       for record in ldb.FileReader(file_path).GetKeyValueRecords():
         yield cls(path=file_path.as_posix(), record=record)
-    elif file_path.name.startswith('MANIFEST') and include_versionedit:
+    elif file_path.name.startswith('MANIFEST'):
+      if not include_versionedit:
+        print(f'Ignoring {file_path.as_posix()}', file=sys.stderr)
+        return
       for record in descriptor.FileReader(file_path).GetVersionEdits():
         yield cls(path=file_path.as_posix(), record=record)
     elif file_path.name in ('LOCK', 'CURRENT', 'LOG', 'LOG.old'):
