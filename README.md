@@ -4,8 +4,8 @@ dfindexeddb is an experimental Python tool for performing digital forensic
 analysis of IndexedDB and leveldb files.
 
 It parses leveldb, IndexedDB and javascript structures from these files without
-requiring native libraries.  (Note: only a subset of IndexedDB key types and 
-Javascript types for Chromium-based browsers are currently supported.  Safari 
+requiring native libraries.  (Note: only a subset of IndexedDB key types and
+Javascript types for Chromium-based browsers are currently supported.  Safari
 and Firefox are under development).
 
 The content of IndexedDB files is dependent on what a web application stores
@@ -53,45 +53,56 @@ include:
 
 ## Usage
 
-A CLI tool is available after installation:
+Two CLI tools are available after installation:
+
+### LevelDB
+
+```
+$ dfleveldb -h
+usage: dfleveldb [-h] {db,log,ldb,descriptor} ...
+
+A cli tool for parsing leveldb files
+
+positional arguments:
+  {db,log,ldb,descriptor}
+    db                  Parse a directory as leveldb.
+    log                 Parse a leveldb log file.
+    ldb                 Parse a leveldb table (.ldb) file.
+    descriptor          Parse a leveldb descriptor (MANIFEST) file.
+
+options:
+  -h, --help            show this help message and exit
+```
+
+To parse records from a LevelDB log (.log) file, use the following command:
+
+```
+$ dfleveldb log -s <SOURCE> [--json]
+```
+
+To parse records from a LevelDB table (.ldb) file, use the following command:
+
+```
+$ dfleveldb ldb -s <SOURCE> [--json]
+```
+
+To parse version edit records from a Descriptor (MANIFEST) file:
+
+```
+$ dfleveldb descriptor -s <SOURCE> [--json]
+```
+
+### IndexedDB
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] -s SOURCE [--json] {log,ldb,indexeddb,manifest} ...
+usage: dfindexeddb [-h] -s SOURCE [--json]
 
-A cli tool for the dfindexeddb package
-
-positional arguments:
-  {log,ldb,indexeddb,manifest}
+A cli tool for parsing indexeddb files
 
 options:
+  -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
-                        The source leveldb file
+                        The source leveldb folder
   --json                Output as JSON
-```
-
-To parse a LevelDB log (.log) file, use the following command:
-
-```
-$ dfindexeddb -s <SOURCE> [--json] log {blocks,physical_records,write_batches,parsed_internal_key,records}
-```
-
-Note: `records` is an alias for `parsed_internal_key`.
-
-To parse a LevelDB table (.ldb) file, use the following command:
-
-```
-$ dfindexeddb -s <SOURCE> [--json] ldb {blocks,records}
-```
-
-To parse a LevelDB table/log file as IndexedDB:
-
-```
-$ dfindexeddb -s <SOURCE> [--json] indexeddb
-```
-
-To parse a Descriptor (MANIFEST) file:
-
-```
-$ dfindexeddb -s <SOURCE> [--json] manifest
 ```
