@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utilities for dfindexeddb."""
+from __future__ import annotations
 import io
 import os
 import struct
@@ -206,48 +207,6 @@ class StreamDecoder:
     return self.DecodeZigzagVarint(max_bytes=10)
 
 
-
-class LevelDBDecoder(StreamDecoder):
-  """A helper class to decode data types from LevelDB files."""
-
-  def DecodeBool(self) -> Tuple[int, bool]:
-    """Returns a Tuple of the offset of decoding and the bool value."""
-    offset, buffer = self.ReadBytes(1)
-    return offset, buffer[0] is not None
-
-  def DecodeString(self) -> Tuple[int, str]:
-    """Returns a tuple of the offset of decoding and the string value.
-
-    Raises:
-      errors.DecoderError: when the parsed string buffer is not even (i.e.
-          cannot be decoded as a UTF-16-BE string.
-    """
-    offset = self.stream.tell()
-    buffer = self.stream.read()
-    if len(buffer) % 2:
-      raise errors.DecoderError(
-          f'Odd number of bytes encountered at offset {offset}')
-    return offset, buffer.decode('utf-16-be')
-
-  def DecodeLengthPrefixedSlice(self) -> Tuple[int, bytes]:
-    """Returns a tuple of the offset of decoding and the byte 'slice'."""
-    offset, num_bytes = self.DecodeUint32Varint()
-    _, blob = self.ReadBytes(num_bytes)
-    return offset, blob
-
-  def DecodeBlobWithLength(self) -> Tuple[int, bytes]:
-    """Returns a tuple of a the offset of decoding and the binary blob."""
-    offset, num_bytes = self.DecodeUint64Varint()
-    _, blob = self.ReadBytes(num_bytes)
-    return offset, blob
-
-  def DecodeStringWithLength(self, encoding='utf-16-be') -> Tuple[int, str]:
-    """Returns a tuple of the offset of decoding and the string value."""
-    offset, length = self.DecodeUint64Varint()
-    _, buffer = self.ReadBytes(length*2)
-    return offset, buffer.decode(encoding=encoding)
-
-
 T = TypeVar('T')
 
 
@@ -256,11 +215,11 @@ class FromDecoderMixin:
 
   @classmethod
   def FromDecoder(
-      cls: Type[T], decoder: LevelDBDecoder, base_offset: int = 0) -> T:
-    """Decodes a class type from the current position of a LevelDBDecoder.
+      cls: Type[T], decoder: StreamDecoder, base_offset: int = 0) -> T:
+    """Decodes a class type from the current position of a StreamDecoder.
 
     Args:
-      decoder: the LevelDBDecoder.
+      decoder: the StreamDecoder.
       base_offset: the base offset.
 
     Returns:
@@ -283,7 +242,7 @@ class FromDecoderMixin:
     Returns:
       The class instance.
     """
-    decoder = LevelDBDecoder(stream)
+    decoder = StreamDecoder(stream)
     return cls.FromDecoder(decoder=decoder, base_offset=base_offset)
 
   @classmethod

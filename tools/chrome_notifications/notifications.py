@@ -133,7 +133,7 @@ def Main(indexeddb_path):
       continue
     if filename.name.endswith('.log'):
       leveldb_records = list(
-          log.FileReader(filename.as_posix()).GetKeyValueRecords())
+          log.FileReader(filename.as_posix()).GetParsedInternalKeys())
     elif filename.name.endswith('.ldb'):
       leveldb_records = list(
           ldb.FileReader(filename.as_posix()).GetKeyValueRecords())

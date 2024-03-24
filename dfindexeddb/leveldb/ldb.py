@@ -23,8 +23,8 @@ from typing import BinaryIO, Iterable, Tuple
 import snappy
 import zstd
 
-from dfindexeddb import utils
 from dfindexeddb.leveldb import definitions
+from dfindexeddb.leveldb import utils
 
 
 @dataclass

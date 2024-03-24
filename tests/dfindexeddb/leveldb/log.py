@@ -87,7 +87,7 @@ class LogTest(unittest.TestCase):
     """Tests the GetKeyValueRecords method."""
     log_file = log.FileReader(
         './test_data/leveldb/delete large key/000006.log')
-    records = list(log_file.GetKeyValueRecords())
+    records = list(log_file.GetParsedInternalKeys())
     self.assertIsInstance(records[0], log.ParsedInternalKey)
     self.assertEqual(records[0].key, b'AAAAAAAA'*1024*1024)
     # 7 (log file record header) + 12 (log file batch header) = 19
