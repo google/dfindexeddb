@@ -53,7 +53,24 @@ include:
 
 ## Usage
 
-Two CLI tools are available after installation:
+Two CLI tools for parsing IndexedDB/leveldb files are available after
+installation:
+
+
+### IndexedDB
+
+```
+$ dfindexeddb -h
+usage: dfindexeddb [-h] -s SOURCE [--json]
+
+A cli tool for parsing indexeddb files
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source leveldb folder
+  --json                Output as JSON
+```
 
 ### LevelDB
 
@@ -90,19 +107,4 @@ To parse version edit records from a Descriptor (MANIFEST) file:
 
 ```
 $ dfleveldb descriptor -s <SOURCE> [--json]
-```
-
-### IndexedDB
-
-```
-$ dfindexeddb -h
-usage: dfindexeddb [-h] -s SOURCE [--json]
-
-A cli tool for parsing indexeddb files
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source leveldb folder
-  --json                Output as JSON
 ```
