@@ -19,9 +19,9 @@ from dataclasses import dataclass, field
 from typing import Generator, Optional
 
 from dfindexeddb import errors
-from dfindexeddb.leveldb import utils
 from dfindexeddb.leveldb import definitions
 from dfindexeddb.leveldb import log
+from dfindexeddb.leveldb import utils
 
 
 @dataclass

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A class to represent records from LevelDB files."""
+"""A module for records from LevelDB files."""
 from __future__ import annotations
 import dataclasses
 import pathlib
@@ -29,7 +29,7 @@ class LevelDBRecord:
   """A leveldb record.
 
   A record can come from a log file, a table (ldb) file or a descriptor
-  (manifest) file.
+  (MANIFEST) file.
 
   Attributes:
     path: the file path where the record was parsed from.
@@ -37,7 +37,9 @@ class LevelDBRecord:
   """
   path: str
   record: Union[
-      ldb.KeyValueRecord | log.ParsedInternalKey | descriptor.VersionEdit]
+      ldb.KeyValueRecord,
+      log.ParsedInternalKey,
+      descriptor.VersionEdit]
 
   @classmethod
   def FromFile(
@@ -55,16 +57,18 @@ class LevelDBRecord:
       include_versionedit: include VersionEdit records from descriptor files.
     """
     if file_path.name.endswith('.log'):
-      for record in log.FileReader(file_path).GetParsedInternalKeys():
+      for record in log.FileReader(
+          file_path.as_posix()).GetParsedInternalKeys():
         yield cls(path=file_path.as_posix(), record=record)
     elif file_path.name.endswith('.ldb'):
-      for record in ldb.FileReader(file_path).GetKeyValueRecords():
+      for record in ldb.FileReader(file_path.as_posix()).GetKeyValueRecords():
         yield cls(path=file_path.as_posix(), record=record)
     elif file_path.name.startswith('MANIFEST'):
       if not include_versionedit:
         print(f'Ignoring {file_path.as_posix()}', file=sys.stderr)
         return
-      for record in descriptor.FileReader(file_path).GetVersionEdits():
+      for record in descriptor.FileReader(
+          file_path.as_posix()).GetVersionEdits():
         yield cls(path=file_path.as_posix(), record=record)
     elif file_path.name in ('LOCK', 'CURRENT', 'LOG', 'LOG.old'):
       print(f'Ignoring {file_path.as_posix()}', file=sys.stderr)
