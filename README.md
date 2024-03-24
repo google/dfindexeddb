@@ -25,7 +25,7 @@ include:
     $ sudo apt install libsnappy-dev
 ```
 
-2. Create a virutal environemnt and install the package
+2. Create a virtual environment and install the package
 
 ```
     $ python3 -m venv .venv
@@ -43,7 +43,7 @@ include:
 
 2. Clone or download/unzip the repository to your local machine.
 
-3. Create a virutal environemnt and install the package
+3. Create a virtual environment and install the package
 
 ```
     $ python3 -m venv .venv
