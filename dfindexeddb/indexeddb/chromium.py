@@ -570,7 +570,7 @@ class EarlistCompactionTimeKey(BaseIndexedDBKey):
 class ScopesPrefixKey(BaseIndexedDBKey):
   """A scopes prefix IndexedDB key."""
 
-  def DecodeValue(self, decoder: utils.StreamDecoder) -> Optional[bytes]:
+  def DecodeValue(self, decoder: utils.LevelDBDecoder) -> Optional[bytes]:
     """Decodes the scopes prefix value."""
     if decoder.NumRemainingBytes:
       return decoder.ReadBytes()[1]
@@ -578,7 +578,7 @@ class ScopesPrefixKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.StreamDecoder, key_prefix: KeyPrefix,
+      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ScopesPrefixKey:
     """Decodes the scopes prefix key."""
