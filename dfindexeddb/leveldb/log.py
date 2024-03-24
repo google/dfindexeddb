@@ -15,13 +15,13 @@
 """Parser for LevelDB Log (.log) files."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import io
 from typing import BinaryIO, Generator, Iterable, Optional
 
 from dfindexeddb import errors
-from dfindexeddb import utils
 from dfindexeddb.leveldb import definitions
+from dfindexeddb.leveldb import utils
 
 
 @dataclass
@@ -94,7 +94,7 @@ class WriteBatch(utils.FromDecoderMixin):
   offset: int
   sequence_number: int
   count: int
-  records: Iterable[ParsedInternalKey] = field(repr=False)
+  records: Iterable[ParsedInternalKey]
 
   @classmethod
   def FromDecoder(
@@ -144,7 +144,7 @@ class PhysicalRecord(utils.FromDecoderMixin):
   checksum: int
   length: int
   record_type: definitions.LogFilePhysicalRecordType
-  contents: bytes = field(repr=False)
+  contents: bytes
   contents_offset: int
 
   PHYSICAL_HEADER_LENGTH = 7
@@ -192,7 +192,7 @@ class Block:
     data: the block data.
   """
   offset: int
-  data: bytes = field(repr=False)
+  data: bytes
 
   BLOCK_SIZE = 32768
 
@@ -283,7 +283,7 @@ class FileReader:
     """
     buffer = bytearray()
     for physical_record in self.GetPhysicalRecords():
-      if(physical_record.record_type ==
+      if (physical_record.record_type ==
          definitions.LogFilePhysicalRecordType.FULL):
         buffer = physical_record.contents
         offset = physical_record.contents_offset + physical_record.base_offset
@@ -302,13 +302,13 @@ class FileReader:
         yield WriteBatch.FromBytes(buffer, base_offset=offset)
         buffer = bytearray()
 
-  def GetKeyValueRecords(self) -> Generator[ParsedInternalKey, None, None]:
-    """Returns an iterator of KeyValueRecord instances.
+  def GetParsedInternalKeys(self) -> Generator[ParsedInternalKey, None, None]:
+    """Returns an iterator of ParsedInternalKey instances.
 
-    A batch can contain on or more key value records.
+    A batch can contain one or more key value records.
 
     Yields:
-      KeyValueRecord
+      ParsedInternalKey
     """
     for batch in self.GetWriteBatches():
       yield from batch.records

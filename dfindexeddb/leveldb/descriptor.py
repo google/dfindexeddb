@@ -12,17 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for LevelDB Manifest files."""
+"""Parser for LevelDB Descriptor (MANIFEST) files."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Generator, Optional
 
 from dfindexeddb import errors
-from dfindexeddb import utils
+from dfindexeddb.leveldb import utils
 from dfindexeddb.leveldb import definitions
 from dfindexeddb.leveldb import log
-
 
 
 @dataclass
@@ -43,7 +42,7 @@ class InternalKey:
   @classmethod
   def FromDecoder(
       cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> InternalKey:
-    """Decodes a InternalKey from the current position of a LevelDBDecoder.
+    """Decodes an InternalKey from the current position of a LevelDBDecoder.
 
     Args:
       decoder: the LevelDBDecoder.
@@ -78,7 +77,7 @@ class NewFile(utils.FromDecoderMixin):
   Attributes:
     offset: the offset.
     level: the level.
-    number: the number.
+    number: the file number.
     file_size: the file size.
     smallest: the smallest internal key.
     largest: the largest internal key.
@@ -119,7 +118,7 @@ class NewFile(utils.FromDecoderMixin):
 
 @dataclass
 class CompactPointer(utils.FromDecoderMixin):
-  """A NewFile.
+  """A CompactPointer.
 
   Attributes:
     offset: the offset.
@@ -155,7 +154,7 @@ class DeletedFile(utils.FromDecoderMixin):
   Attributes:
     offset: the offset.
     level: the level.
-    number: the number.
+    number: the file number.
   """
   offset: int
   level: int
@@ -260,12 +259,12 @@ class VersionEdit(utils.FromDecoderMixin):
 
 
 class FileReader:
-  """A Descriptor file reader.
-  
+  """A reader for Descriptor files.
+
   A DescriptorFileReader provides read-only sequential iteration of serialized
   structures in a leveldb Descriptor file.  These structures include:
-  * blocks (log.Block)
-  * records (log.PhysicalRecords)
+  * blocks (Block)
+  * records (PhysicalRecord)
   * version edits (VersionEdit)
   """
   def __init__(self, filename: str):
