@@ -14,7 +14,7 @@
 # limitations under the License.
 """Parser for LevelDB Descriptor (MANIFEST) files."""
 from __future__ import annotations
-
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Generator, Optional
 
@@ -35,7 +35,7 @@ class InternalKey:
     key_type: the key type.
   """
   offset: int
-  user_key: bytes = field(repr=False)
+  user_key: bytes
   sequence_number: int
   key_type: int
 
@@ -127,7 +127,7 @@ class CompactPointer(utils.FromDecoderMixin):
   """
   offset: int
   level: int
-  key: bytes = field(repr=False)
+  key: bytes
 
   @classmethod
   def FromDecoder(
@@ -258,6 +258,27 @@ class VersionEdit(utils.FromDecoderMixin):
     return version_edit
 
 
+@dataclass
+class LevelDBVersion:
+  """A LevelDBVersion.
+  
+  A LevelDBVersion represents the current state of the table files and log file
+  that are currently "active".  The current state is determined by the sequence
+  of VersionEdits that are parsed from a descriptor file.
+  
+  Active files can contain overlapping keys in the current log file and the
+  "young" or 0-level.
+
+  "Deleted files" will typically no longer exist but may be forensically 
+  recoverable.
+  """
+  current_log: int
+  version_edit_offset: int
+  last_sequence: int
+  active_files: dict[int, dict[int, NewFile]]
+  deleted_files: dict[int, dict[int, DeletedFile]]
+
+
 class FileReader:
   """A reader for Descriptor files.
 
@@ -332,3 +353,30 @@ class FileReader:
         version_edit = VersionEdit.FromBytes(buffer, base_offset=offset)
         yield version_edit
         buffer = bytearray()
+
+  def GetVersions(self) -> Generator[LevelDBVersion, None, None]:
+    """Returns an iterator of LevelDBVersion instances.
+  
+    Yields:
+      LevelDBVersion
+    """
+    active_files = defaultdict(dict)
+    deleted_files = defaultdict(set)
+    current_log = None
+    
+    for version_edit in self.GetVersionEdits():
+      current_log = f'{version_edit.log_number:06d}.log'
+      
+      for new_file in version_edit.new_files:
+        active_files[new_file.level][f'{new_file.number:06d}.ldb'] = new_file
+      
+      for deleted_file in version_edit.deleted_files:
+        active_files[deleted_file.level].pop(f'{deleted_file.number:06d}.ldb')
+        deleted_files[deleted_file.level].add(f'{deleted_file.number:06d}.ldb')
+      
+      yield LevelDBVersion(
+          current_log=current_log, 
+          active_files=dict(active_files), 
+          deleted_files=dict(deleted_files),
+          version_edit_offset=version_edit.offset,
+          last_sequence=version_edit.last_sequence)
