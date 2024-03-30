@@ -124,7 +124,7 @@ def DescriptorCommand(args):
   if args.version_history:
     for levels in manifest_file.GetVersions():
       _Output(levels, output=args.output)
-      
+
   elif args.structure_type == 'blocks':
     # Prints block information.
     for block in manifest_file.GetBlocks():
@@ -161,7 +161,7 @@ def App():
       help='The source leveldb directory')
   parser_db.add_argument(
       '-o',
-      '--output', 
+      '--output',
       choices=[
           'json',
           'jsonl',
@@ -178,7 +178,7 @@ def App():
       help='The source leveldb file')
   parser_log.add_argument(
       '-o',
-      '--output', 
+      '--output',
       choices=[
           'json',
           'jsonl',
@@ -205,7 +205,7 @@ def App():
       help='The source leveldb file')
   parser_ldb.add_argument(
       '-o',
-      '--output', 
+      '--output',
       choices=[
           'json',
           'jsonl',
@@ -230,7 +230,7 @@ def App():
       help='The source leveldb file')
   parser_descriptor.add_argument(
       '-o',
-      '--output', 
+      '--output',
       choices=[
           'json',
           'jsonl',

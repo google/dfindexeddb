@@ -60,7 +60,7 @@ class Encoder(json.JSONEncoder):
     return json.JSONEncoder.default(self, o)
 
 
-def _Output(structure, to_json=False):
+def _Output(structure, output):
   """Helper method to output parsed structure to stdout."""
   if output == 'json':
     print(json.dumps(structure, indent=2, cls=Encoder))
@@ -99,7 +99,7 @@ def App():
       help='The source leveldb folder')
   parser.add_argument(
       '-o',
-      '--output', 
+      '--output',
       choices=[
           'json',
           'jsonl',

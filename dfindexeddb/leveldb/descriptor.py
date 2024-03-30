@@ -261,15 +261,15 @@ class VersionEdit(utils.FromDecoderMixin):
 @dataclass
 class LevelDBVersion:
   """A LevelDBVersion.
-  
+
   A LevelDBVersion represents the current state of the table files and log file
   that are currently "active".  The current state is determined by the sequence
   of VersionEdits that are parsed from a descriptor file.
-  
+
   Active files can contain overlapping keys in the current log file and the
   "young" or 0-level.
 
-  "Deleted files" will typically no longer exist but may be forensically 
+  "Deleted files" will typically no longer exist but may be forensically
   recoverable.
   """
   current_log: int
@@ -356,27 +356,27 @@ class FileReader:
 
   def GetVersions(self) -> Generator[LevelDBVersion, None, None]:
     """Returns an iterator of LevelDBVersion instances.
-  
+
     Yields:
       LevelDBVersion
     """
     active_files = defaultdict(dict)
     deleted_files = defaultdict(set)
     current_log = None
-    
+
     for version_edit in self.GetVersionEdits():
       current_log = f'{version_edit.log_number:06d}.log'
-      
+
       for new_file in version_edit.new_files:
         active_files[new_file.level][f'{new_file.number:06d}.ldb'] = new_file
-      
+
       for deleted_file in version_edit.deleted_files:
         active_files[deleted_file.level].pop(f'{deleted_file.number:06d}.ldb')
         deleted_files[deleted_file.level].add(f'{deleted_file.number:06d}.ldb')
-      
+
       yield LevelDBVersion(
-          current_log=current_log, 
-          active_files=dict(active_files), 
+          current_log=current_log,
+          active_files=dict(active_files),
           deleted_files=dict(deleted_files),
           version_edit_offset=version_edit.offset,
           last_sequence=version_edit.last_sequence)
