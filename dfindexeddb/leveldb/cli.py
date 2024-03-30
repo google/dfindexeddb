@@ -54,18 +54,20 @@ class Encoder(json.JSONEncoder):
     return json.JSONEncoder.default(self, o)
 
 
-def _Output(structure, to_json=False):
+def _Output(structure, output):
   """Helper method to output parsed structure to stdout."""
-  if to_json:
+  if output == 'json':
     print(json.dumps(structure, indent=2, cls=Encoder))
-  else:
+  elif output == 'jsonl':
+    print(json.dumps(structure, cls=Encoder))
+  elif output == 'repr':
     print(structure)
 
 
 def DbCommand(args):
   """The CLI for processing leveldb folders."""
   for rec in record.LevelDBRecord.FromDir(args.source):
-    _Output(rec, to_json=args.json)
+    _Output(rec, output=args.output)
 
 
 def LdbCommand(args):
@@ -75,12 +77,12 @@ def LdbCommand(args):
   if args.structure_type == 'blocks':
     # Prints block information.
     for block in ldb_file.GetBlocks():
-      _Output(block, to_json=args.json)
+      _Output(block, output=args.output)
 
   elif args.structure_type == 'records' or not args.structure_type:
     # Prints key value record information.
     for key_value_record in ldb_file.GetKeyValueRecords():
-      _Output(key_value_record, to_json=args.json)
+      _Output(key_value_record, output=args.output)
 
   else:
     print(f'{args.structure_type} is not supported for ldb files.')
@@ -93,23 +95,23 @@ def LogCommand(args):
   if args.structure_type == 'blocks':
     # Prints block information.
     for block in log_file.GetBlocks():
-      _Output(block, to_json=args.json)
+      _Output(block, output=args.output)
 
   elif args.structure_type == 'physical_records':
     # Prints log file physical record information.
     for log_file_record in log_file.GetPhysicalRecords():
-      _Output(log_file_record, to_json=args.json)
+      _Output(log_file_record, output=args.output)
 
   elif args.structure_type == 'write_batches':
     # Prints log file batch information.
     for batch in log_file.GetWriteBatches():
-      _Output(batch, to_json=args.json)
+      _Output(batch, output=args.output)
 
   elif (args.structure_type in ('parsed_internal_key', 'records')
         or not args.structure_type):
     # Prints key value record information.
     for internal_key_record in log_file.GetParsedInternalKeys():
-      _Output(internal_key_record, to_json=args.json)
+      _Output(internal_key_record, output=args.output)
 
   else:
     print(f'{args.structure_type} is not supported for log files.')
@@ -119,20 +121,24 @@ def DescriptorCommand(args):
   """The CLI for processing descriptor (MANIFEST) files."""
   manifest_file = descriptor.FileReader(args.source)
 
-  if args.structure_type == 'blocks':
+  if args.version_history:
+    for levels in manifest_file.GetVersions():
+      _Output(levels, output=args.output)
+      
+  elif args.structure_type == 'blocks':
     # Prints block information.
     for block in manifest_file.GetBlocks():
-      _Output(block, to_json=args.json)
+      _Output(block, output=args.output)
 
   elif args.structure_type == 'physical_records':
     # Prints log file physical record information.
     for log_file_record in manifest_file.GetPhysicalRecords():
-      _Output(log_file_record, to_json=args.json)
+      _Output(log_file_record, output=args.output)
 
   elif (args.structure_type == 'versionedit'
         or not args.structure_type):
     for version_edit in manifest_file.GetVersionEdits():
-      _Output(version_edit, to_json=args.json)
+      _Output(version_edit, output=args.output)
 
   else:
     print(f'{args.structure_type} is not supported for descriptor files.')
@@ -154,8 +160,14 @@ def App():
       type=pathlib.Path,
       help='The source leveldb directory')
   parser_db.add_argument(
-      '--json', action='store_true', help='Output as JSON')
-  parser_db.set_defaults(func=DbCommand)
+      '-o',
+      '--output', 
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
 
   parser_log = subparsers.add_parser(
       'log', help='Parse a leveldb log file.')
@@ -165,7 +177,14 @@ def App():
       type=pathlib.Path,
       help='The source leveldb file')
   parser_log.add_argument(
-      '--json', action='store_true', help='Output as JSON')
+      '-o',
+      '--output', 
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
   parser_log.add_argument(
       '-t',
       '--structure_type',
@@ -173,7 +192,8 @@ def App():
           'blocks',
           'physical_records',
           'write_batches',
-          'parsed_internal_key'])
+          'parsed_internal_key'],
+      help='Parses the specified structure.  Default is parsed_internal_key.')
   parser_log.set_defaults(func=LogCommand)
 
   parser_ldb = subparsers.add_parser(
@@ -184,13 +204,21 @@ def App():
       type=pathlib.Path,
       help='The source leveldb file')
   parser_ldb.add_argument(
-      '--json', action='store_true', help='Output as JSON')
+      '-o',
+      '--output', 
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
   parser_ldb.add_argument(
       '-t',
       '--structure_type',
       choices=[
           'blocks',
-          'records'])
+          'records'],
+      help='Parses the specified structure.  Default is records.')
   parser_ldb.set_defaults(func=LdbCommand)
 
   parser_descriptor = subparsers.add_parser(
@@ -201,12 +229,27 @@ def App():
       type=pathlib.Path,
       help='The source leveldb file')
   parser_descriptor.add_argument(
-      '--json', action='store_true', help='Output as JSON')
-  parser_descriptor.add_argument(
+      '-o',
+      '--output', 
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  db_group = parser_descriptor.add_mutually_exclusive_group()
+  db_group.add_argument(
       '-t',
       '--structure_type',
       choices=[
-          'blocks', 'physical_records', 'versionedit'])
+          'blocks', 'physical_records', 'versionedit'],
+      help='Parses the specified structure.  Default is versionedit.')
+  db_group.add_argument(
+      '-v',
+      '--version_history',
+      action='store_true',
+      help='Parses the leveldb version history.'
+  )
   parser_descriptor.set_defaults(func=DescriptorCommand)
 
   args = parser.parse_args()
