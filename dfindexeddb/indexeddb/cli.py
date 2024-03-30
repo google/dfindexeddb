@@ -60,11 +60,13 @@ class Encoder(json.JSONEncoder):
     return json.JSONEncoder.default(self, o)
 
 
-def _Output(structure, to_json=False):
+def _Output(structure, output):
   """Helper method to output parsed structure to stdout."""
-  if to_json:
+  if output == 'json':
     print(json.dumps(structure, indent=2, cls=Encoder))
-  else:
+  elif output == 'jsonl':
+    print(json.dumps(structure, cls=Encoder))
+  elif output == 'repr':
     print(structure)
 
 
@@ -73,7 +75,8 @@ def IndexeddbCommand(args):
   for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
     record = db_record.record
     try:
-      db_record.record = chromium.IndexedDBRecord.FromLevelDBRecord(record)
+      db_record.record = chromium.IndexedDBRecord.FromLevelDBRecord(
+          record)
     except(
         errors.ParserError,
         errors.DecoderError,
@@ -82,7 +85,7 @@ def IndexeddbCommand(args):
           (f'Error parsing blink value: {err} for {record.__class__.__name__} '
            f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
       print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-    _Output(db_record, to_json=args.json)
+    _Output(db_record, output=args.output)
 
 
 def App():
@@ -94,7 +97,15 @@ def App():
   parser.add_argument(
       '-s', '--source', required=True, type=pathlib.Path,
       help='The source leveldb folder')
-  parser.add_argument('--json', action='store_true', help='Output as JSON')
+  parser.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
   parser.set_defaults(func=IndexeddbCommand)
 
   args = parser.parse_args()

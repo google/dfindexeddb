@@ -61,7 +61,7 @@ installation:
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] -s SOURCE [--json]
+usage: dfindexeddb [-h] -s SOURCE [-o {json,jsonl,repr}]
 
 A cli tool for parsing indexeddb files
 
@@ -69,7 +69,8 @@ options:
   -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
                         The source leveldb folder
-  --json                Output as JSON
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
 ```
 
 ### LevelDB
@@ -94,17 +95,46 @@ options:
 To parse records from a LevelDB log (.log) file, use the following command:
 
 ```
-$ dfleveldb log -s <SOURCE> [--json]
+$ dfleveldb log  -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,write_batches,parsed_internal_key}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source leveldb file
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+  -t {blocks,physical_records,write_batches,parsed_internal_key}, --structure_type {blocks,physical_records,write_batches,parsed_internal_key}
+                        Parses the specified structure. Default is parsed_internal_key.
 ```
 
 To parse records from a LevelDB table (.ldb) file, use the following command:
 
 ```
-$ dfleveldb ldb -s <SOURCE> [--json]
+$ dfleveldb ldb -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,records}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source leveldb file
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+  -t {blocks,records}, --structure_type {blocks,records}
+                        Parses the specified structure. Default is records.
 ```
 
 To parse version edit records from a Descriptor (MANIFEST) file:
 
 ```
-$ dfleveldb descriptor -s <SOURCE> [--json]
+$ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source leveldb file
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+  -t {blocks,physical_records,versionedit}, --structure_type {blocks,physical_records,versionedit}
+                        Parses the specified structure. Default is versionedit.
+  -v, --version_history
+                        Parses the leveldb version history.
 ```
