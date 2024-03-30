@@ -31,7 +31,7 @@ from typing import Any, Union
 import notification_database_data_pb2 as notification_pb2
 
 from dfdatetime import webkit_time
-from dfindexeddb.indexeddb import blink
+from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.leveldb import log
 from dfindexeddb.leveldb import ldb
 
