@@ -272,7 +272,7 @@ class LevelDBVersion:
   "Deleted files" will typically no longer exist but may be forensically
   recoverable.
   """
-  current_log: int
+  current_log: str
   version_edit_offset: int
   last_sequence: int
   active_files: dict[int, dict[int, NewFile]]
