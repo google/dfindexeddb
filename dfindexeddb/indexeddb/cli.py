@@ -24,8 +24,8 @@ import traceback
 from dfindexeddb import errors
 from dfindexeddb import version
 from dfindexeddb.leveldb import record as leveldb_record
-from dfindexeddb.indexeddb import chromium
-from dfindexeddb.indexeddb import v8
+from dfindexeddb.indexeddb.chromium import record as chromium_record
+from dfindexeddb.indexeddb.chromium import v8
 
 
 _VALID_PRINTABLE_CHARACTERS = (
@@ -75,7 +75,7 @@ def IndexeddbCommand(args):
   for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
     record = db_record.record
     try:
-      db_record.record = chromium.IndexedDBRecord.FromLevelDBRecord(
+      db_record.record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
           record)
     except(
         errors.ParserError,

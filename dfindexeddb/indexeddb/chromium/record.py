@@ -20,8 +20,8 @@ import io
 from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
 
 from dfindexeddb import errors
-from dfindexeddb.indexeddb import blink
-from dfindexeddb.indexeddb import definitions
+from dfindexeddb.indexeddb.chromium import blink
+from dfindexeddb.indexeddb.chromium import definitions
 from dfindexeddb.leveldb import ldb
 from dfindexeddb.leveldb import log
 from dfindexeddb.leveldb import utils

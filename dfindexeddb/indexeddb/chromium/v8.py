@@ -21,7 +21,7 @@ from typing import Any, BinaryIO, Dict, Optional, Set, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
-from dfindexeddb.indexeddb import definitions
+from dfindexeddb.indexeddb.chromium import definitions
 
 
 @dataclass

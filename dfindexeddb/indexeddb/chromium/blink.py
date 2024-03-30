@@ -17,8 +17,8 @@ import io
 from typing import Any
 
 from dfindexeddb import utils
-from dfindexeddb.indexeddb import definitions
-from dfindexeddb.indexeddb import v8
+from dfindexeddb.indexeddb.chromium import definitions
+from dfindexeddb.indexeddb.chromium import v8
 
 
 

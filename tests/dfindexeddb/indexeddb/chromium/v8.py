@@ -16,8 +16,8 @@
 from datetime import datetime
 import unittest
 
-from dfindexeddb.indexeddb import definitions
-from dfindexeddb.indexeddb import v8
+from dfindexeddb.indexeddb.chromium import definitions
+from dfindexeddb.indexeddb.chromium import v8
 
 
 class V8Test(unittest.TestCase):
