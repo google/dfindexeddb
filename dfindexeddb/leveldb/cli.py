@@ -168,6 +168,7 @@ def App():
           'repr'],
       default='json',
       help='Output format.  Default is json')
+  parser_db.set_defaults(func=DbCommand)
 
   parser_log = subparsers.add_parser(
       'log', help='Parse a leveldb log file.')
