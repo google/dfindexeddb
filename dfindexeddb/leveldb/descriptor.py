@@ -365,7 +365,8 @@ class FileReader:
     current_log = None
 
     for version_edit in self.GetVersionEdits():
-      current_log = f'{version_edit.log_number:06d}.log'
+      if version_edit.log_number:
+        current_log = f'{version_edit.log_number:06d}.log'
 
       for new_file in version_edit.new_files:
         active_files[new_file.level][f'{new_file.number:06d}.ldb'] = new_file
@@ -380,3 +381,8 @@ class FileReader:
           deleted_files=dict(deleted_files),
           version_edit_offset=version_edit.offset,
           last_sequence=version_edit.last_sequence)
+
+  def GetLatestVersion(self) -> LevelDBVersion:
+    """Returns the latest LevelDBVersion instance."""
+    *_, latest = self.GetVersions()
+    return latest
