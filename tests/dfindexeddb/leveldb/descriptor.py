@@ -57,3 +57,38 @@ class DescriptorTests(unittest.TestCase):
     self.assertEqual(version_edits[1].compact_pointers, [])
     self.assertEqual(version_edits[1].new_files, [])
     self.assertEqual(version_edits[1].deleted_files, [])
+
+  def test_versions(self):
+    """Tests the GetVersions method."""
+    manifest_file = descriptor.FileReader(
+        './test_data/leveldb/100k keys delete/MANIFEST-000002')
+    versions = list(manifest_file.GetVersions())
+    self.assertEqual(len(versions), 3)
+    self.assertEqual(versions[0].active_files, {})
+    self.assertEqual(versions[0].deleted_files, {})
+    self.assertEqual(versions[0].current_log, None)
+    self.assertEqual(versions[0].last_sequence, None)
+
+    self.assertEqual(len(versions[2].active_files), 1)
+    self.assertIn(2, versions[2].active_files)
+    self.assertIn('000005.ldb', versions[2].active_files[2])
+    self.assertEqual(versions[2].deleted_files, {})
+    self.assertEqual(versions[2].current_log, '000004.log')
+    self.assertEqual(versions[2].last_sequence, 85673)
+
+  def test_latestversion(self):
+    """Tests the GetLatestVersion method."""
+    manifest_file = descriptor.FileReader(
+        './test_data/leveldb/100k keys delete/MANIFEST-000002')
+    latest_version = manifest_file.GetLatestVersion()
+
+    self.assertEqual(len(latest_version.active_files), 1)
+    self.assertIn(2, latest_version.active_files)
+    self.assertIn('000005.ldb', latest_version.active_files[2])
+    self.assertEqual(latest_version.deleted_files, {})
+    self.assertEqual(latest_version.current_log, '000004.log')
+    self.assertEqual(latest_version.last_sequence, 85673)
+
+
+if __name__ == '__main__':
+  unittest.main()
