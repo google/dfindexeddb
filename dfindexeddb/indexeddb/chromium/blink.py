@@ -16,7 +16,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import io
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
@@ -71,10 +71,10 @@ class CryptoKey:
 
   """
   algorithm_parameters: dict[str, Any]
-  key_type: definitions.WebCryptoKeyType | definitions.AsymmetricCryptoKeyType
+  key_type: Union[
+      definitions.WebCryptoKeyType, definitions.AsymmetricCryptoKeyType]
   extractable: bool
   usages: definitions.CryptoKeyUsage
-  #key_data_length: int
   key_data: bytes
 
 
@@ -356,7 +356,7 @@ class V8ScriptValueDecoder:
     """Deserializes a No Params CryptoKey from the current decoder position."""
     _, raw_id = self.deserializer.decoder.DecodeUint32Varint()
     crypto_key_algorithm = definitions.CryptoKeyAlgorithm(raw_id)
-    
+
     algorithm_parameters = {
         'crypto_key_algorithm': crypto_key_algorithm
     }
