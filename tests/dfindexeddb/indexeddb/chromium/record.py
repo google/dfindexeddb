@@ -126,13 +126,13 @@ class ChromiumIndexedDBTest(unittest.TestCase):
 
   def test_earliest_compaction_key(self):
     """Tests the EarliestCompactionTimeKey."""
-    expected_key = record.EarlistCompactionTimeKey(
+    expected_key = record.EarliestCompactionTimeKey(
         offset=4, key_prefix=record.KeyPrefix(
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 13318229420051176
 
     record_bytes = ((b'\x00\x00\x00\x00\x06'), (b'\xe8\x8a\x9e\xed\xdbP/'))
-    parsed_key = record.EarlistCompactionTimeKey.FromBytes(record_bytes[0])
+    parsed_key = record.EarliestCompactionTimeKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -579,7 +579,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         encoded_user_key=record.IDBKey(
             offset=4, type=definitions.IDBKeyType.NUMBER, value=3.0))
     expected_value = record.ObjectStoreDataValue(
-        unkown=4,
+        unknown=4,
         is_wrapped=True,
         blob_offset=1,
         blob_size=2303,

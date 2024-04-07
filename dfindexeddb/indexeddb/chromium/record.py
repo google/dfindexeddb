@@ -546,7 +546,7 @@ class EarliestSweepKey(BaseIndexedDBKey):
 
 
 @dataclass
-class EarlistCompactionTimeKey(BaseIndexedDBKey):
+class EarliestCompactionTimeKey(BaseIndexedDBKey):
   """An earliest compaction time IndexedDB key."""
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
@@ -558,11 +558,11 @@ class EarlistCompactionTimeKey(BaseIndexedDBKey):
   def FromDecoder(
       cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
       base_offset: int = 0
-  ) -> EarlistCompactionTimeKey:
+  ) -> EarliestCompactionTimeKey:
     """Decodes the earliest compaction time key."""
     offset, key_type = decoder.DecodeUint8()
     if key_type != definitions.GlobalMetadataKeyType.EARLIEST_COMPACTION_TIME:
-      raise errors.ParserError('Not a EarlistCompactionTimeKey')
+      raise errors.ParserError('Not a EarliestCompactionTimeKey')
     return cls(offset=base_offset + offset, key_prefix=key_prefix)
 
 
@@ -668,7 +668,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
       definitions.GlobalMetadataKeyType
           .EARLIEST_SWEEP: EarliestSweepKey,
       definitions.GlobalMetadataKeyType
-          .EARLIEST_COMPACTION_TIME: EarlistCompactionTimeKey,
+          .EARLIEST_COMPACTION_TIME: EarliestCompactionTimeKey,
       definitions.GlobalMetadataKeyType
           .SCOPES_PREFIX: ScopesPrefixKey,
       definitions.GlobalMetadataKeyType
@@ -692,7 +692,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
              Type[DatabaseFreeListKey],
              Type[DatabaseNameKey],
              Type[EarliestSweepKey],
-             Type[EarlistCompactionTimeKey],
+             Type[EarliestCompactionTimeKey],
              Type[MaxDatabaseIdKey],
              Type[RecoveryBlobJournalKey],
              Type[SchemaVersionKey],
@@ -972,7 +972,7 @@ class ObjectStoreDataValue:
     blob_offset: the blob offset, only valid if wrapped.
     value: the blink serialized value, only valid if not wrapped.
   """
-  unkown: int
+  unknown: int
   is_wrapped: bool
   blob_size: Optional[int]
   blob_offset: Optional[int]
@@ -1003,7 +1003,7 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
       _, blob_size = decoder.DecodeVarint()
       _, blob_offset = decoder.DecodeVarint()
       return ObjectStoreDataValue(
-          unkown=unknown_integer,
+          unknown=unknown_integer,
           is_wrapped=True,
           blob_size=blob_size,
           blob_offset=blob_offset,
@@ -1011,7 +1011,7 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
     _, blink_bytes = decoder.ReadBytes()
     blink_value = blink.V8ScriptValueDecoder.FromBytes(blink_bytes)
     return ObjectStoreDataValue(
-        unkown=unknown_integer,
+        unknown=unknown_integer,
         is_wrapped=False,
         blob_size=None,
         blob_offset=None,
