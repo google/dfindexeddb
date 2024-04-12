@@ -122,9 +122,11 @@ class DOMMatrix2D:
   """
   values: list[float]
 
+
 @dataclass
 class DOMMatrix2DReadOnly(DOMMatrix2D):
   """A Javascript Read-Only DOMMatrix2D."""
+
 
 @dataclass
 class DOMMatrix:
@@ -135,9 +137,11 @@ class DOMMatrix:
   """
   values: list[float]
 
+
 @dataclass
 class DOMMatrixReadOnly(DOMMatrix):
   """A Javascript Read-Only DOMMatrix."""
+
 
 @dataclass
 class DOMPoint:
