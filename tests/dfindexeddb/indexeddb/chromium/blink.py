@@ -123,15 +123,15 @@ class BlinkTest(unittest.TestCase):
         0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c, 0x61,
         0x69, 0x6e])
     parsed_file = blink.File(
-          path='path',
-          name=None,
-          relative_path=None,
-          uuid='relative_path',
-          type='text/plain',
-          has_snapshot=0,
-          size=None,
-          last_modified_ms=None,
-          is_user_visible=1)
+        path='path',
+        name=None,
+        relative_path=None,
+        uuid='relative_path',
+        type='text/plain',
+        has_snapshot=0,
+        size=None,
+        last_modified_ms=None,
+        is_user_visible=1)
     expected_value = blink.FileList(files=[parsed_file])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -246,7 +246,8 @@ class BlinkTest(unittest.TestCase):
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40])
+        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40
+    ])
     expected_value = blink.DOMMatrix2D(values=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -262,7 +263,8 @@ class BlinkTest(unittest.TestCase):
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40])
+        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40
+    ])
     expected_value = blink.DOMMatrix2DReadOnly(
         values=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
@@ -331,7 +333,8 @@ class BlinkTest(unittest.TestCase):
   def test_OffscreenCanvasTransfer(self):
     """Tests Blink OffscreenCanvasTransfer decoding."""
     serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x48, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00])
     expected_value = blink.OffscreenCanvasTransfer(
         width=0,
         height=0,
@@ -369,38 +372,36 @@ class BlinkTest(unittest.TestCase):
   def test_ReadDOMException(self):
     """Tests Blink DOMException decoding."""
     serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x78, 0x01, 0x41, 0x01, 0x42, 0x01, 0x43])
-    expected_value = blink.DOMException(name='A', message='B', stack_unused='C')
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x78, 0x01, 0x41, 0x01, 
+        0x42, 0x01, 0x43])
+    expected_value = blink.DOMException(
+        name='A', message='B', stack_unused='C')
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadCryptoKey(self):
     """Tests Blink CryptoKey decoding."""
     with self.subTest('AES'):
-      test_bytes = [
+      serialized_value = bytes([
           0xff, 0x09, 0x3f, 0x00, 0x4b, 0x01, 0x01, 0x10,
           0x04, 0x10,
           0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,  # key data
-          0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15
-      ]
-      serialized_value = bytes(test_bytes)
+          0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15])
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.AES_CBC,
-              'length_bits': 128
-          },
+              'length_bits': 128},
           key_type=definitions.WebCryptoKeyType.SECRET,
           extractable=False,
           usages=definitions.CryptoKeyUsage.DECRYPT,
-        key_data=(
+          key_data=(
               b'\x00\x01\x02\x03\x04\x05\x06\x07'
-              b'\x08\x09\x10\x11\x12\x13\x14\x15')
-      )
+              b'\x08\x09\x10\x11\x12\x13\x14\x15'))
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('HMAC'):
-      test_bytes = [
+      serialized_value = bytes([
           0xff, 0x09, 0x3f, 0x00, 0x4b, 0x02, 0x40, 0x06,
           0x10, 0x40,
           0x84, 0x04, 0x10, 0xb5, 0xb3, 0x15, 0xec, 0x95,  # key data
@@ -410,14 +411,11 @@ class BlinkTest(unittest.TestCase):
           0x89, 0xb3, 0x22, 0xfd, 0x6a, 0x74, 0xe2, 0xdc,
           0x60, 0xbd, 0xd1, 0xcd, 0x2e, 0x2f, 0x1f, 0xb6,
           0x7f, 0xf6, 0x22, 0xf1, 0x25, 0xe8, 0xd7, 0x90,
-          0xfb, 0x80, 0x21, 0x7e, 0x79, 0xc3, 0x5f, 0x98
-      ]
-      serialized_value = bytes(test_bytes)
+          0xfb, 0x80, 0x21, 0x7e, 0x79, 0xc3, 0x5f, 0x98])
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.SHA256,
-              'length_bits': 512
-          },
+              'length_bits': 512},
           key_type=definitions.WebCryptoKeyType.SECRET,
           extractable=False,
           usages=definitions.CryptoKeyUsage.VERIFY,
@@ -429,14 +427,12 @@ class BlinkTest(unittest.TestCase):
               b'\x89\xb3\x22\xfd\x6a\x74\xe2\xdc'
               b'\x60\xbd\xd1\xcd\x2e\x2f\x1f\xb6'
               b'\x7f\xf6\x22\xf1\x25\xe8\xd7\x90'
-              b'\xfb\x80\x21\x7e\x79\xc3\x5f\x98'
-          )
-      )
+              b'\xfb\x80\x21\x7e\x79\xc3\x5f\x98'))
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('RSAHashedKey'):
-      test_bytes = [
+      serialized_value = bytes([
           0xff, 0x09, 0x3f, 0x00, 0x4b, 0x04, 0x0d, 0x01,
           0x80, 0x08, 0x03, 0x01, 0x00, 0x01, 0x06, 0x11,
           0xa2, 0x01,
@@ -460,23 +456,19 @@ class BlinkTest(unittest.TestCase):
           0xad, 0xeb, 0x86, 0xc8, 0x72, 0xb3, 0x2a, 0x5e,
           0xf3, 0x1a, 0x33, 0x59, 0xe3, 0x61, 0xba, 0x91,
           0x85, 0xf8, 0x48, 0x3b, 0x9a, 0xb6, 0xbf, 0xe9,
-          0xe3, 0xb3
-      ]
-      serialized_value = bytes(test_bytes)
+          0xe3, 0xb3])
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.RSA_PSS,
               'modulus_length_bits': 1024,
               'public_exponent_size': 3,
               'public_exponent_bytes': b'\x01\x00\x01',
-              'hash': definitions.CryptoKeyAlgorithm.SHA256
-          },
+              'hash': definitions.CryptoKeyAlgorithm.SHA256},
           key_type=definitions.AsymmetricCryptoKeyType.PUBLIC_KEY,
           extractable=True,
           usages=(
               definitions.CryptoKeyUsage.VERIFY |
-              definitions.CryptoKeyUsage.EXTRACTABLE
-          ),
+              definitions.CryptoKeyUsage.EXTRACTABLE),
           key_data=(
               b'\x0a\xc9\x9b\xea\x4a\x34\xec\x34'
               b'\xe0\x79\x5e\x8d\x12\x25\x4f\x19'
@@ -498,14 +490,12 @@ class BlinkTest(unittest.TestCase):
               b'\xad\xeb\x86\xc8\x72\xb3\x2a\x5e'
               b'\xf3\x1a\x33\x59\xe3\x61\xba\x91'
               b'\x85\xf8\x48\x3b\x9a\xb6\xbf\xe9'
-              b'\xe3\xb3'
-          )
-      )
+              b'\xe3\xb3'))
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('ECDSA Key'):
-      test_bytes = [
+      serialized_value = bytes([
           0xff, 0x09, 0x3f, 0x00, 0x4b, 0x05, 0x0e, 0x01,
           0x01, 0x11, 0x5b,
           0xcb, 0x98, 0x1a, 0xb7, 0xac, 0x67, 0x86, 0x68,  # key data
@@ -519,20 +509,16 @@ class BlinkTest(unittest.TestCase):
           0xad, 0xeb, 0x86, 0xc8, 0x72, 0xb3, 0x2a, 0x5e,
           0xf3, 0x1a, 0x33, 0x59, 0xe3, 0x61, 0xba, 0x91,
           0x85, 0xf8, 0x48, 0x3b, 0x9a, 0xb6, 0xbf, 0xe9,
-          0xe3, 0xb3, 0x30
-      ]
-      serialized_value = bytes(test_bytes)
+          0xe3, 0xb3, 0x30])
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'crypto_key_algorithm': definitions.CryptoKeyAlgorithm.ECDSA,
-              'named_curve_type': definitions.NamedCurve.P256
-          },
+              'named_curve_type': definitions.NamedCurve.P256},
           key_type=definitions.AsymmetricCryptoKeyType.PUBLIC_KEY,
           extractable=True,
           usages=(
               definitions.CryptoKeyUsage.VERIFY
-              | definitions.CryptoKeyUsage.EXTRACTABLE
-          ),
+              | definitions.CryptoKeyUsage.EXTRACTABLE),
           key_data=(
               b'\xcb\x98\x1a\xb7\xac\x67\x86\x68'
               b'\xf1\x4c\xcc\x34\x28\xa6\xc9\x9a'
@@ -545,28 +531,22 @@ class BlinkTest(unittest.TestCase):
               b'\xad\xeb\x86\xc8\x72\xb3\x2a\x5e'
               b'\xf3\x1a\x33\x59\xe3\x61\xba\x91'
               b'\x85\xf8\x48\x3b\x9a\xb6\xbf\xe9'
-              b'\xe3\xb3\x30'
-          )
-      )
+              b'\xe3\xb3\x30'))
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('NoParams Key'):
-      test_bytes = [
+      serialized_value = bytes([
           0xff, 0x09, 0x3f, 0x00, 0x4b, 0x06, 0x11, 0xa0, 0x02,
-          0x03, 0x01, 0x02, 0x03, 0x00
-      ]
-      serialized_value = bytes(test_bytes)
+          0x03, 0x01, 0x02, 0x03, 0x00])
       expected_value = blink.CryptoKey(
           algorithm_parameters={
-              'crypto_key_algorithm': definitions.CryptoKeyAlgorithm.PBKDF2
-          },
+              'crypto_key_algorithm': definitions.CryptoKeyAlgorithm.PBKDF2},
           key_type=definitions.WebCryptoKeyType.SECRET,
           extractable=False,
           usages=(
               definitions.CryptoKeyUsage.DRIVE_BITS
-              | definitions.CryptoKeyUsage.DERIVE_KEY
-          ),
+              | definitions.CryptoKeyUsage.DERIVE_KEY),
           key_data=b'\x01\x02\x03'
       )
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
