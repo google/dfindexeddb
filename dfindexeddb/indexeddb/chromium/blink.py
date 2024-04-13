@@ -793,7 +793,7 @@ class V8ScriptValueDecoder:
     return DOMFileSystem(raw_type=raw_type, name=name, root_url=root_url)
 
   def _ReadFileSystemFileHandle(self) -> FileSystemHandle:
-    """Reads an FileSystemHandle from the current position."""
+    """Reads a FileSystemHandle from the current position."""
     name = self.deserializer.ReadUTF8String()
     _, token_index = self.deserializer.decoder.DecodeUint32Varint()
     return FileSystemHandle(name=name, token_index=token_index)
