@@ -38,6 +38,12 @@ class AudioData:
 
 
 @dataclass
+class BaseIndex:
+  """A base index class."""
+  index: int
+
+
+@dataclass
 class BitMap:
   """A Javascript BitMap."""
 
@@ -57,13 +63,8 @@ class Blob:
 
 
 @dataclass
-class BlobIndex:
-  """A Javascript BlobIndex class type.
-
-  Attributes:
-    index: the Blob index.
-  """
-  index: int
+class BlobIndex(BaseIndex):
+  """A Javascript BlobIndex class type."""
 
 
 @dataclass
@@ -88,7 +89,7 @@ class CryptoKey:
 @dataclass
 class DOMException:
   """A Javascript DOMException.
-  
+
   Attributes:
     name: the name.
     message: the message.
@@ -228,13 +229,8 @@ class File:
 
 
 @dataclass
-class FileIndex:
-  """A Javascript FileIndex.
-
-  Attributes:
-    index: the file index.
-  """
-  index: int
+class FileIndex(BaseIndex):
+  """A Javascript FileIndex."""
 
 
 @dataclass
@@ -267,6 +263,36 @@ class FileSystemHandle:
   """
   name: str
   token_index: int
+
+
+@dataclass
+class ImageBitmapTransfer(BaseIndex):
+  """A Javascript ImageBitmapTransfer."""
+
+
+@dataclass
+class MessagePort(BaseIndex):
+  """A Javascript MessagePort."""
+
+
+@dataclass
+class MojoHandle(BaseIndex):
+  """A Javascript MojoHandle."""
+
+
+@dataclass
+class ReadableStreamTransfer(BaseIndex):
+  """A Javascript ReadableStreamTransfer."""
+
+
+@dataclass
+class WriteableStreamTransfer(BaseIndex):
+  """A Javascript WriteableStreamTransfer."""
+
+
+@dataclass
+class TransformStreamTransfer(BaseIndex):
+  """A Javascript TransformStreamTransfer."""
 
 
 @dataclass
@@ -328,13 +354,13 @@ class V8ScriptValueDecoder:
     if tag != definitions.BlinkSerializationTag.VERSION:
       return 0
 
-    _, version = decoder.DecodeUint32Varint()
-    if version < self._MIN_VERSION_FOR_SEPARATE_ENVELOPE:
+    _, self.version = decoder.DecodeUint32Varint()
+    if self.version < self._MIN_VERSION_FOR_SEPARATE_ENVELOPE:
       return 0
 
     consumed_bytes = decoder.stream.tell()
 
-    if version >= self._MIN_WIRE_FORMAT_VERSION:
+    if self.version >= self._MIN_WIRE_FORMAT_VERSION:
       _, trailer_offset_tag = decoder.DecodeUint8()
       if (trailer_offset_tag !=
           definitions.BlinkSerializationTag.TRAILER_OFFSET):
@@ -554,7 +580,7 @@ class V8ScriptValueDecoder:
     """
     if self.version < 6:
       return None
-    index = self.deserializer.decoder.DecodeUint32Varint()
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
     return FileIndex(index=index)
 
   def _ReadFileList(self) -> Optional[FileList]:
@@ -594,7 +620,7 @@ class V8ScriptValueDecoder:
   def _ReadImageBitmapTransfer(self) -> int:
     """Reads an ImageBitmapTransfer."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return ImageBitmapTransfer(index=index)
 
   def _ReadImageData(self):
     """Reads an ImageData from the current position."""
@@ -663,12 +689,12 @@ class V8ScriptValueDecoder:
   def _ReadMessagePort(self) -> int:
     """Reads a MessagePort from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return MessagePort(index=index)
 
   def _ReadMojoHandle(self) -> int:
     """Reads a MojoHandle from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return MojoHandle(index=index)
 
   def _ReadOffscreenCanvasTransfer(self):
     """Reads a Offscreen Canvas Transfer from the current position."""
@@ -690,17 +716,17 @@ class V8ScriptValueDecoder:
   def _ReadReadableStreamTransfer(self) -> int:
     """Reads a Readable Stream Transfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return ReadableStreamTransfer(index=index)
 
   def _ReadWriteableStreamTransfer(self) -> int:
     """Reads a Writeable Stream Transfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return WriteableStreamTransfer(index=index)
 
   def _ReadTransformStreamTransfer(self) -> int:
     """Reads a TransformStreamTransfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
-    return index
+    return TransformStreamTransfer(index=index)
 
   def _ReadDOMException(self) -> DOMException:
     """Reads a DOMException from the current position."""
@@ -754,13 +780,7 @@ class V8ScriptValueDecoder:
         key_data=key_data
     )
 
-  def _ReadUnguessableToken(self) -> UnguessableToken:
-    """Reads an UnguessableToken from the current position."""
-    _, high = self.deserializer.decoder.DecodeUint64Varint()
-    _, low = self.deserializer.decoder.DecodeUint64Varint()
-    return UnguessableToken(high=high, low=low)
-
-  def _ReadAudioData(self) -> AudioData:
+  def _ReadAudioData(self):
     """Reads an AudioData from the current position."""
     _, audio_frame_index = self.deserializer.decoder.DecodeUint32Varint()
     return AudioData(audio_frame_index=audio_frame_index)
@@ -847,6 +867,8 @@ class V8ScriptValueDecoder:
       dom_object = self._ReadFileIndex()
     elif tag == definitions.BlinkSerializationTag.FILE_LIST:
       dom_object = self._ReadFileList()
+    elif tag == definitions.BlinkSerializationTag.FILE_LIST_INDEX:
+      dom_object = self._ReadFileListIndex()
     elif tag == definitions.BlinkSerializationTag.IMAGE_BITMAP:
       dom_object = self._ReadImageBitmap()
     elif tag == definitions.BlinkSerializationTag.IMAGE_BITMAP_TRANSFER:
