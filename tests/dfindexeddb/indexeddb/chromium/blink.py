@@ -333,7 +333,7 @@ class BlinkTest(unittest.TestCase):
   def test_OffscreenCanvasTransfer(self):
     """Tests Blink OffscreenCanvasTransfer decoding."""
     serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x48, 0x00, 0x00, 
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x48, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00])
     expected_value = blink.OffscreenCanvasTransfer(
         width=0,
@@ -372,7 +372,7 @@ class BlinkTest(unittest.TestCase):
   def test_ReadDOMException(self):
     """Tests Blink DOMException decoding."""
     serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x78, 0x01, 0x41, 0x01, 
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x78, 0x01, 0x41, 0x01,
         0x42, 0x01, 0x43])
     expected_value = blink.DOMException(
         name='A', message='B', stack_unused='C')
