@@ -73,11 +73,11 @@ class BlinkTest(unittest.TestCase):
     """Tests Blink BlobIndex decoding."""
     serialized_value = bytes([
         0xff, 0x03, 0x3f, 0x00, 0x6c, 0x01,
-          0x04, 0x70, 0x61, 0x74, 0x68,
-          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76, 0x65,
-          0x5f, 0x70, 0x61, 0x74, 0x68,
-          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c, 0x61,
-          0x69, 0x6e])
+        0x04, 0x70, 0x61, 0x74, 0x68,
+        0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76, 0x65,
+        0x5f, 0x70, 0x61, 0x74, 0x68,
+        0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c, 0x61,
+        0x69, 0x6e])
     parsed_file = blink.File(
           path='path',
           name=None,
@@ -96,7 +96,8 @@ class BlinkTest(unittest.TestCase):
     """Tests Blink FileListIndex decoding."""
     serialized_value = bytes([
         0xff, 0x09, 0x3f, 0x00, 0x4c, 0x01, 0x00, 0x00])
-    expected_value = blink.FileListIndex(file_indexes=[blink.FileIndex(index=0)])
+    expected_value = blink.FileListIndex(
+        file_indexes=[blink.FileIndex(index=0)])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
@@ -192,47 +193,47 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadDOMMatrix2D(self):
     """Tests Blink DOMMatrix2D decoding."""
-    pass
+
 
   def test_ReadDOMMatrix2DReadOnly(self):
     """Tests Blink DOMMatrix2DReadOnly decoding."""
-    pass
+
 
   def test_ReadDOMMatrix(self):
     """Tests Blink DOMMatrix decoding."""
-    pass
+
 
   def test_ReadDOMMatrixReadOnly(self):
     """Tests Blink DOMMatrixReadonly decoding."""
-    pass
+
 
   def test_ReadMessagePort(self):
     """Tests Blink MessagePort decoding."""
-    pass
+
 
   def test_ReadMojoHandle(self):
     """Tests Blink MojoHandle decoding."""
-    pass
+
 
   def test_OffscreenCanvasTransfer(self):
     """Tests Blink OffscreenCanvasTransfer decoding."""
-    pass
+
 
   def test_ReadableStreamTransfer(self):
     """Tests Blink ReadableStreamTransfer decoding."""
-    pass
+
 
   def test_WriteableStreamTransfer(self):
     """Tests Blink WriteableStreamTransfer decoding."""
-    pass
+
 
   def test_TransformStreamTransfer(self):
     """Tests Blink TransformStreamTransfer decoding."""
-    pass
+
 
   def test_ReadDOMException(self):
     """Tests Blink DOMException decoding."""
-    pass
+
 
   def test_ReadCryptoKey(self):
     """Tests Blink CryptoKey decoding."""
@@ -450,14 +451,16 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadRTCEncodedAudioFrame(self):
     """Tests Blink RTCEncodedAudioFrame decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadRTCEncodedAudioFrame'):
+    with self.assertRaisesRegex(NotImplementedError,
+                                'ReadRTCEncodedAudioFrame'):
       serialized_value = bytes([
         0xff, 0x11, 0xff, 0x0d, 0x5c, 0x41])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadRTCEncodedVideoFrame(self):
     """Tests Blink RTCEncodedVideoFrame decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadRTCEncodedVideoFrame'):
+    with self.assertRaisesRegex(NotImplementedError,
+                                'ReadRTCEncodedVideoFrame'):
       serialized_value = bytes([
         0xff, 0x11, 0xff, 0x0d, 0x5c, 0x56])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)

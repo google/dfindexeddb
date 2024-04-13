@@ -218,13 +218,13 @@ class File:
     is_user_visible: True if the file is user visible.
   """
   path: str
-  name: str
-  relative_path: str
+  name: Optional[str]
+  relative_path: Optional[str]
   uuid: str
   type: str
   has_snapshot: int
-  size: int
-  last_modified_ms: int
+  size: Optional[int]
+  last_modified_ms: Optional[int]
   is_user_visible: int
 
 
@@ -617,7 +617,7 @@ class V8ScriptValueDecoder:
     """Reads an ImageBitmap."""
     raise NotImplementedError('V8ScriptValueDecoder._ReadImageBitmap')
 
-  def _ReadImageBitmapTransfer(self) -> int:
+  def _ReadImageBitmapTransfer(self) -> ImageBitmapTransfer:
     """Reads an ImageBitmapTransfer."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return ImageBitmapTransfer(index=index)
@@ -686,12 +686,12 @@ class V8ScriptValueDecoder:
     values = [self.deserializer.decoder.DecodeDouble()[1] for _ in range(16)]
     return DOMMatrixReadOnly(values=values)
 
-  def _ReadMessagePort(self) -> int:
+  def _ReadMessagePort(self) -> MessagePort:
     """Reads a MessagePort from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return MessagePort(index=index)
 
-  def _ReadMojoHandle(self) -> int:
+  def _ReadMojoHandle(self) -> MojoHandle:
     """Reads a MojoHandle from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return MojoHandle(index=index)
@@ -713,17 +713,17 @@ class V8ScriptValueDecoder:
         sink_id=sink_id,
         filter_quality=filter_quality)
 
-  def _ReadReadableStreamTransfer(self) -> int:
+  def _ReadReadableStreamTransfer(self) -> ReadableStreamTransfer:
     """Reads a Readable Stream Transfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return ReadableStreamTransfer(index=index)
 
-  def _ReadWriteableStreamTransfer(self) -> int:
+  def _ReadWriteableStreamTransfer(self) -> WriteableStreamTransfer:
     """Reads a Writeable Stream Transfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return WriteableStreamTransfer(index=index)
 
-  def _ReadTransformStreamTransfer(self) -> int:
+  def _ReadTransformStreamTransfer(self) -> TransformStreamTransfer:
     """Reads a TransformStreamTransfer from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return TransformStreamTransfer(index=index)
@@ -780,19 +780,19 @@ class V8ScriptValueDecoder:
         key_data=key_data
     )
 
-  def _ReadAudioData(self):
+  def _ReadAudioData(self) -> AudioData:
     """Reads an AudioData from the current position."""
     _, audio_frame_index = self.deserializer.decoder.DecodeUint32Varint()
     return AudioData(audio_frame_index=audio_frame_index)
 
-  def _ReadDomFileSystem(self):
+  def _ReadDomFileSystem(self) -> DOMFileSystem:
     """Reads an DOMFileSystem from the current position."""
     _, raw_type = self.deserializer.decoder.DecodeUint32Varint()
     name = self.deserializer.ReadUTF8String()
     root_url = self.deserializer.ReadUTF8String()
     return DOMFileSystem(raw_type=raw_type, name=name, root_url=root_url)
 
-  def _ReadFileSystemFileHandle(self):
+  def _ReadFileSystemFileHandle(self) -> FileSystemHandle:
     """Reads an FileSystemHandle from the current position."""
     name = self.deserializer.ReadUTF8String()
     _, token_index = self.deserializer.decoder.DecodeUint32Varint()
