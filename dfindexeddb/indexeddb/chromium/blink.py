@@ -730,9 +730,9 @@ class V8ScriptValueDecoder:
 
   def _ReadDOMException(self) -> DOMException:
     """Reads a DOMException from the current position."""
-    _, name = self.deserializer.ReadUTF8String()
-    _, message = self.deserializer.ReadUTF8String()
-    _, stack_unused = self.deserializer.ReadUTF8String()
+    name = self.deserializer.ReadUTF8String()
+    message = self.deserializer.ReadUTF8String()
+    stack_unused = self.deserializer.ReadUTF8String()
     return DOMException(name=name, message=message, stack_unused=stack_unused)
 
   def _ReadRTCEncodedAudioFrame(self):
