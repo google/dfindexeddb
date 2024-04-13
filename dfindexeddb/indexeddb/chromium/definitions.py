@@ -141,10 +141,12 @@ class BlinkSerializationTag(IntEnum):
   ENCODED_AUDIO_CHUNK = ord('y')
   ENCODED_VIDEO_CHUNK = ord('z')
   CROP_TARGET = ord('c')
+  RESTRICTION_TARGET = ord('D')
   MEDIA_SOURCE_HANDLE = ord('S')
   DEPRECATED_DETECTED_BARCODE = ord('B')
   DEPRECATED_DETECTED_FACE = ord('F')
   DEPRECATED_DETECTED_TEXT = ord('t')
+  FENCED_FRAME_CONFIG = ord('C')
   DOM_EXCEPTION = ord('x')
   TRAILER_OFFSET = 0xFE
   VERSION = 0xFF
@@ -304,3 +306,67 @@ class V8ErrorTag(IntEnum):
   CAUSE = ord('c')
   STACK = ord('s')
   END = ord('.')
+
+
+class ImageSerializationTag(IntEnum):
+  """Image Serialization tags."""
+  END = 0
+  PREDEFINED_COLOR_SPACE = 1
+  CANVAS_PIXEL_FORMAT = 2
+  IMAGE_DATA_STORAGE_FORMAT = 3
+  ORIGIN_CLEAN = 4
+  IS_PREMULTIPLIED = 5
+  CANVAS_OPACITY_MODE = 6
+  PARAMETRIC_COLOR_SPACE = 7
+  IMAGE_ORIENTATION = 8
+  LAST = IMAGE_ORIENTATION
+
+
+class SerializedPredefinedColorSpace(IntEnum):
+  """Serialized Predefined Color Space enumeration."""
+  LEGACY_OBSOLETE = 0
+  SRGB = 1
+  REC2020 = 2
+  P3 = 3
+  REC2100HLG = 4
+  REC2100PQ = 5
+  SRGB_LINEAR = 6
+  LAST = SRGB_LINEAR
+
+
+class SerializedPixelFormat(IntEnum):
+  """Serialized Pixel Format enumeration."""
+  NATIVE8_LEGACY_OBSOLETE = 0
+  F16 = 1
+  RGBA8 = 2
+  BGRA8 = 3
+  RGBX8 = 4
+  LAST = RGBX8
+
+
+class SerializedImageDataStorageFormat(IntEnum):
+  """The Serialized Image Data Storage Format."""
+  UINT8CLAMPED = 0
+  UINT16 = 1
+  FLOAT32 = 2
+  LAST = FLOAT32
+
+
+class SerializedOpacityMode(IntEnum):
+  """The Serialized Opacity Mode."""
+  KNONOPAQUE = 0
+  KOPAQUE = 1
+  KLAST = KOPAQUE
+
+
+class SerializedImageOrientation(IntEnum):
+  """The Serialized Image Orientation."""
+  TOP_LEFT = 0
+  TOP_RIGHT = 1
+  BOTTOM_RIGHT = 2
+  BOTTOM_LEFT = 3
+  LEFT_TOP = 4
+  RIGHT_TOP = 5
+  RIGHT_BOTTOM = 6
+  LEFT_BOTTOM = 7
+  LAST = LEFT_BOTTOM

@@ -15,6 +15,7 @@
 """A CLI tool for dfindexeddb."""
 import argparse
 import dataclasses
+import enum
 from datetime import datetime
 import json
 import pathlib
@@ -57,6 +58,8 @@ class Encoder(json.JSONEncoder):
       return list(o)
     if isinstance(o, v8.RegExp):
       return str(o)
+    if isinstance(o, enum.Enum):
+      return o.name
     return json.JSONEncoder.default(self, o)
 
 
@@ -85,6 +88,7 @@ def IndexeddbCommand(args):
           (f'Error parsing blink value: {err} for {record.__class__.__name__} '
            f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
       print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+      print(f'Record: {record}', file=sys.stderr)
     _Output(db_record, output=args.output)
 
 
