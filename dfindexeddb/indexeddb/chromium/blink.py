@@ -234,7 +234,7 @@ class File:
   type: str
   has_snapshot: int
   size: Optional[int]
-  last_modified_ms: Optional[int]
+  last_modified_ms: Optional[float]
   is_user_visible: int
 
 
@@ -293,6 +293,16 @@ class MojoHandle(BaseIndex):
 @dataclass
 class ReadableStreamTransfer(BaseIndex):
   """A Javascript ReadableStreamTransfer."""
+
+
+@dataclass
+class RTCEncodedAudioFrame(BaseIndex):
+  """A Javascript RTCEncodedAudioFrame."""
+
+
+@dataclass
+class RTCEncodedVideoFrame(BaseIndex):
+  """A Javascript RTCEncodedVideoFrame."""
 
 
 @dataclass
@@ -750,13 +760,15 @@ class V8ScriptValueDecoder:
     stack_unused = self.deserializer.ReadUTF8String()
     return DOMException(name=name, message=message, stack_unused=stack_unused)
 
-  def _ReadRTCEncodedAudioFrame(self):
+  def _ReadRTCEncodedAudioFrame(self) -> RTCEncodedAudioFrame:
     """Reads a RTC Encoded Audio Frame from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadRTCEncodedAudioFrame')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return RTCEncodedAudioFrame(index=index)
 
-  def _ReadRTCEncodedVideoFrame(self):
+  def _ReadRTCEncodedVideoFrame(self) -> RTCEncodedAudioFrame:
     """Reads a RTC Encoded Video Frame from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadRTCEncodedVideoFrame')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return RTCEncodedVideoFrame(index=index)
 
   def _ReadCryptoKey(self) -> CryptoKey:
     """Reads a CryptoKey from the current position.
@@ -813,17 +825,17 @@ class V8ScriptValueDecoder:
     _, token_index = self.deserializer.decoder.DecodeUint32Varint()
     return FileSystemHandle(name=name, token_index=token_index)
 
-  def _ReadVideoFrame(self):
+  def _ReadVideoFrame(self) -> VideoFrame:
     """Reads the video frame from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return VideoFrame(index=index)
 
-  def _ReadEncodedAudioChunk(self):
+  def _ReadEncodedAudioChunk(self) -> EncodedAudioChunk:
     """Reads the encoded audio chunk from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return EncodedAudioChunk(index=index)
 
-  def _ReadEncodedVideoChunk(self):
+  def _ReadEncodedVideoChunk(self) -> EncodedVideoChunk:
     """Reads the encoded video chunk from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return EncodedVideoChunk(index=index)

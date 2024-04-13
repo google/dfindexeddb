@@ -590,19 +590,19 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadRTCEncodedAudioFrame(self):
     """Tests Blink RTCEncodedAudioFrame decoding."""
-    with self.assertRaisesRegex(NotImplementedError,
-                                'ReadRTCEncodedAudioFrame'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x41])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    serialized_value = bytes([
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x41, 0x00])
+    expected_value = blink.RTCEncodedAudioFrame(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadRTCEncodedVideoFrame(self):
     """Tests Blink RTCEncodedVideoFrame decoding."""
-    with self.assertRaisesRegex(NotImplementedError,
-                                'ReadRTCEncodedVideoFrame'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x56])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    serialized_value = bytes([
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x56, 0x00])
+    expected_value = blink.RTCEncodedVideoFrame(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadAudioData(self):
     """Tests AudioData decoding."""
