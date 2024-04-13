@@ -44,19 +44,63 @@ class BlinkTest(unittest.TestCase):
       serialized_value = bytes([
           0xff, 0x03, 0x3f, 0x00, 0x66,
           0x04, 0x70, 0x61, 0x74, 0x68,
-          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76, 0x65,
-          0x5f, 0x70, 0x61, 0x74, 0x68,
-          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c, 0x61,
-          0x69, 0x6e])
+          0x04, 0x75, 0x75, 0x69, 0x64,
+          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
+          0x61, 0x69, 0x6e])
       expected_value = blink.File(
           path='path',
           name=None,
           relative_path=None,
-          uuid='relative_path',
+          uuid='uuid',
           type='text/plain',
           has_snapshot=0,
           size=None,
           last_modified_ms=None,
+          is_user_visible=1)
+      parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+      self.assertEqual(parsed_value, expected_value)
+    with self.subTest('file_v4'):
+      serialized_value = bytes([
+          0xff, 0x04, 0x3f, 0x00, 0x66,
+          0x04, 0x70, 0x61, 0x74, 0x68,
+          0x04, 0x6e, 0x61, 0x6d, 0x65,
+          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76,
+          0x65, 0x5f, 0x70, 0x61, 0x74, 0x68,
+          0x04, 0x75, 0x75, 0x69, 0x64,
+          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
+          0x61, 0x69, 0x6e, 0x00])
+      expected_value = blink.File(
+          path='path',
+          name='name',
+          relative_path='relative_path',
+          uuid='uuid',
+          type='text/plain',
+          has_snapshot=0,
+          size=None,
+          last_modified_ms=None,
+          is_user_visible=1)
+      parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+      self.assertEqual(parsed_value, expected_value)
+    with self.subTest('file_v8'):
+      serialized_value = bytes([
+          0xff, 0x08, 0x3f, 0x00, 0x66,
+          0x04, 0x70, 0x61, 0x74, 0x68,
+          0x04, 0x6e, 0x61, 0x6d, 0x65,
+          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76,
+          0x65, 0x5f, 0x70, 0x61, 0x74, 0x68,
+          0x04, 0x75, 0x75, 0x69, 0x64,
+          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
+          0x61, 0x69, 0x6e, 0x01, 0x80, 0x04, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0xd0, 0xbf, 0x01, 0x00])
+      expected_value = blink.File(
+          path='path',
+          name='name',
+          relative_path='relative_path',
+          uuid='uuid',
+          type='text/plain',
+          has_snapshot=1,
+          size=512,
+          last_modified_ms=-0.25,
           is_user_visible=1)
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
@@ -570,24 +614,27 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadVideoFrame(self):
     """Tests VideoFrame decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadVideoFrame'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x76])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    serialized_value = bytes([
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x76, 0x00])
+    expected_value = blink.VideoFrame(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadEncodedAudioChunk(self):
     """Tests UnguessableToken decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadEncodedAudioChunk'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x79])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    serialized_value = bytes([
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x79, 0x00])
+    expected_value = blink.EncodedAudioChunk(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadEncodedVideoChunk(self):
     """Tests UnguessableToken decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadEncodedVideoChunk'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x7a])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    serialized_value = bytes([
+        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x7a, 0x00])
+    expected_value = blink.EncodedVideoChunk(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadMediaStreamTrack(self):
     """Tests MediaStream decoding."""

@@ -203,6 +203,16 @@ class DOMRectReadOnly(DOMRect):
 
 
 @dataclass
+class EncodedAudioChunk(BaseIndex):
+  """A Javascript EncodedAudioChunk."""
+
+
+@dataclass
+class EncodedVideoChunk(BaseIndex):
+  """A Javascript EncodedVideoChunk."""
+
+
+@dataclass
 class File:
   """A Javascript File.
 
@@ -316,6 +326,11 @@ class UnguessableToken:
   """
   high: int
   low: int
+
+
+@dataclass
+class VideoFrame(BaseIndex):
+  """A Javascript VideoFrame."""
 
 
 class V8ScriptValueDecoder:
@@ -800,15 +815,18 @@ class V8ScriptValueDecoder:
 
   def _ReadVideoFrame(self):
     """Reads the video frame from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadVideoFrame')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return VideoFrame(index=index)
 
   def _ReadEncodedAudioChunk(self):
     """Reads the encoded audio chunk from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadEncodedAudioChunk')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return EncodedAudioChunk(index=index)
 
   def _ReadEncodedVideoChunk(self):
     """Reads the encoded video chunk from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadEncodedVideoChunk')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return EncodedVideoChunk(index=index)
 
   def _ReadMediaStreamTrack(self):
     """Reads the media stream track from the current position."""
