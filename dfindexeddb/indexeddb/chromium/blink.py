@@ -281,6 +281,11 @@ class ImageBitmapTransfer(BaseIndex):
 
 
 @dataclass
+class MediaSourceHandle(BaseIndex):
+  """A Javascript MediaSourceHandle."""
+
+
+@dataclass
 class MessagePort(BaseIndex):
   """A Javascript MessagePort."""
 
@@ -765,7 +770,7 @@ class V8ScriptValueDecoder:
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return RTCEncodedAudioFrame(index=index)
 
-  def _ReadRTCEncodedVideoFrame(self) -> RTCEncodedAudioFrame:
+  def _ReadRTCEncodedVideoFrame(self) -> RTCEncodedVideoFrame:
     """Reads a RTC Encoded Video Frame from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return RTCEncodedVideoFrame(index=index)
@@ -852,9 +857,10 @@ class V8ScriptValueDecoder:
     """Reads the restriction target from the current position."""
     raise NotImplementedError('V8ScriptValueDecoder._ReadRestrictionTarget')
 
-  def _ReadMediaSourceHandle(self):
+  def _ReadMediaSourceHandle(self) -> MediaSourceHandle:
     """Reads the media source handle from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadMediaSourceHandle')
+    _, index = self.deserializer.decoder.DecodeUint32Varint()
+    return MediaSourceHandle(index=index)
 
   def _ReadFencedFrameConfig(self):
     """Reads the fenced frame target from the current position."""

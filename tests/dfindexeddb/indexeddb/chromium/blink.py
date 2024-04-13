@@ -149,8 +149,8 @@ class BlinkTest(unittest.TestCase):
     """Tests Blink ImageBitmap decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadImageBitmap'):
       serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x67, 0x01, 0x01, 0x02, 0x01,
-        0x08, 0x00, 0x00, 0xff, 0xff, 0x00, 0xff, 0x00, 0xff])
+          0xff, 0x09, 0x3f, 0x00, 0x67, 0x01, 0x01, 0x02, 0x01,
+          0x08, 0x00, 0x00, 0xff, 0xff, 0x00, 0xff, 0x00, 0xff])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadImageBitmapTransfer(self):
@@ -165,7 +165,7 @@ class BlinkTest(unittest.TestCase):
     """Tests Blink ImageData decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadImageData'):
       serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x23, 0x00])
+          0xff, 0x09, 0x3f, 0x00, 0x23, 0x00])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadDOMPoint(self):
@@ -647,28 +647,29 @@ class BlinkTest(unittest.TestCase):
     """Tests CropTarget decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadCropTarget'):
       serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x63, 0x00])
+          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x63, 0x00])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadRestrictionTarget(self):
     """Tests RestrictionTarget decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadRestrictionTarget'):
       serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x44, 0x00])
+          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x44, 0x00])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadMediaSourceHandle(self):
     """Tests MediaSourceHandle decoding."""
-    with self.assertRaisesRegex(NotImplementedError, 'ReadMediaSourceHandle'):
-      serialized_value = bytes([
+    serialized_value = bytes([
         0xff, 0x11, 0xff, 0x0d, 0x5c, 0x53, 0x00])
-      _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    expected_value = blink.MediaSourceHandle(index=0)
+    parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
+    self.assertEqual(parsed_value, expected_value)
 
   def test_ReadFencedFrameConfig(self):
     """Tests FencedFrameConfig decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadFencedFrameConfig'):
       serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x43, 0x00])
+          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x43, 0x00])
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
 
