@@ -152,7 +152,12 @@ class ValueDeserializer:
       _, tag_value = self.decoder.PeekBytes(1)
     except errors.DecoderError:
       return None
-    return definitions.V8SerializationTag(tag_value[0])
+    try:
+      return definitions.V8SerializationTag(tag_value[0])
+    except ValueError as error:
+      raise errors.ParserError(
+          f'Invalid v8 tag value {tag_value} at offset'
+          f' {self.decoder.stream.tell()}') from error
 
   def _ReadTag(self) -> definitions.V8SerializationTag:
     """Returns the next non-padding serialization tag.
@@ -269,7 +274,7 @@ class ValueDeserializer:
             self.version >= 15):
       parsed_object = self.ReadSharedObject()
     elif self.version < 13:
-      self.decoder.stream.seek(-1)
+      self.decoder.stream.seek(-1, os.SEEK_CUR)
       parsed_object = self.ReadHostObject()
     else:
       parsed_object = None
@@ -492,7 +497,7 @@ class ValueDeserializer:
     return value
 
   def _ReadJSRegExp(self) -> RegExp:
-    """Reads a Javscript regular expression from the current position."""
+    """Reads a Javascript regular expression from the current position."""
     next_id = self._GetNextId()
     pattern = self.ReadString()
     _, flags = self.decoder.DecodeUint32Varint()  # TODO: verify flags

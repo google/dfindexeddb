@@ -15,6 +15,7 @@
 """A CLI tool for dfindexeddb."""
 import argparse
 import dataclasses
+import enum
 from datetime import datetime
 import json
 import pathlib
@@ -57,6 +58,8 @@ class Encoder(json.JSONEncoder):
       return list(o)
     if isinstance(o, v8.RegExp):
       return str(o)
+    if isinstance(o, enum.Enum):
+      return o.name
     return json.JSONEncoder.default(self, o)
 
 
