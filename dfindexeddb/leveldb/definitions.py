@@ -25,6 +25,8 @@ PACKED_SEQUENCE_AND_TYPE_LENGTH = 8
 SEQUENCE_LENGTH = 7
 TYPE_LENGTH = 1
 
+MANIFEST_FILENAME_PATTERN = r'MANIFEST-[0-9]{6}'
+
 
 class BlockCompressionType(enum.IntEnum):
   """Block compression types."""
