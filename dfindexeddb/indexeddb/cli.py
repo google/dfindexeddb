@@ -73,23 +73,78 @@ def _Output(structure, output):
     print(structure)
 
 
-def IndexeddbCommand(args):
-  """The CLI for processing a log/ldb file as indexeddb."""
-  for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
+def DbCommand(args):
+  """The CLI for processing a directory as indexeddb."""
+  if args.use_manifest:
+    for db_record in leveldb_record.LevelDBRecord.FromManifest(args.source):
+      record = db_record.record
+      try:
+        idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+            db_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
+            f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+        continue
+      _Output(idb_record, output=args.output)
+  else:
+    for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
+      record = db_record.record
+      try:
+        idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+            db_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
+            f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+        continue
+      _Output(idb_record, output=args.output)
+
+
+def LdbCommand(args):
+  """The CLI for processing a leveldb table (.ldb) file as indexeddb."""
+  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
     record = db_record.record
     try:
-      db_record.record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-          record)
+      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+          db_record)
     except(
         errors.ParserError,
         errors.DecoderError,
         NotImplementedError) as err:
       print(
-          (f'Error parsing blink value: {err} for {record.__class__.__name__} '
+          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
            f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
       print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-      print(f'Record: {record}', file=sys.stderr)
-    _Output(db_record, output=args.output)
+      continue
+    _Output(idb_record, output=args.output)
+
+
+def LogCommand(args):
+  """The CLI for processing a leveldb log file as indexeddb."""
+  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
+    record = db_record.record
+    try:
+      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+          db_record)
+    except(
+        errors.ParserError,
+        errors.DecoderError,
+        NotImplementedError) as err:
+      print(
+          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
+           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
+      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+      continue
+    _Output(idb_record, output=args.output)
 
 
 def App():
@@ -98,10 +153,19 @@ def App():
       prog='dfindexeddb',
       description='A cli tool for parsing indexeddb files',
       epilog=f'Version {version.GetVersion()}')
-  parser.add_argument(
+
+  subparsers = parser.add_subparsers()
+
+  parser_db = subparsers.add_parser(
+      'db', help='Parse a directory as indexeddb.')
+  parser_db.add_argument(
       '-s', '--source', required=True, type=pathlib.Path,
       help='The source leveldb folder')
-  parser.add_argument(
+  parser_db.add_argument(
+      '--use_manifest',
+      action='store_true',
+      help='Use manifest file to determine active/deleted records.')
+  parser_db.add_argument(
       '-o',
       '--output',
       choices=[
@@ -110,7 +174,39 @@ def App():
           'repr'],
       default='json',
       help='Output format.  Default is json')
-  parser.set_defaults(func=IndexeddbCommand)
+  parser_db.set_defaults(func=DbCommand)
+
+  parser_ldb = subparsers.add_parser(
+      'ldb', help='Parse a ldb file as indexeddb.')
+  parser_ldb.add_argument(
+      '-s', '--source', required=True, type=pathlib.Path,
+      help='The source .ldb file.')
+  parser_ldb.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  parser_ldb.set_defaults(func=LdbCommand)
+
+  parser_log = subparsers.add_parser(
+      'log', help='Parse a log file as indexeddb.')
+  parser_log.add_argument(
+      '-s', '--source', required=True, type=pathlib.Path,
+      help='The source .log file.')
+  parser_log.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  parser_log.set_defaults(func=LogCommand)
 
   args = parser.parse_args()
   args.func(args)

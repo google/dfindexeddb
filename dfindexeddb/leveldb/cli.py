@@ -66,8 +66,12 @@ def _Output(structure, output):
 
 def DbCommand(args):
   """The CLI for processing leveldb folders."""
-  for rec in record.LevelDBRecord.FromDir(args.source):
-    _Output(rec, output=args.output)
+  if args.use_manifest:
+    for rec in record.LevelDBRecord.FromManifest(args.source):
+      _Output(rec, output=args.output)
+  else:
+    for rec in record.LevelDBRecord.FromDir(args.source):
+      _Output(rec, output=args.output)
 
 
 def LdbCommand(args):
@@ -159,6 +163,10 @@ def App():
       required=True,
       type=pathlib.Path,
       help='The source leveldb directory')
+  parser_db.add_argument(
+      '--use_manifest',
+      action='store_true',
+      help='Use manifest file to determine active/deleted records.')
   parser_db.add_argument(
       '-o',
       '--output',

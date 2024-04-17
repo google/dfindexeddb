@@ -22,8 +22,7 @@ from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import definitions
-from dfindexeddb.leveldb import ldb
-from dfindexeddb.leveldb import log
+from dfindexeddb.leveldb import record
 from dfindexeddb.leveldb import utils
 
 
@@ -1337,24 +1336,33 @@ class IndexedDBRecord:
     value: the value of the record.
     sequence_number: if available, the sequence number of the record.
     type: the type of the record.
+    level: the leveldb level, None indicates the record came from a log file.
+    recovered: True if the record is a recovered record.
   """
+  path: str
   offset: int
   key: Any
   value: Any
-  sequence_number: int
+  sequence_number: Optional[int]
   type: int
+  level: Optional[int]
+  recovered: Optional[bool]
 
   @classmethod
   def FromLevelDBRecord(
-      cls, record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]
+      cls, db_record: record.LevelDBRecord
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
-    idb_key = IndexedDbKey.FromBytes(record.key, base_offset=record.offset)
-    idb_value = idb_key.ParseValue(record.value)
+    idb_key = IndexedDbKey.FromBytes(
+        db_record.record.key, base_offset=db_record.record.offset)
+    idb_value = idb_key.ParseValue(db_record.record.value)
     return cls(
-      offset=record.offset,
-      key=idb_key,
-      value=idb_value,
-      sequence_number=record.sequence_number if hasattr(
-          record, 'sequence_number') else None,
-      type=record.record_type)
+        path=db_record.path,
+        offset=db_record.record.offset,
+        key=idb_key,
+        value=idb_value,
+        sequence_number=db_record.record.sequence_number if hasattr(
+            db_record.record, 'sequence_number') else None,
+        type=db_record.record.record_type,
+        level=db_record.level,
+        recovered=db_record.recovered)
