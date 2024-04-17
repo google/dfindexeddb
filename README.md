@@ -61,14 +61,61 @@ installation:
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] -s SOURCE [-o {json,jsonl,repr}]
+usage: dfindexeddb [-h] {db,ldb,log} ...
 
 A cli tool for parsing indexeddb files
+
+positional arguments:
+  {db,ldb,log}
+    db          Parse a directory as indexeddb.
+    ldb         Parse a ldb file as indexeddb.
+    log         Parse a log file as indexeddb.
+
+options:
+  -h, --help    show this help message and exit
+```
+
+To parse Indexeddb records from a LevelDB folder, use the following command:
+
+```
+dfindexeddb db -h
+usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
 
 options:
   -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
                         The source leveldb folder
+  --use_manifest        Use manifest file to determine active/recovered records.
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+```
+
+To parse Indexeddb records from a LevelDB ldb (.ldb) file, use the following 
+command:
+
+```
+dfindexeddb ldb -h
+usage: dfindexeddb ldb [-h] -s SOURCE [-o {json,jsonl,repr}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source .ldb file.
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+```
+
+To parse Indexeddb records from a LevelDB log (.log) file, use the following 
+command:
+
+```
+dfindexeddb log -h
+usage: dfindexeddb log [-h] -s SOURCE [-o {json,jsonl,repr}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source .log file.
   -o {json,jsonl,repr}, --output {json,jsonl,repr}
                         Output format. Default is json
 ```
@@ -90,6 +137,21 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+```
+
+To parse records from a LevelDB folder, use the following command:
+
+```
+dfindexeddb db -h
+usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source leveldb folder
+  --use_manifest        Use manifest file to determine active/recovered records.
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
 ```
 
 To parse records from a LevelDB log (.log) file, use the following command:
