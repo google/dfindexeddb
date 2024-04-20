@@ -76,7 +76,7 @@ class IDBKeyData(utils.FromDecoderMixin):
         _, data = decoder.DecodeDouble()
       elif key_type == SIDBKeyType.DATE:
         _, timestamp = decoder.DecodeDouble()
-        data = datetime.fromtimestamp(timestamp/1000)  # UTC?
+        data = datetime.utcfromtimestamp(timestamp/1000)  # UTC?
       elif key_type == SIDBKeyType.STRING:
         _, length = decoder.DecodeUint32()
         data = []

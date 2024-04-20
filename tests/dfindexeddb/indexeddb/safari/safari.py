@@ -576,7 +576,7 @@ class SafariIndexedDBTest(unittest.TestCase):
       expected_key = record.IDBKeyData(
           offset=0,
           key_type=record.SIDBKeyType.DATE,
-          data=datetime.datetime(2023, 2, 13, 10, 20, 30, 456000))
+          data=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000))
       key_bytes = bytes.fromhex('004000803FE17E647842')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)

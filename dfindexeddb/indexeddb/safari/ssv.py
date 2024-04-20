@@ -16,7 +16,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 import io
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from dfindexeddb import errors
 from dfindexeddb import utils
@@ -45,7 +45,7 @@ class FileData:
 @dataclass
 class FileList:
   """A parsed FileList."""
-  files: list[FileData]
+  files: List[FileData]
 
 
 class JSArray(list):
