@@ -397,7 +397,7 @@ class SerializedScriptValueDecoder():
     _, value = self.DecodeValue()
     return value
 
-  def DecodeValue(self) -> tuple[int, Any]:
+  def DecodeValue(self) -> Tuple[int, Any]:
     """Decodes a value."""
     offset, tag = self.DecodeSerializationTag()
     if tag == definitions.SerializationTag.ARRAY:
