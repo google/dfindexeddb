@@ -16,7 +16,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 import io
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from dfindexeddb import errors
 from dfindexeddb import utils
@@ -116,7 +116,7 @@ class SerializedScriptValueDecoder():
       raise errors.ParserError(
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
-  def DecodeSerializationTag(self) -> tuple[int, definitions.SerializationTag]:
+  def DecodeSerializationTag(self) -> Tuple[int, definitions.SerializationTag]:
     """Decodes a SerializationTag."""
     offset, terminal_byte = self.decoder.DecodeUint8()
     try:
