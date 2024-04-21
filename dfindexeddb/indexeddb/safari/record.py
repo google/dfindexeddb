@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from datetime import datetime
 import plistlib
 import sqlite3
+import sys
+import traceback
 from typing import Any, Generator, Union
 
 from dfindexeddb import errors
@@ -111,12 +113,13 @@ class ObjectStoreInfo:
     name: the object store name.
     key_path: the object store key path.
     auto_inc: True if the object store uses auto incrementing IDs.
+    database_name: the database name.
   """
   id: int
   name: str
   key_path: str
   auto_inc: bool
-
+  database_name: str
 
 @dataclass
 class IndexedDBRecord:
@@ -124,6 +127,8 @@ class IndexedDBRecord:
   key: Any
   value: Any
   object_store_id: int
+  object_store_name: str
+  database_name: str
   record_id: int
 
 
@@ -179,7 +184,11 @@ class FileReader:
       for result in results:
         key_path = plistlib.loads(result[2])
         yield ObjectStoreInfo(
-            id=result[0], name=result[1], key_path=key_path, auto_inc=result[3])
+            id=result[0],
+            name=result[1],
+            key_path=key_path,
+            auto_inc=result[3],
+            database_name=self.database_name)
 
   def RecordsByObjectStoreName(
       self,
@@ -193,13 +202,19 @@ class FileReader:
     with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
       conn.text_factory = bytes
       for row in conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, r.recordID FROM Records r '
+          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM '
+          'Records r '
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
           'WHERE o.name = ?', (name, )):
         key = IDBKeyData.FromBytes(row[0]).data
         value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
         yield IndexedDBRecord(
-            key=key, value=value, object_store_id=row[2], record_id=row[3])
+            key=key,
+            value=value,
+            object_store_id=row[2],
+            object_store_name=row[3],
+            database_name=self.database_name,
+            record_id=row[4])
 
   def RecordsByObjectStoreId(
       self,
@@ -213,24 +228,54 @@ class FileReader:
     with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, r.recordID FROM Records r '
+          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID '
+          'FROM Records r '
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
           'WHERE o.id = ?', (object_store_id, ))
       for row in cursor:
         key = IDBKeyData.FromBytes(row[0]).data
         value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
         yield IndexedDBRecord(
-            key=key, value=value, object_store_id=row[2], record_id=row[3])
+            key=key,
+            value=value,
+            object_store_id=row[2],
+            object_store_name=row[3],
+            database_name=self.database_name,
+            record_id=row[4])
 
   def Records(self) -> Generator[IndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
     with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, r.recordID FROM Records r '
-          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id ')
+          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID '
+          'FROM Records r '
+          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id')
       for row in cursor:
-        key = IDBKeyData.FromBytes(row[0]).data
-        value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
+        try:
+          key = IDBKeyData.FromBytes(row[0]).data
+        except(
+            errors.ParserError,
+            errors.DecoderError,
+            NotImplementedError) as err:
+          print(
+              f'Error parsing Indexeddb key: {err}', file=sys.stderr)
+          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+          continue
+        try:
+          value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
+        except(
+            errors.ParserError,
+            errors.DecoderError,
+            NotImplementedError) as err:
+          print(
+              f'Error parsing Indexeddb value: {err}', file=sys.stderr)
+          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+          continue
         yield IndexedDBRecord(
-            key=key, value=value, object_store_id=row[2], record_id=row[3])
+            key=key,
+            value=value,
+            object_store_id=row[2],
+            object_store_name=row[3],
+            database_name=self.database_name,
+            record_id=row[4])
