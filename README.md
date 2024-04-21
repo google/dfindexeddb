@@ -1,11 +1,11 @@
 # dfIndexeddb
 
 dfindexeddb is an experimental Python tool for performing digital forensic
-analysis of IndexedDB and leveldb files.
+analysis of IndexedDB and LevelDB files.
 
-It parses leveldb, IndexedDB and javascript structures from these files without
+It parses LevelDB, IndexedDB and JavaScript structures from these files without
 requiring native libraries.  (Note: only a subset of IndexedDB key types and
-Javascript types for Chromium-based browsers are currently supported.  Safari
+JavaScript types for Chromium-based browsers are currently supported.  Safari
 and Firefox are under development).
 
 The content of IndexedDB files is dependent on what a web application stores
@@ -53,7 +53,7 @@ include:
 
 ## Usage
 
-Two CLI tools for parsing IndexedDB/leveldb files are available after
+Two CLI tools for parsing IndexedDB/LevelDB files are available after
 installation:
 
 
@@ -75,7 +75,7 @@ options:
   -h, --help    show this help message and exit
 ```
 
-To parse Indexeddb records from a LevelDB folder, use the following command:
+To parse IndexedDB records from a LevelDB folder, use the following command:
 
 ```
 dfindexeddb db -h
@@ -90,7 +90,7 @@ options:
                         Output format. Default is json
 ```
 
-To parse Indexeddb records from a LevelDB ldb (.ldb) file, use the following 
+To parse IndexedDB records from a LevelDB ldb (.ldb) file, use the following 
 command:
 
 ```
@@ -105,7 +105,7 @@ options:
                         Output format. Default is json
 ```
 
-To parse Indexeddb records from a LevelDB log (.log) file, use the following 
+To parse IndexedDB records from a LevelDB log (.log) file, use the following 
 command:
 
 ```
