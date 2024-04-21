@@ -111,7 +111,7 @@ def DbCommand(args):
           continue
         _Output(idb_record, output=args.output)
   elif args.format == 'safari':
-    for db_record in safari_record.FileReader(args.source).Records():
+    for db_record in safari_record.Reader(args.source).Records():
       _Output(db_record, output=args.output)
 
 
