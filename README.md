@@ -75,22 +75,25 @@ options:
   -h, --help    show this help message and exit
 ```
 
-To parse IndexedDB records from a LevelDB folder, use the following command:
+To parse IndexedDB records from a LevelDB folder (for chrome/chromium) or file (for
+safari), use the following command:
 
 ```
 dfindexeddb db -h
-usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
+usage: dfindexeddb db [-h] -s SOURCE --format {chromium,chrome,safari} [--use_manifest] [-o {json,jsonl,repr}]
 
 options:
   -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
-                        The source leveldb folder
-  --use_manifest        Use manifest file to determine active/recovered records.
+                        The source IndexedDB folder (for chrome/chromium) or file (for safari).
+  --format {chromium,chrome,safari}
+                        The type of IndexedDB to parse.
+  --use_manifest        Use manifest file to determine active/deleted records.
   -o {json,jsonl,repr}, --output {json,jsonl,repr}
                         Output format. Default is json
 ```
 
-To parse IndexedDB records from a LevelDB ldb (.ldb) file, use the following 
+To parse IndexedDB records from a LevelDB ldb (.ldb) file, use the following
 command:
 
 ```
@@ -105,7 +108,7 @@ options:
                         Output format. Default is json
 ```
 
-To parse IndexedDB records from a LevelDB log (.log) file, use the following 
+To parse IndexedDB records from a LevelDB log (.log) file, use the following
 command:
 
 ```
