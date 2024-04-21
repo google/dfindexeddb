@@ -16,6 +16,7 @@
 import datetime
 import unittest
 
+from dfindexeddb.indexeddb.safari import definitions
 from dfindexeddb.indexeddb.safari import record
 from dfindexeddb.indexeddb.safari import ssv
 
@@ -28,7 +29,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_idbkeydata = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=10)
       key_bytes = bytes.fromhex('00200000000000002440')
       parsed_idbkeydata = record.IDBKeyData.FromBytes(key_bytes)
@@ -48,7 +49,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=11)
       key_bytes = bytes.fromhex('00200000000000002640')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -67,7 +68,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=12)
       key_bytes = bytes.fromhex('00200000000000002840')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -86,7 +87,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=13)
       key_bytes = bytes.fromhex('00200000000000002A40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -105,7 +106,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=14)
       key_bytes = bytes.fromhex('00200000000000002C40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -126,7 +127,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=15)
       key_bytes = bytes.fromhex('00200000000000002E40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -145,7 +146,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=16)
       key_bytes = bytes.fromhex('00200000000000003040')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -164,7 +165,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=17)
       key_bytes = bytes.fromhex('00200000000000003140')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -183,7 +184,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=18)
       key_bytes = bytes.fromhex('00200000000000003240')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -202,7 +203,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=19)
       key_bytes = bytes.fromhex('00200000000000003340')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -223,7 +224,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=20)
       key_bytes = bytes.fromhex('00200000000000003440')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -244,7 +245,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=21)
       key_bytes = bytes.fromhex('00200000000000003540')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -270,7 +271,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=22)
       key_bytes = bytes.fromhex('00200000000000003640')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -298,7 +299,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=23)
       key_bytes = bytes.fromhex('00200000000000003740')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -320,7 +321,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=24)
       key_bytes = bytes.fromhex('00200000000000003840')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -342,7 +343,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=25)
       key_bytes = bytes.fromhex('00200000000000003940')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -361,7 +362,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=26)
       key_bytes = bytes.fromhex('00200000000000003A40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -380,7 +381,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=27)
       key_bytes = bytes.fromhex('00200000000000003B40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -401,7 +402,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=28)
       key_bytes = bytes.fromhex('00200000000000003C40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -421,7 +422,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=29)
       key_bytes = bytes.fromhex('00200000000000003D40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -441,7 +442,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=30)
       key_bytes = bytes.fromhex('00200000000000003E40')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -461,7 +462,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=1)
       key_bytes = bytes.fromhex('0020000000000000F03F')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -526,7 +527,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=2)
       key_bytes = bytes.fromhex('00200000000000000040')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -575,7 +576,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.DATE,
+          key_type=definitions.SIDBKeyType.DATE,
           data=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000))
       key_bytes = bytes.fromhex('004000803FE17E647842')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -596,7 +597,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.NUMBER,
+          key_type=definitions.SIDBKeyType.NUMBER,
           data=-3.14)
       key_bytes = bytes.fromhex('00201F85EB51B81E09C0')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -617,7 +618,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.STRING,
+          key_type=definitions.SIDBKeyType.STRING,
           data='test string key')
       key_bytes = bytes.fromhex(
           '00600F0000007400650073007400200073007400720069006E00670020006B00'
@@ -640,7 +641,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.BINARY,
+          key_type=definitions.SIDBKeyType.BINARY,
           data=b'\x00\x00\x00')
       key_bytes = bytes.fromhex('00800300000000000000000000')
       parsed_key = record.IDBKeyData.FromBytes(key_bytes)
@@ -651,7 +652,9 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0F00000002020000806964160200000000000000000300000000000000150300'
           '0000000000000000000500008076616C756502FFFFFFFFFFFFFFFF')
       expected_value = {
-          'id': b'\x00\x00\x00', 'value':{}}
+          'id':  ssv.ArrayBufferView(
+              buffer=b'\x00\x00\x00', offset=0, length=3),
+          'value': {}}
       parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
@@ -661,7 +664,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     with self.subTest('key'):
       expected_key = record.IDBKeyData(
           offset=0,
-          key_type=record.SIDBKeyType.ARRAY,
+          key_type=definitions.SIDBKeyType.ARRAY,
           data=[1, 2, 3])
       key_bytes = bytes.fromhex(
           '00A0030000000000000020000000000000F03F20000000000000004020000000'
@@ -675,7 +678,7 @@ class SafariIndexedDBTest(unittest.TestCase):
           '00000503000000FFFFFFFFFFFFFFFF0500008076616C756502FFFFFFFFFFFFFF'
           'FF')
       expected_value = {
-          'id': [1, 2, 3], 'value':{}}
+          'id': [1, 2, 3], 'value': {}}
       parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)

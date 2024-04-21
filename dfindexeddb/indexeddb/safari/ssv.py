@@ -24,12 +24,18 @@ from dfindexeddb.indexeddb.safari import definitions
 
 
 @dataclass
-class BufferArrayView:
-  """A parsed Javascript BufferArrayView."""
+class ArrayBufferView:
+  """A parsed JavaScript ArrayBufferView."""
   buffer: bytes
   offset: int
   length: int
-  flags: int
+
+
+@dataclass
+class ResizableArrayBuffer:
+  """A parsed Resizable Array Buffer."""
+  buffer: bytes
+  max_length: int
 
 
 @dataclass
@@ -49,10 +55,10 @@ class FileList:
 
 
 class JSArray(list):
-  """A parsed Javascript array.
+  """A parsed JavaScript array.
 
   This is a wrapper around a standard Python list to allow assigning arbitrary
-  properties as is possible in the Javascript equivalent.
+  properties as is possible in the JavaScript equivalent.
   """
 
   def __repr__(self):
@@ -75,26 +81,29 @@ class JSArray(list):
 
 @dataclass
 class Null:
-  """A parsed Javascript Null."""
+  """A parsed JavaScript Null."""
 
 
 @dataclass
 class RegExp:
-  """A parsed Javascript RegExp."""
+  """A parsed JavaScript RegExp."""
   pattern: str
   flags: str
 
 
 @dataclass(frozen=True)
 class Undefined:
-  """A parsed Javascript undef."""
+  """A parsed JavaScript undef."""
 
 
 class SerializedScriptValueDecoder():
   """Decodes a Serialized Script Value from a stream of bytes.
 
   Attributes:
-    decoder: the stream decoder.
+    decoder: the stream decoder for the given byte stream.
+    version: the parsed serialized script version.
+    constant_pool: the constant pool.
+    object_pool: the object pool.
   """
   def __init__(self, stream: io.BytesIO):
     self.decoder = utils.StreamDecoder(stream)
@@ -103,7 +112,7 @@ class SerializedScriptValueDecoder():
     self.object_pool = []
 
   def PeekTag(self) -> int:
-    """Peeks a tag."""
+    """Peeks a tag from the current position."""
     _, peeked_bytes = self.decoder.PeekBytes(4)
     return int.from_bytes(peeked_bytes, byteorder='little')
 
@@ -117,7 +126,14 @@ class SerializedScriptValueDecoder():
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
   def DecodeSerializationTag(self) -> Tuple[int, definitions.SerializationTag]:
-    """Decodes a SerializationTag."""
+    """Decodes a SerializationTag.
+
+    Returns:
+      a tuple of the offset and the serialization tag.
+
+    Raises:
+      ParserError if an invalid terminal value was encountered.
+    """
     offset, terminal_byte = self.decoder.DecodeUint8()
     try:
       return offset, definitions.SerializationTag(terminal_byte)
@@ -126,7 +142,7 @@ class SerializedScriptValueDecoder():
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
   def DecodeArray(self) -> JSArray:
-    """ Decodes an Array value."""
+    """Decodes an Array value."""
     _, length = self.decoder.DecodeUint32()
     array = JSArray()
     for _ in range(length):
@@ -180,12 +196,12 @@ class SerializedScriptValueDecoder():
         raise errors.ParserError('Unexpected constant pool size')
       return self.constant_pool[cp_index]
 
-    _, is_8bit_length = self.decoder.DecodeUint32()
-    if is_8bit_length == definitions.TerminatorTag:
+    _, length_with_8bit_flag = self.decoder.DecodeUint32()
+    if length_with_8bit_flag == definitions.TerminatorTag:
       raise errors.ParserError('Disallowed string length found.')
 
-    length = is_8bit_length & 0x7FFFFFFF
-    is_8bit = is_8bit_length & definitions.StringDataIs8BitFlag
+    length = length_with_8bit_flag & 0x7FFFFFFF
+    is_8bit = length_with_8bit_flag & definitions.StringDataIs8BitFlag
     _, characters = self.decoder.ReadBytes(length)
     if is_8bit:
       value = characters.decode('latin-1')
@@ -200,7 +216,7 @@ class SerializedScriptValueDecoder():
     value = datetime.utcfromtimestamp(timestamp/1000)
     return value
 
-  def DecodeFileData(self):
+  def DecodeFileData(self) -> FileData:
     """Decodes a FileData value."""
     path = self.DecodeStringData()
     url = self.DecodeStringData()
@@ -215,7 +231,7 @@ class SerializedScriptValueDecoder():
         name=name,
         last_modified=last_modified)
 
-  def DecodeFileList(self):
+  def DecodeFileList(self) -> FileList:
     """Decodes a FileList value."""
     _, length = self.decoder.DecodeUint32()
     file_list = []
@@ -223,7 +239,7 @@ class SerializedScriptValueDecoder():
       file_list.append(self.DecodeFileData())
     return FileList(files=file_list)
 
-  def DecodeImageData(self):
+  def DecodeImageData(self) -> Dict[str, Any]:
     """Decodes an ImageData value."""
     _, width = self.decoder.DecodeUint32()
     _, height = self.decoder.DecodeUint32()
@@ -235,6 +251,7 @@ class SerializedScriptValueDecoder():
     else:
       color_space = None
 
+    # TODO: make this a dataclass?
     return {
       'width': width,
       'height': height,
@@ -243,7 +260,7 @@ class SerializedScriptValueDecoder():
       'color_space': color_space
     }
 
-  def DecodeBlob(self):
+  def DecodeBlob(self) -> Dict[str, Any]:
     """Decodes a Blob value."""
     url = self.DecodeStringData()
     blob_type = self.DecodeStringData()
@@ -253,6 +270,7 @@ class SerializedScriptValueDecoder():
     else:
       memory_cost = None
 
+    # TODO: make this a dataclass?
     return {
       'url': url,
       'blob_type': blob_type,
@@ -269,6 +287,7 @@ class SerializedScriptValueDecoder():
   def DecodeMapData(self) -> dict:
     """Decodes a Map value."""
     tag = self.PeekSerializationTag()
+    # TODO: make this into a dataclass
     js_map = {}
 
     while tag != definitions.SerializationTag.NON_MAP_PROPERTIES:
@@ -284,7 +303,7 @@ class SerializedScriptValueDecoder():
     while pool_tag != definitions.TerminatorTag:
       name = self.DecodeStringData()
       value = self.DecodeValue()
-      js_map[name] = value  # TODO
+      js_map[name] = value
       pool_tag = self.PeekTag()
 
     _, tag = self.decoder.DecodeUint32()
@@ -294,6 +313,7 @@ class SerializedScriptValueDecoder():
   def DecodeSetData(self) -> set:
     """Decodes a SetData value."""
     tag = self.PeekSerializationTag()
+    # TODO: make this into a dataclasss
     js_set = set()
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
@@ -315,13 +335,13 @@ class SerializedScriptValueDecoder():
     _, tag = self.decoder.DecodeUint32()
     return js_set
 
-  def DecodeCryptoKey(self) -> Any:
+  def DecodeCryptoKey(self) -> bytes:
     """Decodes a CryptoKey value."""
     _, wrapped_key_length = self.decoder.DecodeUint64()
     _, wrapped_key = self.decoder.ReadBytes(wrapped_key_length)
     return wrapped_key
 
-  def DecodeBigIntData(self):
+  def DecodeBigIntData(self) -> int:
     """Decodes a BigIntData value."""
     _, sign = self.decoder.DecodeUint8()
     _, number_of_elements = self.decoder.DecodeUint32()
@@ -332,37 +352,37 @@ class SerializedScriptValueDecoder():
     value = int.from_bytes(contents, byteorder='little', signed=bool(sign))
     return value
 
-  def DecodeArrayBuffer(self):
+  def DecodeArrayBuffer(self) -> bytes:
     """Decodes an ArrayBuffer value."""
     _, byte_length = self.decoder.DecodeUint64()
     _, buffer = self.decoder.ReadBytes(byte_length)
     self.object_pool.append(buffer)
     return buffer
 
-  def DecodeResizableArrayBuffer(self):
+  def DecodeResizableArrayBuffer(self) -> ResizableArrayBuffer:
     """Decodes an ArrayBuffer value."""
     _, byte_length = self.decoder.DecodeUint64()
-    _, _max_length = self.decoder.DecodeUint64()  # TODO: include this value.
+    _, max_length = self.decoder.DecodeUint64()
     _, buffer = self.decoder.ReadBytes(byte_length)
     self.object_pool.append(buffer)
-    return buffer
+    return ResizableArrayBuffer(buffer=buffer, max_length=max_length)
 
-  def DecodeArrayBufferTransfer(self):
+  def DecodeArrayBufferTransfer(self) -> int:
     """Decodes an ArrayBufferTransfer value."""
     _, value = self.decoder.DecodeUint32()
     return value
 
-  def DecodeSharedArrayBuffer(self):
+  def DecodeSharedArrayBuffer(self) -> int:
     """Decodes an SharedArrayBuffer value."""
     _, value = self.decoder.DecodeUint32()
     return value
 
-  def DecodeObjectReference(self):
+  def DecodeObjectReference(self) -> Any:
     """Decodes an ObjectReference value."""
     _, object_ref = self.decoder.DecodeUint8()
     return self.object_pool[object_ref - 1]
 
-  def DecodeArrayBufferView(self):
+  def DecodeArrayBufferView(self) -> ArrayBufferView:
     """Decodes an ArrayBufferView value."""
     _, array_buffer_view_subtag = self.decoder.DecodeUint8()
     array_buffer_view_subtag = definitions.ArrayBufferViewSubtag(
@@ -379,7 +399,7 @@ class SerializedScriptValueDecoder():
     else:
       raise errors.ParserError(
           f'Unexpected serialization tag {next_serialization_tag}.')
-    return value[byte_offset:byte_offset+byte_length]
+    return ArrayBufferView(buffer=value, offset=byte_offset, length=byte_length)
 
   def DecodeSerializedValue(self) -> Any:
     """Decodes a serialized value.
@@ -528,16 +548,16 @@ class SerializedScriptValueDecoder():
 
   @classmethod
   def FromBytes(cls, data: bytes) -> Any:
-    """Returns a deserialized javascript object from the data.
+    """Returns a deserialized JavaScript object from the data.
 
     Args:
       data: the data to deserialize/parse.
 
     Returns:
-      A python representation of the parsed javascript object.
+      A python representation of the parsed JavaScript object.
 
     Raises:
-      errors.ParserError: if there is an invalid V8 javascript header.
+      errors.ParserError: if there is an invalid V8 JavaScript header.
     """
     stream = io.BytesIO(data)
     deserializer = cls(stream)

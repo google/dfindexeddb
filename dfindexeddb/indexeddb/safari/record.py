@@ -15,7 +15,6 @@
 """Safari IndexedDB records."""
 from __future__ import annotations
 
-import enum
 from dataclasses import dataclass
 from datetime import datetime
 import plistlib
@@ -24,7 +23,7 @@ from typing import Any, Generator, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
-from dfindexeddb import definitions
+from dfindexeddb.indexeddb.safari import definitions
 from dfindexeddb.indexeddb.safari import ssv
 
 
@@ -88,8 +87,9 @@ class IDBKeyData(utils.FromDecoderMixin):
     if version_header != definitions.SIDBKeyVersion:
       raise errors.ParserError('SIDBKeyVersion not found.')
 
-    _, key_type = definitions.SIDBKeyType(decoder.DecodeUint8())
-    
+    _, raw_key_type = decoder.DecodeUint8()
+    key_type = definitions.SIDBKeyType(raw_key_type)
+
     # "Old-style key is characterized by this magic character that
     # begins serialized PropertyLists
     if key_type == b'b':
@@ -182,7 +182,7 @@ class FileReader:
             id=result[0], name=result[1], key_path=key_path, auto_inc=result[3])
 
   def RecordsByObjectStoreName(
-      self, 
+      self,
       name: str
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore name.
@@ -202,7 +202,7 @@ class FileReader:
             key=key, value=value, object_store_id=row[2], record_id=row[3])
 
   def RecordsByObjectStoreId(
-      self, 
+      self,
       object_store_id: int
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore id.

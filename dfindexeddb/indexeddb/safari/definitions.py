@@ -27,7 +27,7 @@ StringDataIs8BitFlag = 0x80000000
 SIDBKeyVersion = 0x00
 
 
-class SIDBKeyType(enum.IntEnum):
+class SIDBKeyType(IntEnum):
   """SIDBKeyType."""
   MIN = 0x00
   NUMBER = 0x20
