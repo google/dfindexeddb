@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for Safari IndexedDB encoded databases."""
+"""Unit tests for Safari IndexedDB encoded sqlite3 databases."""
 import datetime
 import unittest
 
@@ -21,7 +21,7 @@ from dfindexeddb.indexeddb.safari import ssv
 
 
 class SafariIndexedDBTest(unittest.TestCase):
-  """Unit tests for Safari IndexedDB encoded leveldb databases."""
+  """Unit tests for Safari IndexedDB encoded sqlite3 databases."""
 
   def test_parse_undefined(self):
     """Tests parsing an undefined value from an IndexedDB value."""
@@ -282,7 +282,7 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0500008076616C75650B00803FE17E64'
           '7842FFFFFFFF')
       # Date(2023, 1, 13, 10, 20, 30, 456)
-      # note javascript dates, month is 0-indexed and the date is in localtime
+      # note JavaScript dates, month is 0-indexed and the date is in localtime
       # (UTC+11)
       expected_value = {
           'id': 22,
