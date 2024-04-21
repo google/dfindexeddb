@@ -16,6 +16,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 import io
+import plistlib
 from typing import Any, Dict, List, Tuple
 
 from dfindexeddb import errors
@@ -175,7 +176,7 @@ class SerializedScriptValueDecoder():
       js_object[name] = value
       tag = self.PeekTag()
     _ = self.decoder.DecodeUint32()
-
+    self.object_pool.append(js_object)
     return js_object
 
   def DecodeStringData(self) -> str:
@@ -202,11 +203,16 @@ class SerializedScriptValueDecoder():
 
     length = length_with_8bit_flag & 0x7FFFFFFF
     is_8bit = length_with_8bit_flag & definitions.StringDataIs8BitFlag
-    _, characters = self.decoder.ReadBytes(length)
+
     if is_8bit:
+      _, characters = self.decoder.ReadBytes(length)
       value = characters.decode('latin-1')
     else:
-      value = characters.decode('utf-16-le')
+      try:
+        _, characters = self.decoder.ReadBytes(2*length)
+        value = characters.decode('utf-16-le')
+      except UnicodeDecodeError:
+        raise errors.ParserError(f'Unable to decode characters as utf-16-le {characters}, {len(characters)}')
     self.constant_pool.append(value)
     return value
 
@@ -337,9 +343,10 @@ class SerializedScriptValueDecoder():
 
   def DecodeCryptoKey(self) -> bytes:
     """Decodes a CryptoKey value."""
-    _, wrapped_key_length = self.decoder.DecodeUint64()
+    _, wrapped_key_length = self.decoder.DecodeUint32()
     _, wrapped_key = self.decoder.ReadBytes(wrapped_key_length)
-    return wrapped_key
+    key = plistlib.loads(wrapped_key)
+    return key
 
   def DecodeBigIntData(self) -> int:
     """Decodes a BigIntData value."""
