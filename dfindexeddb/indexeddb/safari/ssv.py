@@ -208,11 +208,12 @@ class SerializedScriptValueDecoder():
       _, characters = self.decoder.ReadBytes(length)
       value = characters.decode('latin-1')
     else:
+      _, characters = self.decoder.ReadBytes(2*length)
       try:
-        _, characters = self.decoder.ReadBytes(2*length)
         value = characters.decode('utf-16-le')
       except UnicodeDecodeError:
-        raise errors.ParserError(f'Unable to decode characters as utf-16-le {characters}, {len(characters)}')
+        raise errors.ParserError(
+            f'Unable to decode {len(characters)} characters as utf-16-le')
     self.constant_pool.append(value)
     return value
 

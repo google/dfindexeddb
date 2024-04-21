@@ -87,8 +87,9 @@ def DbCommand(args):
             errors.DecoderError,
             NotImplementedError) as err:
           print((
-              f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
-              f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
+              f'Error parsing Indexeddb record {record.__class__.__name__}: '
+              f'{err} at offset {record.offset} in {db_record.path}'),
+              file=sys.stderr)
           print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
           continue
         _Output(idb_record, output=args.output)
@@ -103,8 +104,9 @@ def DbCommand(args):
             errors.DecoderError,
             NotImplementedError) as err:
           print((
-              f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
-              f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
+              f'Error parsing Indexeddb record {record.__class__.__name__}: '
+              f'{err} at offset {record.offset} in {db_record.path}'),
+              file=sys.stderr)
           print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
           continue
         _Output(idb_record, output=args.output)
