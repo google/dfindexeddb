@@ -26,7 +26,13 @@ from dfindexeddb.indexeddb.safari import definitions
 
 @dataclass
 class ArrayBufferView:
-  """A parsed JavaScript ArrayBufferView."""
+  """A parsed JavaScript ArrayBufferView.
+
+  Attributes:
+    buffer: the buffer.
+    offset: the offset of the view.
+    length: the length of the view.
+  """
   buffer: bytes
   offset: int
   length: int
@@ -34,14 +40,27 @@ class ArrayBufferView:
 
 @dataclass
 class ResizableArrayBuffer:
-  """A parsed Resizable Array Buffer."""
+  """A parsed Resizable Array Buffer.
+
+  Attributes:
+    buffer: the buffer.
+    max_length: the maximum length of the buffer (for resizing).
+  """
   buffer: bytes
   max_length: int
 
 
 @dataclass
 class FileData:
-  """A parsed FileData."""
+  """A parsed FileData.
+
+  Attributes:
+    path: the path.
+    url: the URL.
+    type: the type.
+    name: the file name.
+    last_modified: the last modified timestamp.
+  """
   path: str
   url: str
   type: str
@@ -51,7 +70,11 @@ class FileData:
 
 @dataclass
 class FileList:
-  """A parsed FileList."""
+  """A parsed FileList.
+
+  Attributes:
+    files: the list of files.
+  """
   files: List[FileData]
 
 
@@ -80,6 +103,31 @@ class JSArray(list):
     return self.__dict__[name]
 
 
+class JSSet(set):
+  """A parsed JavaScript set.
+
+  This is a wrapper around a standard Python set to allow assigning arbitrary
+  properties as is possible in the JavaScript equivalent.
+  """
+
+  def __repr__(self):
+    set_entries = ", ".join([str(entry) for entry in list(self)])
+    properties = ", ".join(
+        f'{key}: {value}' for key, value in self.properties.items())
+    return f'[{set_entries}, {properties}]'
+
+  @property
+  def properties(self) -> Dict[str, Any]:
+    """Returns the object properties."""
+    return self.__dict__
+
+  def __contains__(self, item):
+    return item in self.__dict__
+
+  def __getitem__(self, name):
+    return self.__dict__[name]
+
+
 @dataclass
 class Null:
   """A parsed JavaScript Null."""
@@ -87,7 +135,12 @@ class Null:
 
 @dataclass
 class RegExp:
-  """A parsed JavaScript RegExp."""
+  """A parsed JavaScript RegExp.
+
+  Attributes:
+    pattern: the pattern.
+    flags: the flags.
+  """
   pattern: str
   flags: str
 
@@ -294,8 +347,7 @@ class SerializedScriptValueDecoder():
   def DecodeMapData(self) -> dict:
     """Decodes a Map value."""
     tag = self.PeekSerializationTag()
-    # TODO: make this into a dataclass
-    js_map = {}
+    js_map = {}   # TODO: make this into a JSMap (like JSArray/JSSet)
 
     while tag != definitions.SerializationTag.NON_MAP_PROPERTIES:
       _, key = self.DecodeValue()
@@ -317,11 +369,10 @@ class SerializedScriptValueDecoder():
 
     return js_map
 
-  def DecodeSetData(self) -> set:
+  def DecodeSetData(self) -> JSSet:
     """Decodes a SetData value."""
     tag = self.PeekSerializationTag()
-    # TODO: make this into a dataclasss
-    js_set = set()
+    js_set = JSSet()
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
       _, key = self.DecodeValue()
@@ -335,7 +386,7 @@ class SerializedScriptValueDecoder():
     while pool_tag != definitions.TerminatorTag:
       name = self.DecodeStringData()
       value = self.DecodeValue()
-      js_set.__dict__[name] = value
+      js_set.properties[name] = value
       pool_tag = self.decoder.PeekBytes(4)
 
     # consume the TerminatorTag
@@ -426,13 +477,20 @@ class SerializedScriptValueDecoder():
     return value
 
   def DecodeValue(self) -> Tuple[int, Any]:
-    """Decodes a value."""
+    """Decodes a value.
+
+    Returns:
+      the offset and parsed value.
+
+    Raises:
+      ParserError when an unhandled SerializationTag is found.
+    """
     offset, tag = self.DecodeSerializationTag()
     if tag == definitions.SerializationTag.ARRAY:
       value = self.DecodeArray()
     elif tag == definitions.SerializationTag.OBJECT:
       value = self.DecodeObject()
-    if tag == definitions.SerializationTag.UNDEFINED:
+    elif tag == definitions.SerializationTag.UNDEFINED:
       value = Undefined()
     elif tag == definitions.SerializationTag.NULL:
       value = Null()
@@ -466,8 +524,6 @@ class SerializedScriptValueDecoder():
       value = self.DecodeRegExp()
     elif tag == definitions.SerializationTag.OBJECT_REFERENCE:
       value = self.DecodeObjectReference()
-    # elif tag == definitions.SerializationTag.MESSAGE_PORT_REFERENCE:
-    #   value = self.DecodeMessagePortReference()
     elif tag == definitions.SerializationTag.ARRAY_BUFFER:
       value = self.DecodeArrayBuffer()
     elif tag == definitions.SerializationTag.ARRAY_BUFFER_VIEW:
@@ -497,61 +553,13 @@ class SerializedScriptValueDecoder():
       value = self.DecodeCryptoKey()
     elif tag == definitions.SerializationTag.SHARED_ARRAY_BUFFER:
       value = self.DecodeSharedArrayBuffer()
-    # elif tag == definitions.SerializationTag.WASM_MODULE:
-    #   _, value = self.DecodeWasmModule()
-    # elif tag == definitions.SerializationTag.DOM_POINT_READONLY:
-    #   _, value = self.DecodeDOMPoint()
-    # elif tag == definitions.SerializationTag.DOM_POINT:
-    #   _, value = self.DecodeDOMPoint()
-    # elif tag == definitions.SerializationTag.DOM_RECT_READONLY:
-    #   _, value = self.DecodeDOMRect()
-    # elif tag == definitions.SerializationTag.DOM_RECT:
-    #   _, value = self.DecodeDOMRect()
-    # elif tag == definitions.SerializationTag.DOM_MATRIX_READONLY:
-    #   _, value = self.DecodeDOMMatrix()
-    # elif tag == definitions.SerializationTag.DOM_MATRIX:
-    #   _, value = self.DecodeDOMMatrix()
-    # elif tag == definitions.SerializationTag.DOM_QUAD:
-    #   _, value = self.DecodeDOMQuad()
-    # elif tag == definitions.SerializationTag.IMAGE_BITMAP_TRANSFER:
-    #   _, value = self.DecodeImageBitmapTransferTag()
-    # elif tag == definitions.SerializationTag.RTC_CERTIFICATE:
-    #   _, value = self.DecodeRTCCCertificate()
-    # elif tag == definitions.SerializationTag.IMAGE_BITMAP:
-    #   _, value = self.DecodeImageBitmap()
-    # elif tag == definitions.SerializationTag.OFF_SCREEN_CANVAS_TRANSFER:
-    #   _, value = self.DecodeOffscreenCanvasTransferTag()
     elif tag == definitions.SerializationTag.BIGINT:
       value = self.DecodeBigIntData()
     elif tag == definitions.SerializationTag.BIGINT_OBJECT:
       value = self.DecodeBigIntData()
       self.object_pool.append(value)
-    # elif tag == definitions.SerializationTag.WASM_MEMORY:
-    #   _, value = self.DecodeWasmMemory()
-    # elif tag == definitions.SerializationTag.RTC_DATA_CHANNEL_TRANSFER:
-    #   _, value = self.DecodeRTCDataChannel()
-    # elif tag == definitions.SerializationTag.DOM_EXCEPTION:
-    #   _, value = self.DecodeDOMException()
-    # elif tag == definitions.SerializationTag.WEB_CODECS_ENCODED_VIDEO_CHUNK:
-    #   _, value = self.DecodeWebCodecsEncodedVideoChunk()
-    # elif tag == definitions.SerializationTag.WEB_CODECS_VIDEO_FRAME:
-    #   _, value = self.DecodeWebCodecsVideoFrame()
-    # elif tag == definitions.SerializationTag.RESIZABLE_ARRAY_BUFFER:
-    #   value = self.DecodeResizableArrayBuffer()
-    # elif tag == definitions.SerializationTag.ERROR_INSTANCE:
-    #   _, value = self.DecodeErrorInstanceTag()
-    # elif tag == definitions.SerializationTag.IN_MEMORY_OFFSCREEN_CANVAS:
-    #   _, value = self.DecodeInMemoryOffscreenCanvas()
-    # elif tag == definitions.SerializationTag.IN_MEMORY_MESSAGE_PORT:
-    #   _, value = self.DecodeInMemoryOffscreenCanvas()
-    # elif tag == definitions.SerializationTag.WEB_CODECS_ENCODED_AUDIO_CHUNK:
-    #   _, value = self.DecodeWebCodecsEncodedAudioChunk()
-    # elif tag == definitions.SerializationTag.WEB_CODECS_AUDIO_DATA:
-    #   _, value = self.DecodeWebCodecsAudioData()
-    # elif tag == definitions.SerializationTag.MEDIA_STREAM_TRACK:
-    #   _, value = self.DecodeMediaStreamTrack()
-    # elif tag == definitions.SerializationTag.MEDIA_SOURCE_HANDLE_TRANSFER:
-    #   _, value = self.DecodeMediaSourceHandle()
+    else:
+      raise errors.ParserError(f'Unhandled Serialization Tag {tag.name} found.')
     return offset, value
 
   @classmethod

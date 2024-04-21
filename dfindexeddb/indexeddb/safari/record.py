@@ -113,7 +113,7 @@ class ObjectStoreInfo:
     name: the object store name.
     key_path: the object store key path.
     auto_inc: True if the object store uses auto incrementing IDs.
-    database_name: the database name.
+    database_name: the database name from the IDBDatabaseInfo table.
   """
   id: int
   name: str
@@ -123,7 +123,15 @@ class ObjectStoreInfo:
 
 @dataclass
 class IndexedDBRecord:
-  """A Safari IndexedDBRecord."""
+  """A Safari IndexedDBRecord.
+
+  Attributes:
+    key: the parsed key.
+    value: the parsed value.
+    object_store_id: the object store id.
+    object_store_name: the object store name from the ObjectStoreInfo table.
+    database_name: the IndexedDB database name from the IDBDatabaseInfo table.
+    record_id: the record ID from the Record table."""
   key: Any
   value: Any
   object_store_id: int
@@ -132,7 +140,7 @@ class IndexedDBRecord:
   record_id: int
 
 
-class FileReader:
+class Reader:
   """A reader for Safari IndexedDB sqlite3 files.
 
   Attributes:
@@ -259,7 +267,7 @@ class FileReader:
             errors.DecoderError,
             NotImplementedError) as err:
           print(
-              f'Error parsing Indexeddb key: {err}', file=sys.stderr)
+              f'Error parsing IndexedDB key: {err}', file=sys.stderr)
           print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
           continue
         try:
@@ -269,7 +277,7 @@ class FileReader:
             errors.DecoderError,
             NotImplementedError) as err:
           print(
-              f'Error parsing Indexeddb value: {err}', file=sys.stderr)
+              f'Error parsing IndexedDB value: {err}', file=sys.stderr)
           print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
           continue
         yield IndexedDBRecord(
