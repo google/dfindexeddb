@@ -24,6 +24,20 @@ ImageDataPoolTag = 0xFFFFFFFE
 StringDataIs8BitFlag = 0x80000000
 
 
+SIDBKeyVersion = 0x00
+
+
+class SIDBKeyType(enum.IntEnum):
+  """SIDBKeyType."""
+  MIN = 0x00
+  NUMBER = 0x20
+  DATE = 0x40
+  STRING = 0x60
+  BINARY = 0x80
+  ARRAY = 0xA0
+  MAX = 0xFF
+
+
 class SerializationTag(IntEnum):
   """Database Metadata key types.  
   
