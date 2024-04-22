@@ -12,12 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parsers for Safari Serialized Script Values."""
+"""Parsers for WebKit Serialized Script Values."""
+from __future__ import annotations
+
 from datetime import datetime
 from dataclasses import dataclass
 import io
 import plistlib
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
@@ -148,6 +150,81 @@ class RegExp:
 @dataclass(frozen=True)
 class Undefined:
   """A parsed JavaScript undef."""
+
+
+@dataclass
+class IDBKeyData(utils.FromDecoderMixin):
+  """An IDBKeyData.
+
+  Attributes:
+    offset: the offset at which the IDBKeyData was parsed.
+    key_type: the IDB Key Type.
+    data: the key data.
+  """
+  offset: int
+  key_type: definitions.SIDBKeyType
+  data: Union[float, datetime, str, bytes, list]
+
+  @classmethod
+  def FromDecoder(
+      cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> IDBKeyData:
+    """Decodes an IDBKeyData from the current position of decoder.
+
+    Refer to IDBSerialization.cpp for the encoding scheme.
+
+    Args:
+      decoder: the decoder
+
+    Returns:
+      the IDBKeyData.
+
+    Raises:
+      ParserError: when the key version is not found or an unknown key type is
+          encountered or an old-style PropertyList key type is found.
+    """
+    def _DecodeKeyBuffer(key_type):
+      if key_type == definitions.SIDBKeyType.MIN:
+        data = None
+      if key_type == definitions.SIDBKeyType.NUMBER:
+        _, data = decoder.DecodeDouble()
+      elif key_type == definitions.SIDBKeyType.DATE:
+        _, timestamp = decoder.DecodeDouble()
+        data = datetime.utcfromtimestamp(timestamp/1000)
+      elif key_type == definitions.SIDBKeyType.STRING:
+        _, length = decoder.DecodeUint32()
+        _, raw_data = decoder.ReadBytes(length*2)
+        data = raw_data.decode('utf-16-le')
+      elif key_type == definitions.SIDBKeyType.BINARY:
+        _, length = decoder.DecodeUint32()
+        _, data = decoder.ReadBytes(length)
+      elif key_type == definitions.SIDBKeyType.ARRAY:
+        _, length = decoder.DecodeUint64()
+        data = []
+        for _ in range(length):
+          _, key_type = decoder.DecodeUint8()
+          element = _DecodeKeyBuffer(key_type)
+          data.append(element)
+      else:
+        raise errors.ParserError('Unknown definitions.SIDBKeyType found.')
+      return data
+
+    offset, version_header = decoder.DecodeUint8()
+    if version_header != definitions.SIDBKeyVersion:
+      raise errors.ParserError('SIDBKeyVersion not found.')
+
+    _, raw_key_type = decoder.DecodeUint8()
+    key_type = definitions.SIDBKeyType(raw_key_type)
+
+    # "Old-style key is characterized by this magic character that
+    # begins serialized PropertyLists
+    if key_type == b'b':
+      raise errors.ParserError('Old-style PropertyList key type found.')
+    data = _DecodeKeyBuffer(key_type)
+
+    return cls(
+        offset=offset+base_offset,
+        key_type=key_type,
+        data=data)
 
 
 class SerializedScriptValueDecoder():

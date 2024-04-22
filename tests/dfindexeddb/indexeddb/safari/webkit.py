@@ -12,104 +12,103 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for Safari IndexedDB encoded sqlite3 databases."""
+"""Unit tests for Webkit encoded JavaScript values."""
 import datetime
 import unittest
 
 from dfindexeddb.indexeddb.safari import definitions
-from dfindexeddb.indexeddb.safari import record
-from dfindexeddb.indexeddb.safari import ssv
+from dfindexeddb.indexeddb.safari import webkit
 
 
-class SafariIndexedDBTest(unittest.TestCase):
-  """Unit tests for Safari IndexedDB encoded sqlite3 databases."""
+class WebkitTest(unittest.TestCase):
+  """Unit tests for Webkit encoded JavaScript values."""
 
   def test_parse_undefined(self):
     """Tests parsing an undefined value from an IndexedDB value."""
     with self.subTest('key'):
-      expected_idbkeydata = record.IDBKeyData(
+      expected_idbkeydata = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=10)
       key_bytes = bytes.fromhex('00200000000000002440')
-      parsed_idbkeydata = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_idbkeydata = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkeydata, expected_idbkeydata)
 
     with self.subTest('value'):
-      expected_value = {'id': 10, 'value': ssv.Undefined()}
+      expected_value = {'id': 10, 'value': webkit.Undefined()}
       value_bytes = bytes.fromhex(
           '0F00000002020000 806964050A000000'
           '0500008076616C75 6503FFFFFFFF')
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_null(self):
     """Tests parsing a null value from an IndexedDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=11)
       key_bytes = bytes.fromhex('00200000000000002640')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
-      expected_value = {'id': 11, 'value': ssv.Null()}
+      expected_value = {'id': 11, 'value': webkit.Null()}
       value_bytes = bytes.fromhex(
           '0F00000002020000806964050B0000000500008076616C756504FFFFFFFF')
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_zero(self):
     """Tests parsing a zero value from an IndexedDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=12)
       key_bytes = bytes.fromhex('00200000000000002840')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F00000002020000806964050C0000000500008076616C756506FFFFFFFF')
       expected_value = {'id': 12, 'value': 0}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_one(self):
     """Tests parsing a one value from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=13)
       key_bytes = bytes.fromhex('00200000000000002A40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F00000002020000806964050D0000000500008076616C756507FFFFFFFF')
       expected_value = {'id': 13, 'value': 1}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_integer(self):
     """Tests parsing an integer value from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=14)
       key_bytes = bytes.fromhex('00200000000000002C40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -118,95 +117,95 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0500008076616C7565057B000000FFFF'
           'FFFF')
       expected_value = {'id': 14, 'value': 123}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_true(self):
     """Tests parsing a true value from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=15)
       key_bytes = bytes.fromhex('00200000000000002E40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F00000002020000806964050F0000000500008076616C756509FFFFFFFF')
       expected_value = {'id': 15, 'value': True}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_false(self):
     """Tests parsing a false value from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=16)
       key_bytes = bytes.fromhex('00200000000000003040')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F0000000202000080696405100000000500008076616C756508FFFFFFFF')
       expected_value = {'id': 16, 'value': False}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_true_object(self):
     """Tests parsing a true object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=17)
       key_bytes = bytes.fromhex('00200000000000003140')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F0000000202000080696405110000000500008076616C756518FFFFFFFF')
       expected_value = {'id': 17, 'value': True}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_false_object(self):
     """Tests parsing a false object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=18)
       key_bytes = bytes.fromhex('00200000000000003240')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F0000000202000080696405120000000500008076616C756519FFFFFFFF')
       expected_value = {'id': 18, 'value': False}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_number(self):
     """Tests parsing a number from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=19)
       key_bytes = bytes.fromhex('00200000000000003340')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -215,19 +214,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0500008076616C75650A1F85EB51B81E'
           '0940FFFFFFFF')
       expected_value = {'id': 19, 'value': 3.14}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_number_object(self):
     """Tests parsing a number object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=20)
       key_bytes = bytes.fromhex('00200000000000003440')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -236,19 +235,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0500008076616C75651C1F85EB51B81E'
           '0940FFFFFFFF')
       expected_value = {'id': 20, 'value': 3.14}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_bigint(self):
     """Tests parsing a bigint from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=21)
       key_bytes = bytes.fromhex('00200000000000003540')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -262,19 +261,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           'FFFFFFFF')
       # BigInt(123e20) === 12300000000000001048576n
       expected_value = {'id': 21, 'value': 12300000000000001048576}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_date(self):
     """Tests parsing a date from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=22)
       key_bytes = bytes.fromhex('00200000000000003640')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -290,19 +289,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           'value': datetime.datetime(
               year=2023, month=2, day=12, hour=23, minute=20, second=30,
               microsecond=456000)}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_string(self):
     """Tests parsing a string from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=23)
       key_bytes = bytes.fromhex('00200000000000003740')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -312,19 +311,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '737420737472696E672076616C7565FF'
           'FFFFFF')
       expected_value = {'id': 23, 'value': 'test string value'}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_string_object(self):
     """Tests parsing a string object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=24)
       key_bytes = bytes.fromhex('00200000000000003840')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -334,57 +333,57 @@ class SafariIndexedDBTest(unittest.TestCase):
           '737420737472696E67206F626A656374'
           'FFFFFFFF')
       expected_value = {'id': 24, 'value': 'test string object'}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_string(self):
     """Tests parsing an empty string from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=25)
       key_bytes = bytes.fromhex('00200000000000003940')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F0000000202000080696405190000000500008076616C756511FFFFFFFF')
       expected_value = {'id': 25, 'value': ''}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_string_object(self):
     """Tests parsing an empty string object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=26)
       key_bytes = bytes.fromhex('00200000000000003A40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F00000002020000806964051A0000000500008076616C75651BFFFFFFFF')
       expected_value = {'id': 26, 'value': ''}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_set(self):
     """Tests parsing a set from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=27)
       key_bytes = bytes.fromhex('00200000000000003B40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -393,19 +392,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0500008076616C75651D070502000000'
           '050300000020FFFFFFFFFFFFFFFF')
       expected_value = {'id': 27, 'value': {1, 2, 3}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_map(self):
     """Tests parsing a map from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=28)
       key_bytes = bytes.fromhex('00200000000000003C40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -413,39 +412,39 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0F00000002020000806964051C0000000500008076616C75651E1FFFFFFFFFFFFF'
           'FFFF')
       expected_value = {'id': 28, 'value': {}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_regexp(self):
     """Tests parsing a regexp from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=29)
       key_bytes = bytes.fromhex('00200000000000003D40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
       value_bytes = bytes.fromhex(
           '0F00000002020000806964051D0000000500008076616C756512'
           '00000080FEFFFFFF02FFFFFFFF')
-      expected_value = {'id': 29, 'value': ssv.RegExp(pattern='', flags='')}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      expected_value = {'id': 29, 'value': webkit.RegExp(pattern='', flags='')}
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_object(self):
     """Tests parsing a empty object from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=30)
       key_bytes = bytes.fromhex('00200000000000003E40')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -453,19 +452,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0F00000002020000806964051E0000000500008076616C756502FFFFFFFFFFFF'
           'FFFF')
       expected_value = {'id': 30, 'value': {}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_mixed_object(self):
     """Tests parsing a object with mixed values from an IndexedDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=1)
       key_bytes = bytes.fromhex('0020000000000000F03F')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -491,8 +490,8 @@ class SafariIndexedDBTest(unittest.TestCase):
           'FFFFFFFFFFFFFFFF')
       expected_value = {
          'id': 1,
-          'test_undef': ssv.Undefined(),
-          'test_null': ssv.Null(),
+          'test_undef': webkit.Undefined(),
+          'test_null': webkit.Null(),
           'test_bool_true': True,
           'test_bool_false': False,
           'test_string': 'a string value',
@@ -508,7 +507,7 @@ class SafariIndexedDBTest(unittest.TestCase):
               'a': 1,
               'b': 2,
               'c': 3},
-          'test_regexp': ssv.RegExp('\\w+', ''),
+          'test_regexp': webkit.RegExp('\\w+', ''),
           'test_array': [123, 456, 'abc', 'def'],
           'test_object': {
               'name': {
@@ -518,19 +517,19 @@ class SafariIndexedDBTest(unittest.TestCase):
               'age': 21,
           }
       }
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_nested_array(self):
     """Tests parsing a nested array value from an IDB value."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=2)
       key_bytes = bytes.fromhex('00200000000000000040')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -567,19 +566,19 @@ class SafariIndexedDBTest(unittest.TestCase):
               }
           }
       }
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_date_key(self):
     """Tests parsing a date from an IDB key."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.DATE,
           data=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000))
       key_bytes = bytes.fromhex('004000803FE17E647842')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -588,19 +587,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           'FFFFFFFFFFFF')
       expected_value = {
           'id': datetime.datetime(2023, 2, 12, 23, 20, 30, 456000), 'value':{}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_number_key(self):
     """Tests parsing a number from an IDB key."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.NUMBER,
           data=-3.14)
       key_bytes = bytes.fromhex('00201F85EB51B81E09C0')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -609,21 +608,21 @@ class SafariIndexedDBTest(unittest.TestCase):
           'FFFFFFFFFFFF')
       expected_value = {
           'id': -3.14, 'value':{}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_string_key(self):
     """Tests parsing a number from an IDB key."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.STRING,
           data='test string key')
       key_bytes = bytes.fromhex(
           '00600F0000007400650073007400200073007400720069006E00670020006B00'
           '65007900')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -632,19 +631,19 @@ class SafariIndexedDBTest(unittest.TestCase):
           '00008076616C756502FFFFFFFFFFFFFFFF')
       expected_value = {
           'id':'test string key', 'value':{}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_uintarray_key(self):
     """Tests parsing a number from an IDB key."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.BINARY,
           data=b'\x00\x00\x00')
       key_bytes = bytes.fromhex('00800300000000000000000000')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -652,24 +651,24 @@ class SafariIndexedDBTest(unittest.TestCase):
           '0F00000002020000806964160200000000000000000300000000000000150300'
           '0000000000000000000500008076616C756502FFFFFFFFFFFFFFFF')
       expected_value = {
-          'id':  ssv.ArrayBufferView(
+          'id':  webkit.ArrayBufferView(
               buffer=b'\x00\x00\x00', offset=0, length=3),
           'value': {}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 
   def test_parse_array_key(self):
     """Tests parsing an array from an IDB key."""
     with self.subTest('key'):
-      expected_key = record.IDBKeyData(
+      expected_key = webkit.IDBKeyData(
           offset=0,
           key_type=definitions.SIDBKeyType.ARRAY,
           data=[1, 2, 3])
       key_bytes = bytes.fromhex(
           '00A0030000000000000020000000000000F03F20000000000000004020000000'
           '0000000840')
-      parsed_key = record.IDBKeyData.FromBytes(key_bytes)
+      parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
       self.assertEqual(parsed_key, expected_key)
 
     with self.subTest('value'):
@@ -679,7 +678,7 @@ class SafariIndexedDBTest(unittest.TestCase):
           'FF')
       expected_value = {
           'id': [1, 2, 3], 'value': {}}
-      parsed_value = ssv.SerializedScriptValueDecoder.FromBytes(
+      parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
           value_bytes)
       self.assertEqual(parsed_value, expected_value)
 

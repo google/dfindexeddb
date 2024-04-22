@@ -13,95 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Safari IndexedDB records."""
-from __future__ import annotations
-
 from dataclasses import dataclass
-from datetime import datetime
 import plistlib
 import sqlite3
 import sys
 import traceback
-from typing import Any, Generator, Union
+from typing import Any, Generator
 
 from dfindexeddb import errors
-from dfindexeddb import utils
-from dfindexeddb.indexeddb.safari import definitions
-from dfindexeddb.indexeddb.safari import ssv
-
-
-@dataclass
-class IDBKeyData(utils.FromDecoderMixin):
-  """An IDBKeyData.
-
-  Attributes:
-    offset: the offset at which the IDBKeyData was parsed.
-    key_type: the IDB Key Type.
-    data: the key data.
-  """
-  offset: int
-  key_type: definitions.SIDBKeyType
-  data: Union[float, datetime, str, bytes, list]
-
-  @classmethod
-  def FromDecoder(
-      cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> IDBKeyData:
-    """Decodes an IDBKeyData from the current position of decoder.
-
-    Refer to IDBSerialization.cpp for the encoding scheme.
-
-    Args:
-      decoder: the decoder
-
-    Returns:
-      the IDBKeyData.
-
-    Raises:
-      ParserError: when the key version is not found or an unknown key type is
-          encountered or an old-style PropertyList key type is found.
-    """
-    def _DecodeKeyBuffer(key_type):
-      if key_type == definitions.SIDBKeyType.MIN:
-        data = None
-      if key_type == definitions.SIDBKeyType.NUMBER:
-        _, data = decoder.DecodeDouble()
-      elif key_type == definitions.SIDBKeyType.DATE:
-        _, timestamp = decoder.DecodeDouble()
-        data = datetime.utcfromtimestamp(timestamp/1000)
-      elif key_type == definitions.SIDBKeyType.STRING:
-        _, length = decoder.DecodeUint32()
-        _, raw_data = decoder.ReadBytes(length*2)
-        data = raw_data.decode('utf-16-le')
-      elif key_type == definitions.SIDBKeyType.BINARY:
-        _, length = decoder.DecodeUint32()
-        _, data = decoder.ReadBytes(length)
-      elif key_type == definitions.SIDBKeyType.ARRAY:
-        _, length = decoder.DecodeUint64()
-        data = []
-        for _ in range(length):
-          _, key_type = decoder.DecodeUint8()
-          element = _DecodeKeyBuffer(key_type)
-          data.append(element)
-      else:
-        raise errors.ParserError('Unknown definitions.SIDBKeyType found.')
-      return data
-
-    offset, version_header = decoder.DecodeUint8()
-    if version_header != definitions.SIDBKeyVersion:
-      raise errors.ParserError('SIDBKeyVersion not found.')
-
-    _, raw_key_type = decoder.DecodeUint8()
-    key_type = definitions.SIDBKeyType(raw_key_type)
-
-    # "Old-style key is characterized by this magic character that
-    # begins serialized PropertyLists
-    if key_type == b'b':
-      raise errors.ParserError('Old-style PropertyList key type found.')
-    data = _DecodeKeyBuffer(key_type)
-
-    return cls(
-        offset=offset+base_offset,
-        key_type=key_type,
-        data=data)
+from dfindexeddb.indexeddb.safari import webkit
 
 
 @dataclass
@@ -120,6 +40,7 @@ class ObjectStoreInfo:
   key_path: str
   auto_inc: bool
   database_name: str
+
 
 @dataclass
 class IndexedDBRecord:
@@ -198,6 +119,26 @@ class Reader:
             auto_inc=result[3],
             database_name=self.database_name)
 
+  def RecordById(self, record_id: int) -> IndexedDBRecord:
+    """Returns an IndexedDBRecord for the given record_id."""
+    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+      conn.text_factory = bytes
+      cursor = conn.execute(
+          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM '
+          'Records r '
+          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
+          'WHERE r.recordID = ?', (record_id, ))
+      row = cursor.fetchone()
+      key = webkit.IDBKeyData.FromBytes(row[0]).data
+      value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
+      return IndexedDBRecord(
+          key=key,
+          value=value,
+          object_store_id=row[2],
+          object_store_name=row[3],
+          database_name=self.database_name,
+          record_id=row[4])
+
   def RecordsByObjectStoreName(
       self,
       name: str
@@ -214,8 +155,8 @@ class Reader:
           'Records r '
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
           'WHERE o.name = ?', (name, )):
-        key = IDBKeyData.FromBytes(row[0]).data
-        value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
+        key = webkit.IDBKeyData.FromBytes(row[0]).data
+        value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
         yield IndexedDBRecord(
             key=key,
             value=value,
@@ -241,8 +182,8 @@ class Reader:
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
           'WHERE o.id = ?', (object_store_id, ))
       for row in cursor:
-        key = IDBKeyData.FromBytes(row[0]).data
-        value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
+        key = webkit.IDBKeyData.FromBytes(row[0]).data
+        value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
         yield IndexedDBRecord(
             key=key,
             value=value,
@@ -261,7 +202,7 @@ class Reader:
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id')
       for row in cursor:
         try:
-          key = IDBKeyData.FromBytes(row[0]).data
+          key = webkit.IDBKeyData.FromBytes(row[0]).data
         except(
             errors.ParserError,
             errors.DecoderError,
@@ -271,7 +212,7 @@ class Reader:
           print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
           continue
         try:
-          value = ssv.SerializedScriptValueDecoder.FromBytes(row[1])
+          value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
         except(
             errors.ParserError,
             errors.DecoderError,
