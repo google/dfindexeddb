@@ -52,7 +52,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_one(self):
-    """Tests parsing a one value from an IDB value."""
+    """Tests parsing a one value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050D0000000500008076616C756507FFFFFFFF')
     expected_value = {'id': 13, 'value': 1}
@@ -61,7 +61,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_integer(self):
-    """Tests parsing an integer value from an IDB value."""
+    """Tests parsing an integer value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050E000000'
         '0500008076616C7565057B000000FFFF'
@@ -72,7 +72,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_true(self):
-    """Tests parsing a true value from an IDB value."""
+    """Tests parsing a true value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050F0000000500008076616C756509FFFFFFFF')
     expected_value = {'id': 15, 'value': True}
@@ -81,7 +81,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_false(self):
-    """Tests parsing a false value from an IDB value."""
+    """Tests parsing a false value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F0000000202000080696405100000000500008076616C756508FFFFFFFF')
     expected_value = {'id': 16, 'value': False}
@@ -90,7 +90,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_true_object(self):
-    """Tests parsing a true object from an IDB value."""
+    """Tests parsing a true object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F0000000202000080696405110000000500008076616C756518FFFFFFFF')
     expected_value = {'id': 17, 'value': True}
@@ -99,7 +99,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_false_object(self):
-    """Tests parsing a false object from an IDB value."""
+    """Tests parsing a false object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F0000000202000080696405120000000500008076616C756519FFFFFFFF')
     expected_value = {'id': 18, 'value': False}
@@ -108,7 +108,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_number(self):
-    """Tests parsing a number from an IDB value."""
+    """Tests parsing a number from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640513000000'
         '0500008076616C75650A1F85EB51B81E'
@@ -119,7 +119,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_number_object(self):
-    """Tests parsing a number object from an IDB value."""
+    """Tests parsing a number object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640514000000'
         '0500008076616C75651C1F85EB51B81E'
@@ -130,7 +130,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_bigint(self):
-    """Tests parsing a bigint from an IDB value."""
+    """Tests parsing a bigint from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640515000000'
         '0500008076616C7565'
@@ -146,7 +146,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_date(self):
-    """Tests parsing a date from an IDB value."""
+    """Tests parsing a date from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640516000000'
         '0500008076616C75650B00803FE17E64'
@@ -164,7 +164,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_string(self):
-    """Tests parsing a string from an IDB value."""
+    """Tests parsing a string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640517000000'
         '0500008076616C756510110000807465'
@@ -176,7 +176,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_string_object(self):
-    """Tests parsing a string object from an IDB value."""
+    """Tests parsing a string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F000000020200008069640518000000'
         '0500008076616C75651A120000807465'
@@ -188,7 +188,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_string(self):
-    """Tests parsing an empty string from an IDB value."""
+    """Tests parsing an empty string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F0000000202000080696405190000000500008076616C756511FFFFFFFF')
     expected_value = {'id': 25, 'value': ''}
@@ -197,7 +197,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_string_object(self):
-    """Tests parsing an empty string object from an IDB value."""
+    """Tests parsing an empty string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051A0000000500008076616C75651BFFFFFFFF')
     expected_value = {'id': 26, 'value': ''}
@@ -206,7 +206,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_set(self):
-    """Tests parsing a set from an IDB value."""
+    """Tests parsing a set from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051B000000'
         '0500008076616C75651D070502000000'
@@ -217,7 +217,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_map(self):
-    """Tests parsing a map from an IDB value."""
+    """Tests parsing a map from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051C0000000500008076616C75651E1FFFFFFFFFFFFF'
         'FFFF')
@@ -227,7 +227,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_regexp(self):
-    """Tests parsing a regexp from an IDB value."""
+    """Tests parsing a regexp from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051D0000000500008076616C756512'
         '00000080FEFFFFFF02FFFFFFFF')
@@ -237,7 +237,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_empty_object(self):
-    """Tests parsing a empty object from an IDB value."""
+    """Tests parsing a empty object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051E0000000500008076616C756502FFFFFFFFFFFF'
         'FFFF')
@@ -302,7 +302,7 @@ class WebkitTest(unittest.TestCase):
     self.assertEqual(parsed_value, expected_value)
 
   def test_nested_array(self):
-    """Tests parsing a nested array value from an IDB value."""
+    """Tests parsing a nested array value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050200000009000080746573745F646174650B0090'
         '3FE17E64784211000080746573745F6E65737465645F61727261790208000080'
