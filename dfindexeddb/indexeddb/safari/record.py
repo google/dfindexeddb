@@ -52,7 +52,8 @@ class IndexedDBRecord:
     object_store_id: the object store id.
     object_store_name: the object store name from the ObjectStoreInfo table.
     database_name: the IndexedDB database name from the IDBDatabaseInfo table.
-    record_id: the record ID from the Record table."""
+    record_id: the record ID from the Record table.
+  """
   key: Any
   value: Any
   object_store_id: int
@@ -124,7 +125,7 @@ class Reader:
 
     Returns:
       the IndexedDBRecord or None if the record_id does not exist in the 
-          databse.
+          database.
     """
     with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
       conn.text_factory = bytes

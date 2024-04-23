@@ -15,8 +15,8 @@
 """Parsers for WebKit encoded JavaScript values."""
 from __future__ import annotations
 
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 import io
 import plistlib
 from typing import Any, Dict, List, Tuple, Union
