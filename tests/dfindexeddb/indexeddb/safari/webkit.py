@@ -652,6 +652,8 @@ class WebkitTest(unittest.TestCase):
           '0000000000000000000500008076616C756502FFFFFFFFFFFFFFFF')
       expected_value = {
           'id':  webkit.ArrayBufferView(
+              array_buffer_view_subtag=(
+                  definitions.ArrayBufferViewSubtag.UINT8_ARRAY),
               buffer=b'\x00\x00\x00', offset=0, length=3),
           'value': {}}
       parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(

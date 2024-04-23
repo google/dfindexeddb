@@ -18,7 +18,7 @@ import plistlib
 import sqlite3
 import sys
 import traceback
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.safari import webkit
@@ -119,8 +119,13 @@ class Reader:
             auto_inc=result[3],
             database_name=self.database_name)
 
-  def RecordById(self, record_id: int) -> IndexedDBRecord:
-    """Returns an IndexedDBRecord for the given record_id."""
+  def RecordById(self, record_id: int) -> Optional[IndexedDBRecord]:
+    """Returns an IndexedDBRecord for the given record_id.
+
+    Returns:
+      the IndexedDBRecord or None if the record_id does not exist in the 
+          databse.
+    """
     with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
@@ -129,13 +134,15 @@ class Reader:
           'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
           'WHERE r.recordID = ?', (record_id, ))
       row = cursor.fetchone()
+      if not row:
+        return None
       key = webkit.IDBKeyData.FromBytes(row[0]).data
       value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
       return IndexedDBRecord(
           key=key,
           value=value,
           object_store_id=row[2],
-          object_store_name=row[3],
+          object_store_name=row[3].decode('utf-8'),
           database_name=self.database_name,
           record_id=row[4])
 
@@ -161,7 +168,7 @@ class Reader:
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3],
+            object_store_name=row[3].decode('utf-8'),
             database_name=self.database_name,
             record_id=row[4])
 
@@ -188,7 +195,7 @@ class Reader:
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3],
+            object_store_name=row[3].decode('utf-8'),
             database_name=self.database_name,
             record_id=row[4])
 
@@ -225,6 +232,6 @@ class Reader:
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3],
+            object_store_name=row[3].decode('utf-8'),
             database_name=self.database_name,
             record_id=row[4])

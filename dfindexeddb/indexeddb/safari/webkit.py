@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parsers for WebKit Serialized Script Values."""
+"""Parsers for WebKit encoded JavaScript values."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -31,10 +31,12 @@ class ArrayBufferView:
   """A parsed JavaScript ArrayBufferView.
 
   Attributes:
+    array_buffer_view_subtag: the sub tag.
     buffer: the buffer.
     offset: the offset of the view.
     length: the length of the view.
   """
+  array_buffer_view_subtag: definitions.ArrayBufferViewSubtag
   buffer: bytes
   offset: int
   length: int
@@ -535,7 +537,11 @@ class SerializedScriptValueDecoder():
     else:
       raise errors.ParserError(
           f'Unexpected serialization tag {next_serialization_tag}.')
-    return ArrayBufferView(buffer=value, offset=byte_offset, length=byte_length)
+    return ArrayBufferView(
+        array_buffer_view_subtag=array_buffer_view_subtag,
+        buffer=value,
+        offset=byte_offset,
+        length=byte_length)
 
   def DecodeSerializedValue(self) -> Any:
     """Decodes a serialized value.
