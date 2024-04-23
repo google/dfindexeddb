@@ -81,10 +81,6 @@ class SafariIndexedDBTest(unittest.TestCase):
     parsed_record = self.db.RecordById(4)
     self.assertEqual(parsed_record, expected_record)
 
-
-
-
-
   def test_number_record(self):
     """Tests for an IndexedDB record with a number value."""
     expected_record = record.IndexedDBRecord(
@@ -96,8 +92,6 @@ class SafariIndexedDBTest(unittest.TestCase):
         record_id=5)
     parsed_record = self.db.RecordById(5)
     self.assertEqual(parsed_record, expected_record)
-
-
 
   def test_true_record(self):
     """Tests for an IndexedDB record with a true value."""
