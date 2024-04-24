@@ -250,13 +250,18 @@ class SerializedScriptValueDecoder():
     return int.from_bytes(peeked_bytes, byteorder='little')
 
   def PeekSerializationTag(self) -> definitions.SerializationTag:
-    """Peeks a SerializationTag."""
+    """Peeks a SerializationTag from the current position.
+
+    Raises:
+      ParserError if an invalid SerializationTag was parsed.
+    """
     offset, terminal_byte = self.decoder.PeekBytes(1)
     try:
       return definitions.SerializationTag(terminal_byte[0])
     except ValueError as error:
       raise errors.ParserError(
-          f'Invalid terminal {terminal_byte} at offset {offset}') from error
+          f'Invalid SerializationTag {terminal_byte} at offset {offset}'
+      ) from error
 
   def DecodeSerializationTag(self) -> Tuple[int, definitions.SerializationTag]:
     """Decodes a SerializationTag.
@@ -275,7 +280,14 @@ class SerializedScriptValueDecoder():
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
   def DecodeArray(self) -> JSArray:
-    """Decodes an Array value."""
+    """Decodes an Array value.
+
+    Returns:
+      the JavaScript array.
+
+    Raises:
+      ParserError if an invalid Terminator tag was found.
+    """
     _, length = self.decoder.DecodeUint32()
     array = JSArray()
     for _ in range(length):
@@ -287,7 +299,7 @@ class SerializedScriptValueDecoder():
     if terminator_tag != definitions.TerminatorTag:
       raise errors.ParserError(f'Terminator tag not found at offset {offset}.')
 
-    _, tag = self.decoder.DecodeUint32()
+    offset, tag = self.decoder.DecodeUint32()
     if tag == definitions.NonIndexPropertiesTag:
       while tag != definitions.TerminatorTag:
         name = self.DecodeStringData()
@@ -312,10 +324,21 @@ class SerializedScriptValueDecoder():
     return js_object
 
   def DecodeStringData(self) -> str:
-    """Decodes a StringData value."""
+    """Decodes a StringData value.
+
+    Returns:
+      A JavaScript array.
+
+    Raises:
+      ParserError if an:
+          * unexpected TerminatorTag is found
+          * unexpected constant pool size value is found
+          * disallowed string length is found.
+          * unable to to decode a buffer as utf-16-le.
+    """
     peeked_tag = self.PeekTag()
     if peeked_tag == definitions.TerminatorTag:
-      raise errors.ParserError('TerminatorTag found')
+      raise errors.ParserError('Unexpected TerminatorTag found')
 
     if peeked_tag == definitions.StringPoolTag:
       _ = self.decoder.DecodeUint32()
@@ -326,7 +349,7 @@ class SerializedScriptValueDecoder():
       elif len(self.constant_pool) < 0xffffffff:
         _, cp_index = self.decoder.DecodeUint32()
       else:
-        raise errors.ParserError('Unexpected constant pool size')
+        raise errors.ParserError('Unexpected constant pool size value.')
       return self.constant_pool[cp_index]
 
     _, length_with_8bit_flag = self.decoder.DecodeUint32()
@@ -476,7 +499,7 @@ class SerializedScriptValueDecoder():
     """Decodes a CryptoKey value."""
     _, wrapped_key_length = self.decoder.DecodeUint32()
     _, wrapped_key = self.decoder.ReadBytes(wrapped_key_length)
-    key = plistlib.loads(wrapped_key)
+    key = plistlib.loads(wrapped_key)  # TODO: unwrap the wrapped key.
     return key
 
   def DecodeBigIntData(self) -> int:
@@ -521,7 +544,14 @@ class SerializedScriptValueDecoder():
     return self.object_pool[object_ref - 1]
 
   def DecodeArrayBufferView(self) -> ArrayBufferView:
-    """Decodes an ArrayBufferView value."""
+    """Decodes an ArrayBufferView value.
+
+    Returns:
+      an ArrayBufferView.
+
+    Raises:
+      ParserError if an unexpected serialization tag is found.
+    """
     _, array_buffer_view_subtag = self.decoder.DecodeUint8()
     array_buffer_view_subtag = definitions.ArrayBufferViewSubtag(
         array_buffer_view_subtag)
@@ -550,7 +580,7 @@ class SerializedScriptValueDecoder():
       the serialized value.
 
     Raises:
-      ParserError: when CurrentVersion is not found.
+      ParserError when CurrentVersion is not found.
     """
     _, current_version = self.decoder.DecodeUint32()
     if current_version != definitions.CurrentVersion:
