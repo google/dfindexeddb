@@ -1,12 +1,12 @@
 # dfIndexeddb
 
 dfindexeddb is an experimental Python tool for performing digital forensic
-analysis of IndexedDB and leveldb files.
+analysis of IndexedDB and LevelDB files.
 
-It parses leveldb, IndexedDB and javascript structures from these files without
+It parses LevelDB, IndexedDB and JavaScript structures from these files without
 requiring native libraries.  (Note: only a subset of IndexedDB key types and
-Javascript types for Chromium-based browsers are currently supported.  Safari
-and Firefox are under development).
+JavaScript types for Safari and Chromium-based browsers are currently supported.
+Firefox is under development).
 
 The content of IndexedDB files is dependent on what a web application stores
 locally/offline using the web browser's
@@ -53,7 +53,7 @@ include:
 
 ## Usage
 
-Two CLI tools for parsing IndexedDB/leveldb files are available after
+Two CLI tools for parsing IndexedDB/LevelDB files are available after
 installation:
 
 
@@ -75,26 +75,46 @@ options:
   -h, --help    show this help message and exit
 ```
 
-To parse Indexeddb records from a LevelDB folder, use the following command:
+To parse IndexedDB records from an sqlite file for Safari, use the following
+command:
 
 ```
-dfindexeddb db -h
-usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
+dfindexeddb db --format safari [-o {json,jsonl,repr}] -h
+usage: dfindexeddb db [-h] -s SOURCE --format {chromium,chrome,safari} [--use_manifest] [-o {json,jsonl,repr}]
 
 options:
   -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
-                        The source leveldb folder
-  --use_manifest        Use manifest file to determine active/recovered records.
+                        The source IndexedDB folder (for chrome/chromium) or file (for safari).
+  --format {chromium,chrome,safari}
+                        The type of IndexedDB to parse.
+  --use_manifest        Use manifest file to determine active/deleted records.
   -o {json,jsonl,repr}, --output {json,jsonl,repr}
                         Output format. Default is json
 ```
 
-To parse Indexeddb records from a LevelDB ldb (.ldb) file, use the following 
+To parse IndexedDB records from a LevelDB folder for chrome/chromium, use the following command:
+
+```
+dfindexeddb db --format chrome [--use_manifest] [-o {json,jsonl,repr}] -h
+usage: dfindexeddb db [-h] -s SOURCE --format {chromium,chrome,safari} [--use_manifest] [-o {json,jsonl,repr}]
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        The source IndexedDB folder (for chrome/chromium) or file (for safari).
+  --format {chromium,chrome,safari}
+                        The type of IndexedDB to parse.
+  --use_manifest        Use manifest file to determine active/deleted records.
+  -o {json,jsonl,repr}, --output {json,jsonl,repr}
+                        Output format. Default is json
+```
+
+To parse IndexedDB records from a LevelDB ldb (.ldb) file, use the following
 command:
 
 ```
-dfindexeddb ldb -h
+dfindexeddb ldb -s SOURCE [-o {json,jsonl,repr}] -h
 usage: dfindexeddb ldb [-h] -s SOURCE [-o {json,jsonl,repr}]
 
 options:
@@ -105,11 +125,11 @@ options:
                         Output format. Default is json
 ```
 
-To parse Indexeddb records from a LevelDB log (.log) file, use the following 
+To parse IndexedDB records from a LevelDB log (.log) file, use the following
 command:
 
 ```
-dfindexeddb log -h
+dfindexeddb log -s SOURCE [-o {json,jsonl,repr}] -h
 usage: dfindexeddb log [-h] -s SOURCE [-o {json,jsonl,repr}]
 
 options:
@@ -142,7 +162,7 @@ options:
 To parse records from a LevelDB folder, use the following command:
 
 ```
-dfindexeddb db -h
+dfindexeddb db -s SOURCE [-o {json,jsonl,repr}] -h
 usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
 
 options:

@@ -27,7 +27,7 @@ from dfindexeddb import version
 from dfindexeddb.leveldb import record as leveldb_record
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
-
+from dfindexeddb.indexeddb.safari import record as safari_record
 
 _VALID_PRINTABLE_CHARACTERS = (
     ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' +
@@ -74,43 +74,49 @@ def _Output(structure, output):
 
 
 def DbCommand(args):
-  """The CLI for processing a directory as indexeddb."""
-  if args.use_manifest:
-    for db_record in leveldb_record.LevelDBRecord.FromManifest(args.source):
-      record = db_record.record
-      try:
-        idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-            db_record)
-      except(
-          errors.ParserError,
-          errors.DecoderError,
-          NotImplementedError) as err:
-        print((
-            f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
-            f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-        continue
-      _Output(idb_record, output=args.output)
-  else:
-    for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
-      record = db_record.record
-      try:
-        idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-            db_record)
-      except(
-          errors.ParserError,
-          errors.DecoderError,
-          NotImplementedError) as err:
-        print((
-            f'Error parsing Indexeddb record {record.__class__.__name__}: {err}'
-            f' at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-        continue
-      _Output(idb_record, output=args.output)
+  """The CLI for processing a directory as IndexedDB."""
+  if args.format in ('chrome', 'chromium'):
+    if args.use_manifest:
+      for db_record in leveldb_record.LevelDBRecord.FromManifest(args.source):
+        record = db_record.record
+        try:
+          idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+              db_record)
+        except(
+            errors.ParserError,
+            errors.DecoderError,
+            NotImplementedError) as err:
+          print((
+              f'Error parsing Indexeddb record {record.__class__.__name__}: '
+              f'{err} at offset {record.offset} in {db_record.path}'),
+              file=sys.stderr)
+          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+          continue
+        _Output(idb_record, output=args.output)
+    else:
+      for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
+        record = db_record.record
+        try:
+          idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
+              db_record)
+        except(
+            errors.ParserError,
+            errors.DecoderError,
+            NotImplementedError) as err:
+          print((
+              f'Error parsing Indexeddb record {record.__class__.__name__}: '
+              f'{err} at offset {record.offset} in {db_record.path}'),
+              file=sys.stderr)
+          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+          continue
+        _Output(idb_record, output=args.output)
+  elif args.format == 'safari':
+    for db_record in safari_record.Reader(args.source).Records():
+      _Output(db_record, output=args.output)
 
 
 def LdbCommand(args):
-  """The CLI for processing a leveldb table (.ldb) file as indexeddb."""
+  """The CLI for processing a LevelDB table (.ldb) file as IndexedDB."""
   for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
     record = db_record.record
     try:
@@ -129,7 +135,7 @@ def LdbCommand(args):
 
 
 def LogCommand(args):
-  """The CLI for processing a leveldb log file as indexeddb."""
+  """The CLI for processing a LevelDB log file as IndexedDB."""
   for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
     record = db_record.record
     try:
@@ -151,16 +157,25 @@ def App():
   """The CLI app entrypoint for dfindexeddb."""
   parser = argparse.ArgumentParser(
       prog='dfindexeddb',
-      description='A cli tool for parsing indexeddb files',
+      description='A cli tool for parsing IndexedDB files',
       epilog=f'Version {version.GetVersion()}')
 
   subparsers = parser.add_subparsers()
 
   parser_db = subparsers.add_parser(
-      'db', help='Parse a directory as indexeddb.')
+      'db', help='Parse a directory as IndexedDB.')
   parser_db.add_argument(
-      '-s', '--source', required=True, type=pathlib.Path,
-      help='The source leveldb folder')
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
+      help=(
+        'The source IndexedDB folder (for chrome/chromium) '
+        'or file (for safari).'))
+  parser_db.add_argument(
+      '--format',
+      required=True,
+      choices=['chromium', 'chrome', 'safari'],
+      help='The type of IndexedDB to parse.')
   parser_db.add_argument(
       '--use_manifest',
       action='store_true',
@@ -177,9 +192,12 @@ def App():
   parser_db.set_defaults(func=DbCommand)
 
   parser_ldb = subparsers.add_parser(
-      'ldb', help='Parse a ldb file as indexeddb.')
+      'ldb',
+      help='Parse a ldb file as IndexedDB.')
   parser_ldb.add_argument(
-      '-s', '--source', required=True, type=pathlib.Path,
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
       help='The source .ldb file.')
   parser_ldb.add_argument(
       '-o',
@@ -193,9 +211,12 @@ def App():
   parser_ldb.set_defaults(func=LdbCommand)
 
   parser_log = subparsers.add_parser(
-      'log', help='Parse a log file as indexeddb.')
+      'log',
+      help='Parse a log file as IndexedDB.')
   parser_log.add_argument(
-      '-s', '--source', required=True, type=pathlib.Path,
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
       help='The source .log file.')
   parser_log.add_argument(
       '-o',
@@ -209,4 +230,7 @@ def App():
   parser_log.set_defaults(func=LogCommand)
 
   args = parser.parse_args()
-  args.func(args)
+  if hasattr(args, 'func'):
+    args.func(args)
+  else:
+    parser.print_help()
