@@ -37,7 +37,8 @@ class LevelDBRecord:
   Attributes:
     path: the file path where the record was parsed from.
     record: the leveldb record.
-    level: the leveldb level, None indicates the record came from a log file.
+    level: the leveldb level, None indicates the record came from a log file or
+        a file not part of the active file set (determined by a MANIFEST file).
     recovered: True if the record is a recovered record.
   """
   path: str
@@ -76,9 +77,18 @@ class LevelDBRecord:
 
 
 class FolderReader:
-  """Parses a given folder as LevelDB."""
+  """A LevelDB folder reader.
+
+  Attributes:
+    foldername (str): the source LevelDB folder.
+  """
 
   def __init__(self, foldername: pathlib.Path):
+    """Initializes the FolderReader.
+
+    Args:
+      foldername: the source LevelDB folder.
+    """
     if not foldername or not foldername.is_dir():
       raise ValueError(f'{foldername} is not a directory')
     self.foldername = foldername
@@ -95,8 +105,8 @@ class FolderReader:
     """Returns the Manifest filenames."""
     yield from self.foldername.glob('MANIFEST-*')
 
-  def GetCurrentManifest(self) -> pathlib.Path:
-    """Returns the current manifest file."""
+  def GetCurrentManifestPath(self) -> pathlib.Path:
+    """Returns the path of the current manifest file."""
     current_path = self.foldername / 'CURRENT'
     if not current_path.exists():
       raise errors.ParserError(f'{current_path!s} does not exist.')
@@ -113,8 +123,8 @@ class FolderReader:
     return manifest_path
 
   def GetLatestVersion(self) -> descriptor.LevelDBVersion:
-    """Returns the latest version."""
-    current_manifest_path = self.GetCurrentManifest()
+    """Returns the latest LevelDBVersion."""
+    current_manifest_path = self.GetCurrentManifestPath()
     latest_version = descriptor.FileReader(
         str(current_manifest_path)).GetLatestVersion()
     if not latest_version:
@@ -124,7 +134,16 @@ class FolderReader:
 
   def _GetRecordsByFile(
       self, filename: pathlib.Path) -> Generator[LevelDBRecord, None, None]:
-    """"""
+    """Yields the LevelDBRecords from a file.
+
+    Non-log/ldb files are ignored.
+
+    Args:
+      filename: the source LevelDB file.
+
+    Yields:
+      LevelDBRecords
+    """
     if filename.name.endswith('.log'):
       yield from self._GetLogRecords(filename)
     elif filename.name.endswith('.ldb'):
@@ -137,20 +156,49 @@ class FolderReader:
       print(f'Unsupported file type {filename.as_posix()}', file=sys.stderr)
 
   def _GetLogRecords(
-      self, filename: pathlib.Path) -> Generator[LevelDBRecord, None, None]:
+      self,
+      filename: pathlib.Path
+  ) -> Generator[LevelDBRecord, None, None]:
+    """Yields the LevelDBRecords from a log file.
+
+    Args:
+      filename: the source LevelDB file.
+
+    Yields:
+      LevelDBRecords
+    """
     for record in log.FileReader(filename.as_posix()).GetParsedInternalKeys():
       yield LevelDBRecord(path=filename.as_posix(), record=record)
 
   def _GetLdbRecords(
-      self, filename: pathlib.Path) -> Generator[LevelDBRecord, None, None]:
+      self,
+      filename: pathlib.Path
+  ) -> Generator[LevelDBRecord, None, None]:
+    """Yields the LevelDBRecords from a log file.
+
+    Args:
+      filename: the source LevelDB file.
+
+    Yields:
+      LevelDBRecords
+    """
     for record in ldb.FileReader(filename.as_posix()).GetKeyValueRecords():
       yield LevelDBRecord(path=filename.as_posix(), record=record)
 
-  def _RecordsByManifest(self):
-    """Yields LevelDBRecords using the current MANIFEST file."""
+  def _RecordsByManifest(self) -> Generator[LevelDBRecord, None, None]:
+    """Yields LevelDBRecords using the active files determined by the current
+    MANIFEST file.
+
+    Using this method ensures the recovered fields of the
+    LevelDBRecord are populated.
+
+    Yields:
+      LevelDBRecords.
+    """
     latest_version = self.GetLatestVersion()
 
     processed_files = set()
+
     # read log records
     log_records = []
     if latest_version.current_log:
@@ -204,16 +252,16 @@ class FolderReader:
           if current_filename.exists():
             processed_files.add(current_filename)
             for record in self._GetLdbRecords(filename=current_filename):
-              if record.record.key in active_records:
-                record.recovered = True
-              else:
-                record.recovered = False
+              record.recovered = record.record.key in active_records
               record.level = level
               yield record
           else:
-            print(f'Could not find {current_filename}.', file=sys.stderr)
+            print(
+                f'Could not find {current_filename} for level {level}.',
+                file=sys.stderr)
 
-    # as a final step, parse any other log/ldb files.
+    # as a final step, parse any other log/ldb files which we treat as orphans
+    # since they aren't listed in the active file set.
     for log_file in self.LogFiles():
       if log_file in processed_files:
         continue
@@ -232,7 +280,15 @@ class FolderReader:
       self,
       use_manifest: bool = False
   ) -> Generator[LevelDBRecord, None, None]:
-    """Yield records."""
+    """Yield LevelDBRecords.
+
+    Args:
+      use_manifest: True to use the current manifest in the folder as a means to
+          find the active file set.
+
+    Yields:
+      LevelDBRecords.
+    """
     if use_manifest:
       yield from self._RecordsByManifest()
     else:
