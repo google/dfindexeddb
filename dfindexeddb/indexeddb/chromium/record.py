@@ -17,7 +17,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
-from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
+import sys
+import traceback
+from typing import Any, BinaryIO, Generator, Optional, Tuple, Type, TypeVar, \
+    Union
 
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink
@@ -1366,3 +1369,53 @@ class IndexedDBRecord:
         type=db_record.record.record_type,
         level=db_record.level,
         recovered=db_record.recovered)
+
+
+class FolderReader:
+  """A IndexedDB folder reader for Chrome/Chromium.
+  
+  Attributes:
+    foldername (str): the source LevelDB folder.
+  """
+
+  def __init__(self, foldername: str):
+    """Initializes the FileReader.
+
+    Args:
+      foldername: the source IndexedDB folder.
+
+    Raises:
+      ValueError: if foldername is None or not a directory.
+    """
+    if not foldername or not foldername.is_dir():
+      raise ValueError(f'{foldername} is None or not a directory')
+    self.foldername = foldername
+
+  def GetRecords(
+      self, 
+      use_manifest: bool = False
+  ) -> Generator[IndexedDBRecord, None, None]:
+    """Yield LevelDBRecords.
+
+    Args:
+      use_manifest: True to use the current manifest in the folder as a means to
+          find the active file set.
+
+    Yields:
+      LevelDBRecords.
+    """
+    leveldb_folder_reader = record.FolderReader(self.foldername)
+    for leveldb_record in leveldb_folder_reader.GetRecords(use_manifest=use_manifest):
+      try:
+        yield IndexedDBRecord.FromLevelDBRecord(
+            leveldb_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            f'Error parsing Indexeddb record {record.__class__.__name__}: '
+            f'{err} at offset {record.offset} in {leveldb_record.path}'),
+            file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+        continue

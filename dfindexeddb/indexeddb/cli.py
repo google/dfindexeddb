@@ -86,23 +86,9 @@ def BlinkCommand(args):
 def DbCommand(args):
   """The CLI for processing a directory as IndexedDB."""
   if args.format in ('chrome', 'chromium'):
-    for db_record in leveldb_record.FolderReader(
+    for db_record in chromium_record.FolderReader(
         args.source).GetRecords(use_manifest=args.use_manifest):
-      record = db_record.record
-      try:
-        idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-            db_record)
-      except(
-          errors.ParserError,
-          errors.DecoderError,
-          NotImplementedError) as err:
-        print((
-            f'Error parsing Indexeddb record {record.__class__.__name__}: '
-            f'{err} at offset {record.offset} in {db_record.path}'),
-            file=sys.stderr)
-        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-        continue
-      _Output(idb_record, output=args.output)
+      _Output(db_record, output=args.output)
   elif args.format == 'safari':
     for db_record in safari_record.FileReader(args.source).Records():
       _Output(db_record, output=args.output)
