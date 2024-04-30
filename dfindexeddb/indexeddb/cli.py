@@ -25,6 +25,7 @@ import traceback
 from dfindexeddb import errors
 from dfindexeddb import version
 from dfindexeddb.leveldb import record as leveldb_record
+from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
 from dfindexeddb.indexeddb.safari import record as safari_record
@@ -72,6 +73,14 @@ def _Output(structure, output):
     print(json.dumps(structure, cls=Encoder))
   elif output == 'repr':
     print(structure)
+
+
+def BlinkCommand(args):
+  """The CLI for processing a file as a blink value."""
+  with open(args.source, 'rb') as fd:
+    buffer = fd.read()
+    blink_value = blink.V8ScriptValueDecoder.FromBytes(buffer)
+    _Output(blink_value, output=args.output)
 
 
 def DbCommand(args):
@@ -145,6 +154,25 @@ def App():
       epilog=f'Version {version.GetVersion()}')
 
   subparsers = parser.add_subparsers()
+
+  parser_blink = subparsers.add_parser(
+      'blink', help='Parse a file as a blink value.')
+  parser_blink.add_argument(
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
+      help=(
+        'The source file.'))
+  parser_blink.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  parser_blink.set_defaults(func=BlinkCommand)
 
   parser_db = subparsers.add_parser(
       'db', help='Parse a directory as IndexedDB.')
