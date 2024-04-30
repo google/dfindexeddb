@@ -88,9 +88,12 @@ class FolderReader:
 
     Args:
       foldername: the source LevelDB folder.
+
+    Raises:
+      ValueError: if foldername is None or not a directory.
     """
     if not foldername or not foldername.is_dir():
-      raise ValueError(f'{foldername} is not a directory')
+      raise ValueError(f'{foldername} is None or not a directory')
     self.foldername = foldername
 
   def LogFiles(self) -> Generator[pathlib.Path, None, None]:
