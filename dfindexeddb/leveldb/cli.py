@@ -66,12 +66,9 @@ def _Output(structure, output):
 
 def DbCommand(args):
   """The CLI for processing leveldb folders."""
-  if args.use_manifest:
-    for rec in record.LevelDBRecord.FromManifest(args.source):
-      _Output(rec, output=args.output)
-  else:
-    for rec in record.LevelDBRecord.FromDir(args.source):
-      _Output(rec, output=args.output)
+  for leveldb_record in record.FolderReader(
+      args.source).GetRecords(use_manifest=args.use_manifest):
+    _Output(leveldb_record, output=args.output)
 
 
 def LdbCommand(args):
@@ -257,8 +254,7 @@ def App():
       '-v',
       '--version_history',
       action='store_true',
-      help='Parses the leveldb version history.'
-  )
+      help='Parses the leveldb version history.')
   parser_descriptor.set_defaults(func=DescriptorCommand)
 
   args = parser.parse_args()

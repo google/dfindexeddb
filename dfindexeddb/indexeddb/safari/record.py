@@ -62,7 +62,7 @@ class IndexedDBRecord:
   record_id: int
 
 
-class Reader:
+class FileReader:
   """A reader for Safari IndexedDB sqlite3 files.
 
   Attributes:
