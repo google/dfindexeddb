@@ -19,12 +19,9 @@ import enum
 from datetime import datetime
 import json
 import pathlib
-import sys
-import traceback
 
 from dfindexeddb import errors
 from dfindexeddb import version
-from dfindexeddb.leveldb import record as leveldb_record
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
