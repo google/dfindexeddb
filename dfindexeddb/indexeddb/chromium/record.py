@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
+import pathlib
 import sys
 import traceback
 from typing import Any, BinaryIO, Generator, Optional, Tuple, Type, TypeVar, \
@@ -1371,6 +1372,7 @@ class IndexedDBRecord:
         recovered=db_record.recovered)
 
 
+
 class FolderReader:
   """A IndexedDB folder reader for Chrome/Chromium.
 
@@ -1378,7 +1380,7 @@ class FolderReader:
     foldername (str): the source LevelDB folder.
   """
 
-  def __init__(self, foldername: str):
+  def __init__(self, foldername: pathlib.Path):
     """Initializes the FileReader.
 
     Args:
