@@ -1376,7 +1376,7 @@ class IndexedDBRecord:
       cls,
       file_path: pathlib.Path
   ) -> Generator[IndexedDBRecord, None, None]:
-    """Returns an IndexedDBRecord from a file."""
+    """Yields IndexedDBRecords from a file."""
     for db_record in record.LevelDBRecord.FromFile(file_path):
       try:
         yield cls.FromLevelDBRecord(db_record)
