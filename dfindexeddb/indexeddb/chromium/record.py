@@ -1375,11 +1375,11 @@ class IndexedDBRecord:
   def FromFile(
       cls,
       file_path: pathlib.Path
-  ) -> Generator[record.LevelDBRecord, None, None]:
+  ) -> Generator[IndexedDBRecord, None, None]:
     """Returns an IndexedDBRecord from a file."""
     for db_record in record.LevelDBRecord.FromFile(file_path):
       try:
-        yield IndexedDBRecord.FromLevelDBRecord(db_record)
+        yield cls.FromLevelDBRecord(db_record)
       except(
           errors.ParserError,
           errors.DecoderError,

@@ -20,7 +20,6 @@ from datetime import datetime
 import json
 import pathlib
 
-from dfindexeddb import errors
 from dfindexeddb import version
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
