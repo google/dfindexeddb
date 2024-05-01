@@ -53,7 +53,8 @@ include:
 
 ## Usage
 
-Two CLI tools for parsing IndexedDB/LevelDB files are available after installation:
+Two CLI tools for parsing IndexedDB/LevelDB files are available after
+installation:
 
 
 ### IndexedDB
@@ -76,31 +77,37 @@ options:
 
 #### Examples:
 
-To parse IndexedDB records from an sqlite file for Safari and output the results as JSON-L, use the following command:
+To parse IndexedDB records from an sqlite file for Safari and output the
+results as JSON-L, use the following command:
 
 ```
 dfindexeddb db -s SOURCE --format safari -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB folder for Chrome/Chromium, using the manifest file to determine recovered records and output as JSON, use the following command:
+To parse IndexedDB records from a LevelDB folder for Chrome/Chromium, using the
+manifest file to determine recovered records and output as JSON, use the
+following command:
 
 ```
 dfindexeddb db -s SOURCE --format chrome --use_manifest
 ```
 
-To parse IndexedDB records from a LevelDB ldb (.ldb) file and output the results as JSON-L, use the following command:
+To parse IndexedDB records from a LevelDB ldb (.ldb) file and output the
+results as JSON-L, use the following command:
 
 ```
 dfindexeddb ldb -s SOURCE -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB log (.log) file and output the results as the Python printable representation, use the following command:
+To parse IndexedDB records from a LevelDB log (.log) file and output the
+results as the Python printable representation, use the following command:
 
 ```
 dfindexeddb log -s SOURCE -o repr
 ```
 
-To parse a file as a Chrome/Chromium IndexedDB blink value and output the results as JSON:
+To parse a file as a Chrome/Chromium IndexedDB blink value and output the
+results as JSON:
 
 ```
 dfindexeddb blink -s SOURCE
@@ -133,19 +140,24 @@ To parse records from a LevelDB folder, use the following command:
 dfindexeddb db -s SOURCE
 ```
 
-To parse blocks / physical records/ write batches / internal key records from a LevelDB log (.log) file, use the following command, specifying the type (block, physical_records, etc) via the `-t` option.  By default, internal key records are parsed:
+To parse blocks / physical records/ write batches / internal key records from a
+LevelDB log (.log) file, use the following command, specifying the type (block,
+physical_records, etc) via the `-t` option.  By default, internal key records are parsed:
 
 ```
 $ dfleveldb log  -s SOURCE [-t {blocks,physical_records,write_batches,parsed_internal_key}]
 ```
 
-To parse blocks / records from a LevelDB table (.ldb) file, use the following command, specifying the type (blocks, records) via the `-t` option.  By default, records are parsed:
+To parse blocks / records from a LevelDB table (.ldb) file, use the following
+command, specifying the type (blocks, records) via the `-t` option.  By
+default, records are parsed:
 
 ```
 $ dfleveldb ldb -s SOURCE [-t {blocks,records}]
 ```
 
-To parse version edit records from a Descriptor (MANIFEST) file, use the following command:
+To parse version edit records from a Descriptor (MANIFEST) file, use the
+following command:
 
 ```
 $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
