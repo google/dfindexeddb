@@ -1373,7 +1373,7 @@ class IndexedDBRecord:
 
 class FolderReader:
   """A IndexedDB folder reader for Chrome/Chromium.
-  
+
   Attributes:
     foldername (str): the source LevelDB folder.
   """
@@ -1392,7 +1392,7 @@ class FolderReader:
     self.foldername = foldername
 
   def GetRecords(
-      self, 
+      self,
       use_manifest: bool = False
   ) -> Generator[IndexedDBRecord, None, None]:
     """Yield LevelDBRecords.
@@ -1405,7 +1405,8 @@ class FolderReader:
       LevelDBRecords.
     """
     leveldb_folder_reader = record.FolderReader(self.foldername)
-    for leveldb_record in leveldb_folder_reader.GetRecords(use_manifest=use_manifest):
+    for leveldb_record in leveldb_folder_reader.GetRecords(
+        use_manifest=use_manifest):
       try:
         yield IndexedDBRecord.FromLevelDBRecord(
             leveldb_record)
@@ -1414,8 +1415,9 @@ class FolderReader:
           errors.DecoderError,
           NotImplementedError) as err:
         print((
-            f'Error parsing Indexeddb record {record.__class__.__name__}: '
-            f'{err} at offset {record.offset} in {leveldb_record.path}'),
+            'Error parsing Indexeddb record: '
+            f'{err} at offset {leveldb_record.record.offset} in '
+            f'{leveldb_record.path}'),
             file=sys.stderr)
         print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
         continue
