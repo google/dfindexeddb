@@ -109,7 +109,12 @@ class FolderReader:
     yield from self.foldername.glob('MANIFEST-*')
 
   def GetCurrentManifestPath(self) -> pathlib.Path:
-    """Returns the path of the current manifest file."""
+    """Returns the path of the current manifest file.
+
+    Raises:
+      ParserError: when the CURRENT file does not exist/contain the expected
+          content or when the expected MANIFEST file does not exist.
+    """
     current_path = self.foldername / 'CURRENT'
     if not current_path.exists():
       raise errors.ParserError(f'{current_path!s} does not exist.')
@@ -126,7 +131,11 @@ class FolderReader:
     return manifest_path
 
   def GetLatestVersion(self) -> descriptor.LevelDBVersion:
-    """Returns the latest LevelDBVersion."""
+    """Returns the latest LevelDBVersion.
+
+    Raises:
+      ParserError: when the leveldb version could not be parsed.
+    """
     current_manifest_path = self.GetCurrentManifestPath()
     latest_version = descriptor.FileReader(
         str(current_manifest_path)).GetLatestVersion()
@@ -189,11 +198,10 @@ class FolderReader:
       yield LevelDBRecord(path=filename.as_posix(), record=record)
 
   def _RecordsByManifest(self) -> Generator[LevelDBRecord, None, None]:
-    """Yields LevelDBRecords using the active files determined by the current
-    MANIFEST file.
+    """Yields LevelDBRecords using active files determined by the MANIFEST file.
 
-    Using this method ensures the recovered fields of the
-    LevelDBRecord are populated.
+    Using this method ensures the recovered fields of the LevelDBRecord are
+    populated.
 
     Yields:
       LevelDBRecords.
@@ -202,7 +210,7 @@ class FolderReader:
 
     processed_files = set()
 
-    # read log records
+    # read and cache the log records
     log_records = []
     if latest_version.current_log:
       current_log_filename = self.foldername / latest_version.current_log
@@ -212,7 +220,7 @@ class FolderReader:
     else:
       print('No current log file.', file=sys.stderr)
 
-    # read records from the "young" or 0-level
+    # read and cache the records from the "young" or 0-level
     young_records = []
     for active_file in latest_version.active_files.get(0, {}).keys():
       current_young_filename = self.foldername / active_file
@@ -220,7 +228,9 @@ class FolderReader:
         young_records = list(self._GetLdbRecords(current_young_filename))
         processed_files.add(current_young_filename)
 
-    # update the recovered attribute based on the sequence number and key.
+    # sort the log records by the leveldb sequence number in reverse
+    # order and update the recovered attribute based on the highest sequence
+    # number for a key.
     active_records = {}
     for record in sorted(
         log_records,
@@ -232,6 +242,10 @@ class FolderReader:
       else:
         record.recovered = True
 
+    # sort the young records by the leveldb sequence number in reverse
+    # order and update:
+    # * the recovered attribute based on the highest sequence number for a key
+    # * the level attribute to 0
     for record in sorted(
         young_records,
         key=lambda record: record.record.sequence_number,
@@ -248,6 +262,8 @@ class FolderReader:
         key=lambda record: record.record.sequence_number,
         reverse=False)
 
+    # read records from the active files in each level (except the 0 level)
+    # and update the recovered and level attribute.
     if latest_version.active_files.keys():
       for level in range(1, max(latest_version.active_files.keys()) + 1):
         for filename in latest_version.active_files.get(level, []):
@@ -263,8 +279,9 @@ class FolderReader:
                 f'Could not find {current_filename} for level {level}.',
                 file=sys.stderr)
 
-    # as a final step, parse any other log/ldb files which we treat as orphans
-    # since they aren't listed in the active file set.
+    # as a final step, parse any other log/ldb files which we will consider
+    # any records as recovered since they are not listed in the the active file
+    # set.
     for log_file in self.LogFiles():
       if log_file in processed_files:
         continue
