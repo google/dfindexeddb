@@ -1377,7 +1377,7 @@ class IndexedDBRecord:
       file_path: pathlib.Path
   ) -> Generator[record.LevelDBRecord, None, None]:
     """Returns an IndexedDBRecord from a file."""
-    for db_record in record.LevelDBRecord.FromFile(args.source):
+    for db_record in record.LevelDBRecord.FromFile(file_path):
       try:
         yield IndexedDBRecord.FromLevelDBRecord(db_record)
       except(
@@ -1386,8 +1386,8 @@ class IndexedDBRecord:
           NotImplementedError) as err:
         print((
             'Error parsing Indexeddb record: '
-            f'{err} at offset {leveldb_record.record.offset} in '
-            f'{leveldb_record.path}'),
+            f'{err} at offset {db_record.record.offset} in '
+            f'{db_record.path}'),
             file=sys.stderr)
         print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
 
