@@ -460,7 +460,7 @@ class MaxDatabaseIdKey(BaseIndexedDBKey):
       cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> MaxDatabaseIdKey:
-    """Decodes the maximum databse key."""
+    """Decodes the maximum database key."""
     offset, key_type = decoder.DecodeUint8()
     if key_type != definitions.GlobalMetadataKeyType.MAX_DATABASE_ID:
       raise errors.ParserError('Not a MaxDatabaseIdKey')
