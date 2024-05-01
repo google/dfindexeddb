@@ -53,8 +53,7 @@ include:
 
 ## Usage
 
-Two CLI tools for parsing IndexedDB/LevelDB files are available after
-installation:
+Two CLI tools for parsing IndexedDB/LevelDB files are available after installation:
 
 
 ### IndexedDB
@@ -95,13 +94,13 @@ To parse IndexedDB records from a LevelDB ldb (.ldb) file and output the results
 dfindexeddb ldb -s SOURCE -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB log (.log) file and output the results using the Python repr, use the following command:
+To parse IndexedDB records from a LevelDB log (.log) file and output the results as the Python printable representation, use the following command:
 
 ```
 dfindexeddb log -s SOURCE -o repr
 ```
 
-To parse a Chrome/Chromium IndexedDB file as a blink value and output the results as JSON:
+To parse a file as a Chrome/Chromium IndexedDB blink value and output the results as JSON:
 
 ```
 dfindexeddb blink -s SOURCE

@@ -18,7 +18,7 @@ import dataclasses
 import pathlib
 import re
 import sys
-from typing import Any, Generator, Optional, Union
+from typing import Generator, Optional, Union
 
 from dfindexeddb import errors
 from dfindexeddb.leveldb import definitions
@@ -52,7 +52,7 @@ class LevelDBRecord:
   def FromFile(
       cls,
       file_path: pathlib.Path
-  ) -> Generator[LevelDBRecord, Any, Any]:
+  ) -> Generator[LevelDBRecord, None, None]:
     """Yields leveldb records from the given path.
 
     Yields:

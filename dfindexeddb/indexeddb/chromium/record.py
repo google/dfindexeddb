@@ -1371,6 +1371,25 @@ class IndexedDBRecord:
         level=db_record.level,
         recovered=db_record.recovered)
 
+  @classmethod
+  def FromFile(
+      cls,
+      file_path: pathlib.Path
+  ) -> Generator[record.LevelDBRecord, None, None]:
+    """Returns an IndexedDBRecord from a file."""
+    for db_record in record.LevelDBRecord.FromFile(args.source):
+      try:
+        yield IndexedDBRecord.FromLevelDBRecord(db_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            'Error parsing Indexeddb record: '
+            f'{err} at offset {leveldb_record.record.offset} in '
+            f'{leveldb_record.path}'),
+            file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
 
 
 class FolderReader:
@@ -1422,4 +1441,3 @@ class FolderReader:
             f'{leveldb_record.path}'),
             file=sys.stderr)
         print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-        continue

@@ -96,40 +96,14 @@ def DbCommand(args):
 
 def LdbCommand(args):
   """The CLI for processing a LevelDB table (.ldb) file as IndexedDB."""
-  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
-    record = db_record.record
-    try:
-      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-          db_record)
-    except(
-        errors.ParserError,
-        errors.DecoderError,
-        NotImplementedError) as err:
-      print(
-          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
-           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-      continue
-    _Output(idb_record, output=args.output)
+  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+    _Output(db_record, output=args.output)
 
 
 def LogCommand(args):
   """The CLI for processing a LevelDB log file as IndexedDB."""
-  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
-    record = db_record.record
-    try:
-      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-          db_record)
-    except(
-        errors.ParserError,
-        errors.DecoderError,
-        NotImplementedError) as err:
-      print(
-          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
-           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-      continue
-    _Output(idb_record, output=args.output)
+  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+    _Output(db_record, output=args.output)
 
 
 def App():
