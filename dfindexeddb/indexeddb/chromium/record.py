@@ -1335,12 +1335,14 @@ class IndexedDBRecord:
   """An IndexedDB Record.
 
   Attributes:
+    path: the source file path
     offset: the offset of the record.
     key: the key of the record.
     value: the value of the record.
     sequence_number: if available, the sequence number of the record.
     type: the type of the record.
-    level: the leveldb level, None indicates the record came from a log file.
+    level: the leveldb level, if applicable, None can indicate the record
+        originated from a log file or the level could not be determined.
     recovered: True if the record is a recovered record.
   """
   path: str
@@ -1354,7 +1356,8 @@ class IndexedDBRecord:
 
   @classmethod
   def FromLevelDBRecord(
-      cls, db_record: record.LevelDBRecord
+      cls,
+      db_record: record.LevelDBRecord
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
@@ -1423,7 +1426,7 @@ class FolderReader:
           find the active file set.
 
     Yields:
-      LevelDBRecords.
+      IndexedDBRecord.
     """
     leveldb_folder_reader = record.FolderReader(self.foldername)
     for leveldb_record in leveldb_folder_reader.GetRecords(

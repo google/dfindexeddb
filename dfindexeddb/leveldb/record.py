@@ -200,9 +200,6 @@ class FolderReader:
   def _RecordsByManifest(self) -> Generator[LevelDBRecord, None, None]:
     """Yields LevelDBRecords using active files determined by the MANIFEST file.
 
-    Using this method ensures the recovered fields of the LevelDBRecord are
-    populated.
-
     Yields:
       LevelDBRecords.
     """
@@ -227,6 +224,10 @@ class FolderReader:
       if current_young_filename.exists():
         young_records = list(self._GetLdbRecords(current_young_filename))
         processed_files.add(current_young_filename)
+      else:
+        print(
+            f'Could not find {current_young_filename} for level 0.',
+            file=sys.stderr)
 
     # sort the log records by the leveldb sequence number in reverse
     # order and update the recovered attribute based on the highest sequence
