@@ -25,7 +25,7 @@ class SafariIndexedDBTest(unittest.TestCase):
   """Unit tests for Safari IndexedDB encoded sqlite3 databases."""
 
   def setUp(self):
-    self.db = record.Reader(
+    self.db = record.FileReader(
         './test_data/indexeddb/safari/17.3.1/IndexedDB.sqlite3')
 
   def test_nonexistent_record(self):

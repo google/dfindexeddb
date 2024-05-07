@@ -75,69 +75,42 @@ options:
   -h, --help    show this help message and exit
 ```
 
-To parse IndexedDB records from an sqlite file for Safari, use the following
-command:
+#### Examples:
+
+To parse IndexedDB records from an sqlite file for Safari and output the
+results as JSON-L, use the following command:
 
 ```
-dfindexeddb db --format safari [-o {json,jsonl,repr}] -h
-usage: dfindexeddb db [-h] -s SOURCE --format {chromium,chrome,safari} [--use_manifest] [-o {json,jsonl,repr}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source IndexedDB folder (for chrome/chromium) or file (for safari).
-  --format {chromium,chrome,safari}
-                        The type of IndexedDB to parse.
-  --use_manifest        Use manifest file to determine active/deleted records.
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
+dfindexeddb db -s SOURCE --format safari -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB folder for chrome/chromium, use the following command:
+To parse IndexedDB records from a LevelDB folder for Chrome/Chromium, using the
+manifest file to determine recovered records and output as JSON, use the
+following command:
 
 ```
-dfindexeddb db --format chrome [--use_manifest] [-o {json,jsonl,repr}] -h
-usage: dfindexeddb db [-h] -s SOURCE --format {chromium,chrome,safari} [--use_manifest] [-o {json,jsonl,repr}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source IndexedDB folder (for chrome/chromium) or file (for safari).
-  --format {chromium,chrome,safari}
-                        The type of IndexedDB to parse.
-  --use_manifest        Use manifest file to determine active/deleted records.
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
+dfindexeddb db -s SOURCE --format chrome --use_manifest
 ```
 
-To parse IndexedDB records from a LevelDB ldb (.ldb) file, use the following
-command:
+To parse IndexedDB records from a LevelDB ldb (.ldb) file and output the
+results as JSON-L, use the following command:
 
 ```
-dfindexeddb ldb -s SOURCE [-o {json,jsonl,repr}] -h
-usage: dfindexeddb ldb [-h] -s SOURCE [-o {json,jsonl,repr}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source .ldb file.
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
+dfindexeddb ldb -s SOURCE -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB log (.log) file, use the following
-command:
+To parse IndexedDB records from a LevelDB log (.log) file and output the
+results as the Python printable representation, use the following command:
 
 ```
-dfindexeddb log -s SOURCE [-o {json,jsonl,repr}] -h
-usage: dfindexeddb log [-h] -s SOURCE [-o {json,jsonl,repr}]
+dfindexeddb log -s SOURCE -o repr
+```
 
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source .log file.
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
+To parse a file as a Chrome/Chromium IndexedDB blink value and output the
+results as JSON:
+
+```
+dfindexeddb blink -s SOURCE
 ```
 
 ### LevelDB
@@ -159,52 +132,32 @@ options:
   -h, --help            show this help message and exit
 ```
 
+#### Examples
+
 To parse records from a LevelDB folder, use the following command:
 
 ```
-dfindexeddb db -s SOURCE [-o {json,jsonl,repr}] -h
-usage: dfindexeddb db [-h] -s SOURCE [--use_manifest] [-o {json,jsonl,repr}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source leveldb folder
-  --use_manifest        Use manifest file to determine active/recovered records.
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
+dfindexeddb db -s SOURCE
 ```
 
-To parse records from a LevelDB log (.log) file, use the following command:
+To parse blocks / physical records/ write batches / internal key records from a
+LevelDB log (.log) file, use the following command, specifying the type (block,
+physical_records, etc) via the `-t` option.  By default, internal key records are parsed:
 
 ```
-$ dfleveldb log  -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,write_batches,parsed_internal_key}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source leveldb file
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
-  -t {blocks,physical_records,write_batches,parsed_internal_key}, --structure_type {blocks,physical_records,write_batches,parsed_internal_key}
-                        Parses the specified structure. Default is parsed_internal_key.
+$ dfleveldb log  -s SOURCE [-t {blocks,physical_records,write_batches,parsed_internal_key}]
 ```
 
-To parse records from a LevelDB table (.ldb) file, use the following command:
+To parse blocks / records from a LevelDB table (.ldb) file, use the following
+command, specifying the type (blocks, records) via the `-t` option.  By
+default, records are parsed:
 
 ```
-$ dfleveldb ldb -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,records}]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source leveldb file
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
-  -t {blocks,records}, --structure_type {blocks,records}
-                        Parses the specified structure. Default is records.
+$ dfleveldb ldb -s SOURCE [-t {blocks,records}]
 ```
 
-To parse version edit records from a Descriptor (MANIFEST) file:
+To parse version edit records from a Descriptor (MANIFEST) file, use the
+following command:
 
 ```
 $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]

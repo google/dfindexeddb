@@ -17,7 +17,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
-from typing import Any, BinaryIO, Optional, Tuple, Type, TypeVar, Union
+import pathlib
+import sys
+import traceback
+from typing import Any, BinaryIO, Generator, Optional, Tuple, Type, TypeVar, \
+    Union
 
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink
@@ -456,7 +460,7 @@ class MaxDatabaseIdKey(BaseIndexedDBKey):
       cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> MaxDatabaseIdKey:
-    """Decodes the maximum databse key."""
+    """Decodes the maximum database key."""
     offset, key_type = decoder.DecodeUint8()
     if key_type != definitions.GlobalMetadataKeyType.MAX_DATABASE_ID:
       raise errors.ParserError('Not a MaxDatabaseIdKey')
@@ -1331,12 +1335,14 @@ class IndexedDBRecord:
   """An IndexedDB Record.
 
   Attributes:
+    path: the source file path
     offset: the offset of the record.
     key: the key of the record.
     value: the value of the record.
     sequence_number: if available, the sequence number of the record.
     type: the type of the record.
-    level: the leveldb level, None indicates the record came from a log file.
+    level: the leveldb level, if applicable, None can indicate the record
+        originated from a log file or the level could not be determined.
     recovered: True if the record is a recovered record.
   """
   path: str
@@ -1350,7 +1356,8 @@ class IndexedDBRecord:
 
   @classmethod
   def FromLevelDBRecord(
-      cls, db_record: record.LevelDBRecord
+      cls,
+      db_record: record.LevelDBRecord
   ) -> IndexedDBRecord:
     """Returns an IndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
@@ -1366,3 +1373,74 @@ class IndexedDBRecord:
         type=db_record.record.record_type,
         level=db_record.level,
         recovered=db_record.recovered)
+
+  @classmethod
+  def FromFile(
+      cls,
+      file_path: pathlib.Path
+  ) -> Generator[IndexedDBRecord, None, None]:
+    """Yields IndexedDBRecords from a file."""
+    for db_record in record.LevelDBRecord.FromFile(file_path):
+      try:
+        yield cls.FromLevelDBRecord(db_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            'Error parsing Indexeddb record: '
+            f'{err} at offset {db_record.record.offset} in '
+            f'{db_record.path}'),
+            file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+
+
+class FolderReader:
+  """A IndexedDB folder reader for Chrome/Chromium.
+
+  Attributes:
+    foldername (str): the source LevelDB folder.
+  """
+
+  def __init__(self, foldername: pathlib.Path):
+    """Initializes the FileReader.
+
+    Args:
+      foldername: the source IndexedDB folder.
+
+    Raises:
+      ValueError: if foldername is None or not a directory.
+    """
+    if not foldername or not foldername.is_dir():
+      raise ValueError(f'{foldername} is None or not a directory')
+    self.foldername = foldername
+
+  def GetRecords(
+      self,
+      use_manifest: bool = False
+  ) -> Generator[IndexedDBRecord, None, None]:
+    """Yield LevelDBRecords.
+
+    Args:
+      use_manifest: True to use the current manifest in the folder as a means to
+          find the active file set.
+
+    Yields:
+      IndexedDBRecord.
+    """
+    leveldb_folder_reader = record.FolderReader(self.foldername)
+    for leveldb_record in leveldb_folder_reader.GetRecords(
+        use_manifest=use_manifest):
+      try:
+        yield IndexedDBRecord.FromLevelDBRecord(
+            leveldb_record)
+      except(
+          errors.ParserError,
+          errors.DecoderError,
+          NotImplementedError) as err:
+        print((
+            'Error parsing Indexeddb record: '
+            f'{err} at offset {leveldb_record.record.offset} in '
+            f'{leveldb_record.path}'),
+            file=sys.stderr)
+        print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)

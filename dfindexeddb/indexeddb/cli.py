@@ -19,15 +19,13 @@ import enum
 from datetime import datetime
 import json
 import pathlib
-import sys
-import traceback
 
-from dfindexeddb import errors
 from dfindexeddb import version
-from dfindexeddb.leveldb import record as leveldb_record
+from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
 from dfindexeddb.indexeddb.safari import record as safari_record
+
 
 _VALID_PRINTABLE_CHARACTERS = (
     ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' +
@@ -73,84 +71,35 @@ def _Output(structure, output):
     print(structure)
 
 
+def BlinkCommand(args):
+  """The CLI for processing a file as a blink value."""
+  with open(args.source, 'rb') as fd:
+    buffer = fd.read()
+    blink_value = blink.V8ScriptValueDecoder.FromBytes(buffer)
+    _Output(blink_value, output=args.output)
+
+
 def DbCommand(args):
   """The CLI for processing a directory as IndexedDB."""
   if args.format in ('chrome', 'chromium'):
-    if args.use_manifest:
-      for db_record in leveldb_record.LevelDBRecord.FromManifest(args.source):
-        record = db_record.record
-        try:
-          idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-              db_record)
-        except(
-            errors.ParserError,
-            errors.DecoderError,
-            NotImplementedError) as err:
-          print((
-              f'Error parsing Indexeddb record {record.__class__.__name__}: '
-              f'{err} at offset {record.offset} in {db_record.path}'),
-              file=sys.stderr)
-          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-          continue
-        _Output(idb_record, output=args.output)
-    else:
-      for db_record in leveldb_record.LevelDBRecord.FromDir(args.source):
-        record = db_record.record
-        try:
-          idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-              db_record)
-        except(
-            errors.ParserError,
-            errors.DecoderError,
-            NotImplementedError) as err:
-          print((
-              f'Error parsing Indexeddb record {record.__class__.__name__}: '
-              f'{err} at offset {record.offset} in {db_record.path}'),
-              file=sys.stderr)
-          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-          continue
-        _Output(idb_record, output=args.output)
+    for db_record in chromium_record.FolderReader(
+        args.source).GetRecords(use_manifest=args.use_manifest):
+      _Output(db_record, output=args.output)
   elif args.format == 'safari':
-    for db_record in safari_record.Reader(args.source).Records():
+    for db_record in safari_record.FileReader(args.source).Records():
       _Output(db_record, output=args.output)
 
 
 def LdbCommand(args):
   """The CLI for processing a LevelDB table (.ldb) file as IndexedDB."""
-  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
-    record = db_record.record
-    try:
-      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-          db_record)
-    except(
-        errors.ParserError,
-        errors.DecoderError,
-        NotImplementedError) as err:
-      print(
-          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
-           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-      continue
-    _Output(idb_record, output=args.output)
+  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+    _Output(db_record, output=args.output)
 
 
 def LogCommand(args):
   """The CLI for processing a LevelDB log file as IndexedDB."""
-  for db_record in leveldb_record.LevelDBRecord.FromFile(args.source):
-    record = db_record.record
-    try:
-      idb_record = chromium_record.IndexedDBRecord.FromLevelDBRecord(
-          db_record)
-    except(
-        errors.ParserError,
-        errors.DecoderError,
-        NotImplementedError) as err:
-      print(
-          (f'Error parsing Indexeddb record {record.__class__.__name__}: {err} '
-           f'at offset {record.offset} in {db_record.path}'), file=sys.stderr)
-      print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
-      continue
-    _Output(idb_record, output=args.output)
+  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+    _Output(db_record, output=args.output)
 
 
 def App():
@@ -161,6 +110,25 @@ def App():
       epilog=f'Version {version.GetVersion()}')
 
   subparsers = parser.add_subparsers()
+
+  parser_blink = subparsers.add_parser(
+      'blink', help='Parse a file as a blink value.')
+  parser_blink.add_argument(
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
+      help=(
+        'The source file.'))
+  parser_blink.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  parser_blink.set_defaults(func=BlinkCommand)
 
   parser_db = subparsers.add_parser(
       'db', help='Parse a directory as IndexedDB.')
