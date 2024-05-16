@@ -310,7 +310,7 @@ class FolderReader:
       for leveldb_record in LevelDBRecord.FromFile(filename):
         if leveldb_record:
           unsorted_records[leveldb_record.record.key].append(leveldb_record)
-    for key, unsorted_records in unsorted_records.items():
+    for _, unsorted_records in unsorted_records.items():
       num_unsorted_records = len(unsorted_records)
       if num_unsorted_records == 1:
         unsorted_records[0].recovered = False
