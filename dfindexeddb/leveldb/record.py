@@ -318,7 +318,8 @@ class FolderReader:
       else:
         for i, record in enumerate(sorted(
             unsorted_records, key=lambda x: (
-                x.record.sequence_number, x.record.offset))):
+                x.record.sequence_number, x.record.offset)),
+            start=1):
           if i == num_unsorted_records:
             record.recovered = False
           else:
