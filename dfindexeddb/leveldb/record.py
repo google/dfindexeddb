@@ -299,8 +299,7 @@ class FolderReader:
         yield record
 
   def _RecordsBySequenceNumber(self) -> Generator[LevelDBRecord, None, None]:
-    """Yields LevelDBRecords using the sequence number to determine if a record
-    is active.
+    """Yields LevelDBRecords using the sequence number and file offset.
 
     Yields:
       LevelDBRecords.
