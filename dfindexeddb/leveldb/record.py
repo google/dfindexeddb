@@ -306,7 +306,7 @@ class FolderReader:
       LevelDBRecords.
     """
     unsorted_records = defaultdict(list)
-    
+
     for filename in self.foldername.iterdir():
       for leveldb_record in LevelDBRecord.FromFile(filename):
         if leveldb_record:
