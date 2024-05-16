@@ -546,8 +546,8 @@ class SerializedScriptValueDecoder():
       _, object_ref = self.decoder.DecodeUint8()
     elif len(self.object_pool) < 0xFFFF:
       _, object_ref = self.decoder.DecodeUint16()
-    # elif len(self.object_pool) < 0xFFFFFFFF:
-    _, object_ref = self.decoder.DecodeUint32()
+    else:  # if len(self.object_pool) < 0xFFFFFFFF:
+      _, object_ref = self.decoder.DecodeUint32()
     return self.object_pool[object_ref]
 
   def DecodeArrayBufferView(self) -> ArrayBufferView:
