@@ -14,6 +14,7 @@
 # limitations under the License.
 """A module for records from LevelDB files."""
 from __future__ import annotations
+from collections import defaultdict
 import dataclasses
 import pathlib
 import re
@@ -297,6 +298,34 @@ class FolderReader:
         record.recovered = True
         yield record
 
+  def _RecordsBySequenceNumber(self) -> Generator[LevelDBRecord, None, None]:
+    """Yields LevelDBRecords using the sequence number to determine if a record
+    is active.
+
+    Yields:
+      LevelDBRecords.
+    """
+    unsorted_records = defaultdict(list)
+    
+    for filename in self.foldername.iterdir():
+      for leveldb_record in LevelDBRecord.FromFile(filename):
+        if leveldb_record:
+          unsorted_records[leveldb_record.record.key].append(leveldb_record)
+    for key, unsorted_records in unsorted_records.items():
+      num_unsorted_records = len(unsorted_records)
+      if num_unsorted_records == 1:
+        unsorted_records[0].recovered = False
+        yield unsorted_records[0]
+      else:
+        for i, record in enumerate(sorted(
+            unsorted_records, key=lambda x: (
+                x.record.sequence_number, x.record.offset))):
+          if i == num_unsorted_records:
+            record.recovered = False
+          else:
+            record.recovered = True
+          yield record
+
   def GetRecords(
       self,
       use_manifest: bool = False
@@ -313,5 +342,4 @@ class FolderReader:
     if use_manifest:
       yield from self._RecordsByManifest()
     else:
-      for filename in self.foldername.iterdir():
-        yield from LevelDBRecord.FromFile(filename)
+      yield from self._RecordsBySequenceNumber()

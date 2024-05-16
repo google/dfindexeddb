@@ -152,7 +152,7 @@ class PhysicalRecord(utils.FromDecoderMixin):
   @classmethod
   def FromDecoder(
       cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
-  ) -> PhysicalRecord:
+  ) -> Optional[PhysicalRecord]:
     """Decodes a PhysicalRecord from the current position of a LevelDBDecoder.
 
     Args:
@@ -161,11 +161,13 @@ class PhysicalRecord(utils.FromDecoderMixin):
           read from.
 
     Returns:
-      A PhysicalRecord.
+      A PhysicalRecord or None if the parsed header is 0.
     """
     offset, checksum = decoder.DecodeUint32()
     _, length = decoder.DecodeUint16()
     _, record_type_byte = decoder.DecodeUint8()
+    if checksum == 0 or length == 0 or record_type_byte == 0:
+      return None
     try:
       record_type = definitions.LogFilePhysicalRecordType(record_type_byte)
     except ValueError as error:
@@ -206,7 +208,11 @@ class Block:
     buffer_length = len(self.data)
 
     while buffer.tell() + PhysicalRecord.PHYSICAL_HEADER_LENGTH < buffer_length:
-      yield PhysicalRecord.FromStream(buffer, base_offset=self.offset)
+      record = PhysicalRecord.FromStream(buffer, base_offset=self.offset)
+      if record:
+        yield record
+      else:
+        return
 
   @classmethod
   def FromStream(cls, stream: BinaryIO) -> Optional[Block]:
