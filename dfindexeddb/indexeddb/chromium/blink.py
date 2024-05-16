@@ -780,6 +780,9 @@ class V8ScriptValueDecoder:
 
     Returns:
       A parsed CryptoKey.
+
+    Raises:
+      ParserError: if there is an unexpected CryptoKeySubTag.
     """
     _, raw_key_byte = self.deserializer.decoder.DecodeUint8()
     key_byte = definitions.CryptoKeySubTag(raw_key_byte)
@@ -795,6 +798,8 @@ class V8ScriptValueDecoder:
       key_type, algorithm_parameters = self._ReadED25519Key()
     elif key_byte == definitions.CryptoKeySubTag.NO_PARAMS_KEY:
       key_type, algorithm_parameters = self.ReadNoParamsKey()
+    else:
+      raise errors.ParserError('Unexpected CryptoKeySubTag')
 
     _, raw_usages = self.deserializer.decoder.DecodeUint32Varint()
     usages = definitions.CryptoKeyUsage(raw_usages)

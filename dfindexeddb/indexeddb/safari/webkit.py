@@ -290,6 +290,7 @@ class SerializedScriptValueDecoder():
     """
     _, length = self.decoder.DecodeUint32()
     array = JSArray()
+    self.object_pool.append(array)
     for _ in range(length):
       _, _ = self.decoder.DecodeUint32()
       _, value = self.DecodeValue()
@@ -314,13 +315,13 @@ class SerializedScriptValueDecoder():
     """Decodes an Object value."""
     tag = self.PeekTag()
     js_object = {}
+    self.object_pool.append(js_object)
     while tag != definitions.TerminatorTag:
       name = self.DecodeStringData()
       _, value = self.DecodeValue()
       js_object[name] = value
       tag = self.PeekTag()
     _ = self.decoder.DecodeUint32()
-    self.object_pool.append(js_object)
     return js_object
 
   def DecodeStringData(self) -> str:
@@ -342,11 +343,11 @@ class SerializedScriptValueDecoder():
 
     if peeked_tag == definitions.StringPoolTag:
       _ = self.decoder.DecodeUint32()
-      if len(self.constant_pool) < 0xff:
+      if len(self.constant_pool) <= 0xff:
         _, cp_index = self.decoder.DecodeUint8()
-      elif len(self.constant_pool) < 0xffff:
+      elif len(self.constant_pool) <= 0xffff:
         _, cp_index = self.decoder.DecodeUint16()
-      elif len(self.constant_pool) < 0xffffffff:
+      elif len(self.constant_pool) <= 0xffffffff:
         _, cp_index = self.decoder.DecodeUint32()
       else:
         raise errors.ParserError('Unexpected constant pool size value.')
@@ -450,6 +451,7 @@ class SerializedScriptValueDecoder():
     """Decodes a Map value."""
     tag = self.PeekSerializationTag()
     js_map = {}   # TODO: make this into a JSMap (like JSArray/JSSet)
+    self.object_pool.append(js_map)
 
     while tag != definitions.SerializationTag.NON_MAP_PROPERTIES:
       _, key = self.DecodeValue()
@@ -468,13 +470,13 @@ class SerializedScriptValueDecoder():
       pool_tag = self.PeekTag()
 
     _, tag = self.decoder.DecodeUint32()
-
     return js_map
 
   def DecodeSetData(self) -> JSSet:
     """Decodes a SetData value."""
     tag = self.PeekSerializationTag()
     js_set = JSSet()
+    self.object_pool.append(js_set)
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
       _, key = self.DecodeValue()
@@ -540,8 +542,13 @@ class SerializedScriptValueDecoder():
 
   def DecodeObjectReference(self) -> Any:
     """Decodes an ObjectReference value."""
-    _, object_ref = self.decoder.DecodeUint8()
-    return self.object_pool[object_ref - 1]
+    if len(self.object_pool) < 0xFF:
+      _, object_ref = self.decoder.DecodeUint8()
+    elif len(self.object_pool) < 0xFFFF:
+      _, object_ref = self.decoder.DecodeUint16()
+    else:  # if len(self.object_pool) < 0xFFFFFFFF:
+      _, object_ref = self.decoder.DecodeUint32()
+    return self.object_pool[object_ref]
 
   def DecodeArrayBufferView(self) -> ArrayBufferView:
     """Decodes an ArrayBufferView value.
@@ -641,6 +648,7 @@ class SerializedScriptValueDecoder():
       value = self.DecodeArrayBuffer()
     elif tag == definitions.SerializationTag.ARRAY_BUFFER_VIEW:
       value = self.DecodeArrayBufferView()
+      self.object_pool.append(value)
     elif tag == definitions.SerializationTag.ARRAY_BUFFER_TRANSFER:
       value = self.DecodeArrayBufferTransfer()
     elif tag == definitions.SerializationTag.TRUE_OBJECT:

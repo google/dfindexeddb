@@ -1275,14 +1275,17 @@ class ExternalObjectEntry(utils.FromDecoderMixin):
         filename = None
         last_modified = None
       token = None
-    elif (object_type ==
-        definitions.ExternalObjectType.FILE_SYSTEM_ACCESS_HANDLE):
+    else:
+      if (object_type ==
+          definitions.ExternalObjectType.FILE_SYSTEM_ACCESS_HANDLE):
+        _, token = decoder.DecodeBlobWithLength()
+      else:
+        token = None
       blob_number = None
       mime_type = None
       size = None
       filename = None
       last_modified = None
-      _, token = decoder.DecodeBlobWithLength()
 
     return cls(offset=base_offset + offset, object_type=object_type,
         blob_number=blob_number, mime_type=mime_type, size=size,
