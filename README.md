@@ -137,7 +137,15 @@ options:
 To parse records from a LevelDB folder, use the following command:
 
 ```
-dfindexeddb db -s SOURCE
+dfleveldb db -s SOURCE
+```
+
+To parse records from a LevelDB folder, and use the sequence number to 
+determine recovered records and output as JSON, use the
+following command:
+
+```
+dfleveldb db -s SOURCE --use_sequence_number
 ```
 
 To parse blocks / physical records/ write batches / internal key records from a
@@ -161,15 +169,4 @@ following command:
 
 ```
 $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
-
-options:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        The source leveldb file
-  -o {json,jsonl,repr}, --output {json,jsonl,repr}
-                        Output format. Default is json
-  -t {blocks,physical_records,versionedit}, --structure_type {blocks,physical_records,versionedit}
-                        Parses the specified structure. Default is versionedit.
-  -v, --version_history
-                        Parses the leveldb version history.
 ```

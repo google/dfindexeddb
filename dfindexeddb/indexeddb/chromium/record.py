@@ -1420,20 +1420,22 @@ class FolderReader:
 
   def GetRecords(
       self,
-      use_manifest: bool = False
+      use_manifest: bool = False,
+      use_sequence_number: bool = False
   ) -> Generator[IndexedDBRecord, None, None]:
     """Yield LevelDBRecords.
 
     Args:
       use_manifest: True to use the current manifest in the folder as a means to
           find the active file set.
-
+      use_sequence_number: True to use the sequence number to determine the
     Yields:
       IndexedDBRecord.
     """
     leveldb_folder_reader = record.FolderReader(self.foldername)
     for leveldb_record in leveldb_folder_reader.GetRecords(
-        use_manifest=use_manifest):
+        use_manifest=use_manifest,
+        use_sequence_number=use_sequence_number):
       try:
         yield IndexedDBRecord.FromLevelDBRecord(
             leveldb_record)

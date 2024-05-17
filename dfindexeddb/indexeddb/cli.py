@@ -83,7 +83,9 @@ def DbCommand(args):
   """The CLI for processing a directory as IndexedDB."""
   if args.format in ('chrome', 'chromium'):
     for db_record in chromium_record.FolderReader(
-        args.source).GetRecords(use_manifest=args.use_manifest):
+        args.source).GetRecords(
+            use_manifest=args.use_manifest,
+            use_sequence_number=args.use_sequence_number):
       _Output(db_record, output=args.output)
   elif args.format == 'safari':
     for db_record in safari_record.FileReader(args.source).Records():
@@ -139,15 +141,22 @@ def App():
       help=(
         'The source IndexedDB folder (for chrome/chromium) '
         'or file (for safari).'))
+  recover_group = parser_db.add_mutually_exclusive_group()
+  recover_group.add_argument(
+      '--use_manifest',
+      action='store_true',
+      help='Use manifest file to determine active/deleted records.')
+  recover_group.add_argument(
+      '--use_sequence_number',
+      action='store_true',
+      help=(
+          'Use sequence number and file offset to determine active/deleted '
+          'records.'))
   parser_db.add_argument(
       '--format',
       required=True,
       choices=['chromium', 'chrome', 'safari'],
       help='The type of IndexedDB to parse.')
-  parser_db.add_argument(
-      '--use_manifest',
-      action='store_true',
-      help='Use manifest file to determine active/deleted records.')
   parser_db.add_argument(
       '-o',
       '--output',
