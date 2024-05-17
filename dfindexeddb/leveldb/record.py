@@ -328,7 +328,8 @@ class FolderReader:
 
   def GetRecords(
       self,
-      use_manifest: bool = False
+      use_manifest: bool = False,
+      use_sequence_number: bool = False
   ) -> Generator[LevelDBRecord, None, None]:
     """Yield LevelDBRecords.
 
@@ -341,5 +342,8 @@ class FolderReader:
     """
     if use_manifest:
       yield from self._RecordsByManifest()
-    else:
+    elif use_sequence_number:
       yield from self._RecordsBySequenceNumber()
+    else:
+      for filename in self.foldername.iterdir():
+        yield from LevelDBRecord.FromFile(filename)

@@ -67,7 +67,9 @@ def _Output(structure, output):
 def DbCommand(args):
   """The CLI for processing leveldb folders."""
   for leveldb_record in record.FolderReader(
-      args.source).GetRecords(use_manifest=args.use_manifest):
+      args.source).GetRecords(
+          use_manifest=args.use_manifest,
+          use_sequence_number=args.use_sequence_number):
     _Output(leveldb_record, output=args.output)
 
 
@@ -160,10 +162,17 @@ def App():
       required=True,
       type=pathlib.Path,
       help='The source leveldb directory')
-  parser_db.add_argument(
+  recover_group = parser_db.add_mutually_exclusive_group()
+  recover_group.add_argument(
       '--use_manifest',
       action='store_true',
       help='Use manifest file to determine active/deleted records.')
+  recover_group.add_argument(
+      '--use_sequence_number',
+      action='store_true',
+      help=(
+          'Use sequence number and file offset to determine active/deleted '
+          'records.'))
   parser_db.add_argument(
       '-o',
       '--output',
