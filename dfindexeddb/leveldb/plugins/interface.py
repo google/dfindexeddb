@@ -13,21 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Interface for leveldb plugins."""
-from typing import Union
+from typing import Any, Union
 
 from dfindexeddb.leveldb import record
-
+from dfindexeddb.leveldb import ldb
+from dfindexeddb.leveldb import log
 
 class LeveldbPlugin:
+  """The base leveldb plugin class."""
 
   @classmethod
   def FromLevelDBRecord(cls,
-      ldb_record: record.LevelDBRecord):
+      ldb_record: record.LevelDBRecord) -> Any:
     """Parses a leveldb record."""
     parsed_record = cls.FromKeyValueRecord(ldb_record.record)
     ldb_record.record = parsed_record
     return ldb_record
 
   @classmethod
-  def FromKeyValueRecord(cls, ldb_record):
+  def FromKeyValueRecord(
+      cls, ldb_record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]) -> Any:
     """Parses a leveldb key value record."""

@@ -18,52 +18,54 @@ from __future__ import annotations
 import dataclasses
 import logging
 
-from typing import Any, Union
+from typing import Optional
 
 try:
   from dfdatetime import webkit_time
-  from google.protobuf.json_format import MessageToJson
-  from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as notification_pb2
+  from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as \
+      notification_pb2
   _has_import_dependencies = True
 except ImportError as err:
   _has_import_dependencies = False
-  logging.warning(f'Could not import dependencies for leveldb.plugins.chrome_notifications: %s', err)
+  logging.warning((
+      'Could not import dependencies for '
+      'leveldb.plugins.chrome_notifications: %s'), err)
 
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.leveldb.plugins import interface
 from dfindexeddb.leveldb.plugins import manager
-from dfindexeddb.leveldb import record
 
 
 @dataclasses.dataclass
 class ChromeNotificationRecord(interface.LeveldbPlugin):
-  src_file: str = None
-  offset: int = None
-  key: str = None
-  sequence_number: int = None
-  type: int = None
-  origin: str = None
-  service_worker_registration_id: int = None
-  notification_title: str = None
-  notification_direction: str = None
-  notification_lang: str = None
-  notification_body: str = None
-  notification_tag: str = None
-  notification_icon: str = None
-  notification_silent: bool = None
-  notification_data: str = None
-  notification_require_interaction: bool = None
-  notification_time: str = None
-  notification_renotify: bool = None
-  notification_badge: str = None
-  notification_image: str = None
-  notification_id: str = None
-  replaced_existing_notification: bool = None
-  num_clicks: int = None
-  num_action_button_clicks: int = None
-  creation_time: str = None
-  closed_reason: str = None
-  has_triggered: bool = None
+  """Chrome notification record."""
+  src_file: Optional[str] = None
+  offset: Optional[int] = None
+  key: Optional[str] = None
+  sequence_number: Optional[int] = None
+  type: Optional[int] = None
+  origin: Optional[str] = None
+  service_worker_registration_id: Optional[int] = None
+  notification_title: Optional[str] = None
+  notification_direction: Optional[str] = None
+  notification_lang: Optional[str] = None
+  notification_body: Optional[str] = None
+  notification_tag: Optional[str] = None
+  notification_icon: Optional[str] = None
+  notification_silent: Optional[bool] = None
+  notification_data: Optional[str] = None
+  notification_require_interaction: Optional[bool] = None
+  notification_time: Optional[str] = None
+  notification_renotify: Optional[bool] = None
+  notification_badge: Optional[str] = None
+  notification_image: Optional[str] = None
+  notification_id: Optional[str] = None
+  replaced_existing_notification: Optional[bool] = None
+  num_clicks: Optional[int] = None
+  num_action_button_clicks: Optional[int] = None
+  creation_time: Optional[str] = None
+  closed_reason: Optional[str] = None
+  has_triggered: Optional[bool] = None
 
   @classmethod
   def FromKeyValueRecord(
@@ -79,7 +81,8 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
     if not ldb_record.value:
       return record
 
-    notification_proto = notification_pb2.NotificationDatabaseDataProto()
+    # pylint: disable-next=no-member,line-too-long
+    notification_proto = notification_pb2.NotificationDatabaseDataProto()  # pytype: disable=module-attr
     notification_proto.ParseFromString(ldb_record.value)
 
     record.origin = notification_proto.origin

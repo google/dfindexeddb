@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Leveldb plugin manager."""
+from typing import Type
 
 from dfindexeddb.leveldb.plugins import interface
 
@@ -52,7 +53,7 @@ class LeveldbPluginManager:
       raise KeyError(f'Plugin not found: {plugin_name}')
 
   @classmethod
-  def RegisterPlugin(cls, plugin_class: interface.LeveldbPlugin):
+  def RegisterPlugin(cls, plugin_class: Type[interface.LeveldbPlugin]):
     """Registers a leveldb plugin.
 
     Args:

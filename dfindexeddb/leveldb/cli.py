@@ -72,7 +72,8 @@ def DbCommand(args):
     for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
       print(plugin)
     return
-  elif args.plugin:
+
+  if args.plugin:
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
   else:
     plugin_class = None
@@ -82,7 +83,7 @@ def DbCommand(args):
           use_manifest=args.use_manifest,
           use_sequence_number=args.use_sequence_number):
     if plugin_class:
-      plugin_record = plugin_class.FromKeyValueRecord(leveldb_record)
+      plugin_record = plugin_class.FromLevelDBRecord(leveldb_record)
       _Output(plugin_record, output=args.output)
     else:
       _Output(leveldb_record, output=args.output)
@@ -94,7 +95,8 @@ def LdbCommand(args):
     for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
       print(plugin)
     return
-  elif args.plugin:
+
+  if args.plugin:
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
   else:
     plugin_class = None
@@ -125,7 +127,8 @@ def LogCommand(args):
     for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
       print(plugin)
     return
-  elif args.plugin:
+
+  if args.plugin:
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
   else:
     plugin_class = None
