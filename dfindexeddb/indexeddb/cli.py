@@ -20,6 +20,7 @@ from datetime import datetime
 import json
 import pathlib
 
+from dfindexeddb import utils
 from dfindexeddb import version
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
@@ -36,7 +37,7 @@ class Encoder(json.JSONEncoder):
   """A JSON encoder class for dfindexeddb fields."""
   def default(self, o):
     if dataclasses.is_dataclass(o):
-      o_dict = dataclasses.asdict(o)
+      o_dict = utils.asdict(o)
       return o_dict
     if isinstance(o, bytes):
       out = []
