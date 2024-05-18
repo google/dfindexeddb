@@ -21,9 +21,11 @@ import logging
 from typing import Optional
 
 try:
+  # pytype: disable=import-error
   from dfdatetime import webkit_time
   from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as \
       notification_pb2
+  # pytype: enable=import-error
   _has_import_dependencies = True
 except ImportError as err:
   _has_import_dependencies = False
