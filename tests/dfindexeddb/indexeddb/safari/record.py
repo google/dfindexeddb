@@ -241,9 +241,13 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_set_record(self):
     """Tests for an IndexedDB record with a set value."""
+    expected_set = webkit.JSSet()
+    for i in range(1, 4):
+      expected_set.Add(i)
+
     expected_record = record.IndexedDBRecord(
         key=27,
-        value={'id': 27, 'value': {1, 2, 3}},
+        value={'id': 27, 'value': expected_set},
         object_store_id=1,
         object_store_name='test store a',
         database_name='IndexedDB test',
@@ -289,6 +293,13 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_mixed_object_record(self):
     """Tests for an IndexedDB record with mixed values within an object."""
+    expected_test_array = webkit.JSArray()
+    for value in [123, 456, 'abc', 'def']:
+      expected_test_array.Append(value)
+    expected_set = webkit.JSSet()
+    for i in range(1, 4):
+      expected_set.Add(i)
+
     expected_record = record.IndexedDBRecord(
         key=1,
         value={
@@ -305,13 +316,13 @@ class SafariIndexedDBTest(unittest.TestCase):
             'test_boolean_false_object': False,
             'test_bigint': 12300000000000001048576,
             'test_date': datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
-            'test_set': set([1, 2, 3]),
+            'test_set': expected_set,
             'test_map': {
                 'a': 1,
                 'b': 2,
                 'c': 3},
             'test_regexp': webkit.RegExp('\\w+', ''),
-            'test_array': [123, 456, 'abc', 'def'],
+            'test_array': expected_test_array,
             'test_object': {
                 'name': {
                     'first': 'Jane',
@@ -460,10 +471,13 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_array_key_record(self):
     """Tests for an IndexedDB record with an array in the key."""
+    expected_test_array = webkit.JSArray()
+    for value in [1, 2, 3]:
+      expected_test_array.Append(value)
     expected_record = record.IndexedDBRecord(
-        key=[1, 2, 3],
+        key=[1.0, 2.0, 3.0],
         value={
-            'id': [1, 2, 3],
+            'id': expected_test_array,
             'value': {}},
         object_store_id=1,
         object_store_name='test store a',

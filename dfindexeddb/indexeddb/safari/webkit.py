@@ -82,15 +82,22 @@ class FileList:
   files: List[FileData]
 
 
-class JSArray(list):
-  """A parsed JavaScript array.
+class JSArray:
+  """A parsed Javascript array.
 
-  This is a wrapper around a standard Python list to allow assigning arbitrary
-  properties as is possible in the JavaScript equivalent.
+  A Javascript array behaves like a Python list but allows assigning arbitrary
+  properties.  The array is stored in the attribute __array__.
   """
+  def __init__(self):
+    self.__array__ = []
+
+  def Append(self, element: Any):
+    """Appends a new element to the array."""
+    self.__array__.append(element)
 
   def __repr__(self):
-    array_entries = ", ".join([str(entry) for entry in list(self)])
+    array_entries = ", ".join(
+        [str(entry) for entry in list(self.__array__)])
     properties = ", ".join(
         f'{key}: {value}' for key, value in self.properties.items())
     return f'[{array_entries}, {properties}]'
@@ -100,6 +107,11 @@ class JSArray(list):
     """Returns the object properties."""
     return self.__dict__
 
+  def __eq__(self, other):
+    return (
+        self.__array__ == other.__array__
+        and self.properties == other.properties)
+
   def __contains__(self, item):
     return item in self.__dict__
 
@@ -107,23 +119,35 @@ class JSArray(list):
     return self.__dict__[name]
 
 
-class JSSet(set):
-  """A parsed JavaScript set.
+class JSSet:
+  """A parsed Javascript set.
 
-  This is a wrapper around a standard Python set to allow assigning arbitrary
-  properties as is possible in the JavaScript equivalent.
+  A Javascript set behaves like a Python set but allows assigning arbitrary
+  properties.  The array is stored in the attribute __set__.
   """
+  def __init__(self):
+    self.__set__ = set()
+
+  def Add(self, element: Any):
+    """Adds a new element to the set."""
+    self.__set__.add(element)
 
   def __repr__(self):
-    set_entries = ", ".join([str(entry) for entry in list(self)])
+    array_entries = ", ".join(
+        [str(entry) for entry in list(self.__set__)])
     properties = ", ".join(
         f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{set_entries}, {properties}]'
+    return f'[{array_entries}, {properties}]'
 
   @property
   def properties(self) -> Dict[str, Any]:
     """Returns the object properties."""
     return self.__dict__
+
+  def __eq__(self, other):
+    return (
+        self.__set__ == other.__set__
+        and self.properties == other.properties)
 
   def __contains__(self, item):
     return item in self.__dict__
@@ -294,7 +318,7 @@ class SerializedScriptValueDecoder():
     for _ in range(length):
       _, _ = self.decoder.DecodeUint32()
       _, value = self.DecodeValue()
-      array.append(value)
+      array.Append(value)
 
     offset, terminator_tag = self.decoder.DecodeUint32()
     if terminator_tag != definitions.TerminatorTag:
@@ -480,7 +504,7 @@ class SerializedScriptValueDecoder():
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
       _, key = self.DecodeValue()
-      js_set.add(key)
+      js_set.Add(key)
       tag = self.PeekSerializationTag()
 
     # consume the NonSetPropertiesTag
