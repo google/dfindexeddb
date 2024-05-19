@@ -33,7 +33,7 @@ include:
     $ pip install dfindexeddb
 ```
 
-To also install the optional leveldb/indexeddb plugins, instead run
+To also install the dependencies for leveldb/indexeddb plugins, run
 ```
     $ pip install 'dfindexeddb[plugins]'
 ```
@@ -57,7 +57,7 @@ To also install the optional leveldb/indexeddb plugins, instead run
     $ pip install .
 ```
 
-To also install the optional leveldb/indexeddb plugins, instead run
+To also install the dependencies for leveldb/indexeddb plugins, run
 ```
     $ pip install '.[plugins]'
 ```
@@ -181,3 +181,13 @@ following command:
 ```
 $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
 ```
+
+#### Plugins
+
+To apply a plugin parser for a leveldb file/folder, add the 
+`--plugin [Plugin Name]` argument.  Currently, there is support for the 
+following artifacts:
+
+| Plugin Name | Artifact Name |
+| -------- | ------- |
+| `ChromeNotifications` | Chrome/Chromium Notifications |
