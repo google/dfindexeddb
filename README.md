@@ -190,4 +190,4 @@ following artifacts:
 
 | Plugin Name | Artifact Name |
 | -------- | ------- |
-| `ChromeNotifications` | Chrome/Chromium Notifications |
+| `ChromeNotificationRecord` | Chrome/Chromium Notifications |
