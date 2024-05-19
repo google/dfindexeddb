@@ -22,18 +22,22 @@ classifiers = [
   'Programming Language :: Python',
 ]
 
+[project.optional-dependencies]
+plugins = ["protobuf", "dfdatetime"]
+
 [project.scripts]
 dfindexeddb = "dfindexeddb.indexeddb.cli:App"
 dfleveldb = "dfindexeddb.leveldb.cli:App"
 
 [tool.setuptools]
 packages = [
-  "dfindexeddb", 
-  "dfindexeddb.indexeddb", 
+  "dfindexeddb",
+  "dfindexeddb.indexeddb",
   "dfindexeddb.indexeddb.chromium",
   "dfindexeddb.indexeddb.firefox",
-  "dfindexeddb.indexeddb.safari", 
+  "dfindexeddb.indexeddb.safari",
   "dfindexeddb.leveldb",
+  "dfindexeddb.leveldb.plugins",
 ]
 
 [project.urls]

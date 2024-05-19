@@ -19,11 +19,13 @@ from datetime import datetime
 import json
 import pathlib
 
+from dfindexeddb import utils
 from dfindexeddb import version
 from dfindexeddb.leveldb import descriptor
 from dfindexeddb.leveldb import ldb
 from dfindexeddb.leveldb import log
 from dfindexeddb.leveldb import record
+from dfindexeddb.leveldb.plugins import manager
 
 
 _VALID_PRINTABLE_CHARACTERS = (
@@ -37,7 +39,7 @@ class Encoder(json.JSONEncoder):
   def default(self, o):
     """Returns a serializable object for o."""
     if dataclasses.is_dataclass(o):
-      o_dict = dataclasses.asdict(o)
+      o_dict = utils.asdict(o)
       return o_dict
     if isinstance(o, bytes):
       out = []
@@ -66,15 +68,39 @@ def _Output(structure, output):
 
 def DbCommand(args):
   """The CLI for processing leveldb folders."""
+  if args.plugin and args.plugin == 'list':
+    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+      print(plugin)
+    return
+
+  if args.plugin:
+    plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
+  else:
+    plugin_class = None
+
   for leveldb_record in record.FolderReader(
       args.source).GetRecords(
           use_manifest=args.use_manifest,
           use_sequence_number=args.use_sequence_number):
-    _Output(leveldb_record, output=args.output)
+    if plugin_class:
+      plugin_record = plugin_class.FromLevelDBRecord(leveldb_record)
+      _Output(plugin_record, output=args.output)
+    else:
+      _Output(leveldb_record, output=args.output)
 
 
 def LdbCommand(args):
   """The CLI for processing ldb files."""
+  if args.plugin and args.plugin == 'list':
+    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+      print(plugin)
+    return
+
+  if args.plugin:
+    plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
+  else:
+    plugin_class = None
+
   ldb_file = ldb.FileReader(args.source)
 
   if args.structure_type == 'blocks':
@@ -85,7 +111,11 @@ def LdbCommand(args):
   elif args.structure_type == 'records' or not args.structure_type:
     # Prints key value record information.
     for key_value_record in ldb_file.GetKeyValueRecords():
-      _Output(key_value_record, output=args.output)
+      if plugin_class:
+        plugin_record = plugin_class.FromKeyValueRecord(key_value_record)
+        _Output(plugin_record, output=args.output)
+      else:
+        _Output(key_value_record, output=args.output)
 
   else:
     print(f'{args.structure_type} is not supported for ldb files.')
@@ -93,6 +123,16 @@ def LdbCommand(args):
 
 def LogCommand(args):
   """The CLI for processing log files."""
+  if args.plugin and args.plugin == 'list':
+    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+      print(plugin)
+    return
+
+  if args.plugin:
+    plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
+  else:
+    plugin_class = None
+
   log_file = log.FileReader(args.source)
 
   if args.structure_type == 'blocks':
@@ -114,7 +154,11 @@ def LogCommand(args):
         or not args.structure_type):
     # Prints key value record information.
     for internal_key_record in log_file.GetParsedInternalKeys():
-      _Output(internal_key_record, output=args.output)
+      if plugin_class:
+        plugin_record = plugin_class.FromKeyValueRecord(internal_key_record)
+        _Output(plugin_record, output=args.output)
+      else:
+        _Output(internal_key_record, output=args.output)
 
   else:
     print(f'{args.structure_type} is not supported for log files.')
@@ -145,6 +189,7 @@ def DescriptorCommand(args):
 
   else:
     print(f'{args.structure_type} is not supported for descriptor files.')
+
 
 def App():
   """The CLI app entrypoint for parsing leveldb files."""
@@ -182,6 +227,9 @@ def App():
           'repr'],
       default='json',
       help='Output format.  Default is json')
+  parser_db.add_argument(
+      '--plugin',
+      help='Use plugin to parse records.')
   parser_db.set_defaults(func=DbCommand)
 
   parser_log = subparsers.add_parser(
@@ -200,6 +248,9 @@ def App():
           'repr'],
       default='json',
       help='Output format.  Default is json')
+  parser_log.add_argument(
+      '--plugin',
+      help='Use plugin to parse records.')
   parser_log.add_argument(
       '-t',
       '--structure_type',
@@ -227,6 +278,9 @@ def App():
           'repr'],
       default='json',
       help='Output format.  Default is json')
+  parser_ldb.add_argument(
+      '--plugin',
+      help='Use plugin to parse records.')
   parser_ldb.add_argument(
       '-t',
       '--structure_type',

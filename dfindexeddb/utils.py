@@ -14,6 +14,8 @@
 # limitations under the License.
 """Utilities for dfindexeddb."""
 from __future__ import annotations
+import copy
+import dataclasses
 import io
 import os
 import struct
@@ -259,3 +261,35 @@ class FromDecoderMixin:
     """
     stream = io.BytesIO(raw_data)
     return cls.FromStream(stream=stream, base_offset=base_offset)
+
+
+def asdict(obj, *, dict_factory=dict):  # pylint: disable=invalid-name
+  """Custom implementation of the asdict dataclasses method to include the
+  class name under the __type__ attribute name.
+  """
+  if not dataclasses.is_dataclass(obj):
+    raise TypeError("asdict() should be called on dataclass instances")
+  return _asdict_inner(obj, dict_factory)
+
+
+def _asdict_inner(obj, dict_factory):
+  """Custom implementation of the _asdict_inner dataclasses method."""
+  if dataclasses.is_dataclass(obj):
+    result = [('__type__', obj.__class__.__name__)]
+    for f in dataclasses.fields(obj):
+      value = _asdict_inner(getattr(obj, f.name), dict_factory)
+      result.append((f.name, value))
+    return dict_factory(result)
+
+  if isinstance(obj, tuple) and hasattr(obj, '_fields'):
+    return type(obj)(*[_asdict_inner(v, dict_factory) for v in obj])
+
+  if isinstance(obj, (list, tuple)):
+    return type(obj)(_asdict_inner(v, dict_factory) for v in obj)
+
+  if isinstance(obj, dict):
+    return type(obj)((_asdict_inner(k, dict_factory),
+                      _asdict_inner(v, dict_factory))
+                      for k, v in obj.items())
+
+  return copy.deepcopy(obj)

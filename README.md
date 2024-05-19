@@ -33,6 +33,12 @@ include:
     $ pip install dfindexeddb
 ```
 
+To also install the dependencies for leveldb/indexeddb plugins, run
+```
+    $ pip install 'dfindexeddb[plugins]'
+```
+
+
 ## Installation from source
 
 1. [Linux] Install the snappy compression development package
@@ -49,6 +55,11 @@ include:
     $ python3 -m venv .venv
     $ source .venv/bin/activate
     $ pip install .
+```
+
+To also install the dependencies for leveldb/indexeddb plugins, run
+```
+    $ pip install '.[plugins]'
 ```
 
 ## Usage
@@ -170,3 +181,13 @@ following command:
 ```
 $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
 ```
+
+#### Plugins
+
+To apply a plugin parser for a leveldb file/folder, add the 
+`--plugin [Plugin Name]` argument.  Currently, there is support for the 
+following artifacts:
+
+| Plugin Name | Artifact Name |
+| -------- | ------- |
+| `ChromeNotificationRecord` | Chrome/Chromium Notifications |

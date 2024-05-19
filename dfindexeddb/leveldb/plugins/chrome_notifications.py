@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright 2024 Google LLC
 #
@@ -13,76 +12,79 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for Chrome Notifications.
-
-Usage:
-$ pip install dfdatetime protobuf
-$ python notifications.py <PLATFORM NOTIFICATIONS FOLDER>
-
-"""
+"""Parser plugin for Chrome Notifications."""
 from __future__ import annotations
-import json
-import pathlib
-import sys
+
 import dataclasses
+import logging
 
-from typing import Any, Union
+from typing import Optional
 
-import notification_database_data_pb2 as notification_pb2
+try:
+  # pytype: disable=import-error
+  from dfdatetime import webkit_time
+  from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as \
+      notification_pb2
+  # pytype: enable=import-error
+  _has_import_dependencies = True
+except ImportError as err:
+  _has_import_dependencies = False
+  logging.warning((
+      'Could not import dependencies for '
+      'leveldb.plugins.chrome_notifications: %s'), err)
 
-from dfdatetime import webkit_time
 from dfindexeddb.indexeddb.chromium import blink
-from dfindexeddb.leveldb import log
-from dfindexeddb.leveldb import ldb
-
-from google.protobuf.json_format import MessageToJson
+from dfindexeddb.leveldb.plugins import interface
+from dfindexeddb.leveldb.plugins import manager
 
 
 @dataclasses.dataclass
-class ChromeNotificationRecord:
-  src_file: str = None
-  offset: int = None
-  key: str = None
-  sequence_number: int = None
-  type: int = None
-  origin: str = None
-  service_worker_registration_id: int = None
-  notification_title: str = None
-  notification_direction: str = None
-  notification_lang: str = None
-  notification_body: str = None
-  notification_tag: str = None
-  notification_icon: str = None
-  notification_silent: bool = None
-  notification_data: str = None
-  notification_requireInteraction: bool = None
-  notification_time: str = None
-  notification_renotify: bool = None
-  notification_badge: str = None
-  notification_image: str = None
-  notification_id: str = None
-  replaced_existing_notification: bool = None
-  num_clicks: int = None
-  num_action_button_clicks: int = None
-  creation_time: str = None
-  closed_reason: str = None
-  has_triggered: bool = None
+class ChromeNotificationRecord(interface.LeveldbPlugin):
+  """Chrome notification record."""
+  src_file: Optional[str] = None
+  offset: Optional[int] = None
+  key: Optional[str] = None
+  sequence_number: Optional[int] = None
+  type: Optional[int] = None
+  origin: Optional[str] = None
+  service_worker_registration_id: Optional[int] = None
+  notification_title: Optional[str] = None
+  notification_direction: Optional[str] = None
+  notification_lang: Optional[str] = None
+  notification_body: Optional[str] = None
+  notification_tag: Optional[str] = None
+  notification_icon: Optional[str] = None
+  notification_silent: Optional[bool] = None
+  notification_data: Optional[str] = None
+  notification_require_interaction: Optional[bool] = None
+  notification_time: Optional[str] = None
+  notification_renotify: Optional[bool] = None
+  notification_badge: Optional[str] = None
+  notification_image: Optional[str] = None
+  notification_id: Optional[str] = None
+  replaced_existing_notification: Optional[bool] = None
+  num_clicks: Optional[int] = None
+  num_action_button_clicks: Optional[int] = None
+  creation_time: Optional[str] = None
+  closed_reason: Optional[str] = None
+  has_triggered: Optional[bool] = None
 
   @classmethod
-  def FromLeveldbRecord(
+  def FromKeyValueRecord(
       cls,
-      ldb_record: Union[log.ParsedInternalKey, ldb.KeyValueRecord]
+      ldb_record
   ) -> ChromeNotificationRecord:
     record = cls()
     record.offset = ldb_record.offset
     record.key = ldb_record.key.decode()
-    record.sequence_number = ldb_record.sequence_number  
+    record.sequence_number = ldb_record.sequence_number
     record.type = ldb_record.record_type
 
     if not ldb_record.value:
       return record
-        
-    notification_proto = notification_pb2.NotificationDatabaseDataProto()
+
+    # pylint: disable-next=no-member,line-too-long
+    notification_proto = notification_pb2.NotificationDatabaseDataProto()  # pytype: disable=module-attr
     notification_proto.ParseFromString(ldb_record.value)
 
     record.origin = notification_proto.origin
@@ -97,7 +99,7 @@ class ChromeNotificationRecord:
     record.notification_icon = notification_proto.notification_data.icon
     record.notification_silent = notification_proto.notification_data.silent
     record.notification_data = notification_proto.notification_data.data
-    record.notification_requireInteraction = (
+    record.notification_require_interaction = (
         notification_proto.notification_data.require_interaction)
     record.notification_time = webkit_time.WebKitTime(
         timestamp=notification_proto.notification_data.timestamp
@@ -116,7 +118,7 @@ class ChromeNotificationRecord:
     ).CopyToDateTimeString()
     record.closed_reason = notification_proto.closed_reason
     record.has_triggered = notification_proto.has_triggered
-    
+
     if not notification_proto.notification_data.data:
       return record
 
@@ -127,27 +129,7 @@ class ChromeNotificationRecord:
     return record
 
 
-def Main(indexeddb_path):
-  for filename in pathlib.Path(indexeddb_path).iterdir():
-    if filename.name.startswith('.'):
-      continue
-    if filename.name.endswith('.log'):
-      leveldb_records = list(
-          log.FileReader(filename.as_posix()).GetParsedInternalKeys())
-    elif filename.name.endswith('.ldb'):
-      leveldb_records = list(
-          ldb.FileReader(filename.as_posix()).GetKeyValueRecords())
-    else:
-      continue
+# check if dependencies are in existence..
 
-    for record in leveldb_records:
-      notification_record = ChromeNotificationRecord.FromLeveldbRecord(record)
-      notification_record.src_file = filename.as_posix()
-      print(json.dumps(dataclasses.asdict(notification_record), indent=2))
-
-
-if __name__ == '__main__':
-  if len(sys.argv) != 2:
-    print("Usage: python notifications.py <PLATFORM NOTIFICATIONS FOLDER>")
-    sys.exit(1)
-  Main(sys.argv[1])
+if _has_import_dependencies:
+  manager.PluginManager.RegisterPlugin(ChromeNotificationRecord)
