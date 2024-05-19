@@ -33,6 +33,12 @@ include:
     $ pip install dfindexeddb
 ```
 
+To also install the optional leveldb/indexeddb plugins, instead run
+```
+    $ pip install 'dfindexeddb[plugins]'
+```
+
+
 ## Installation from source
 
 1. [Linux] Install the snappy compression development package
@@ -49,6 +55,11 @@ include:
     $ python3 -m venv .venv
     $ source .venv/bin/activate
     $ pip install .
+```
+
+To also install the optional leveldb/indexeddb plugins, instead run
+```
+    $ pip install '.[plugins]'
 ```
 
 ## Usage
