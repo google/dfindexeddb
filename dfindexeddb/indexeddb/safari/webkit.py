@@ -107,7 +107,7 @@ class JSArray:
     """Returns the object properties."""
     return self.__dict__
 
-  def __eq__(self, other):
+  def __eq__(self, other: JSArray):
     return (
         self.__array__ == other.__array__
         and self.properties == other.properties)
@@ -144,7 +144,7 @@ class JSSet:
     """Returns the object properties."""
     return self.__dict__
 
-  def __eq__(self, other):
+  def __eq__(self, other: JSSet):
     return (
         self.__set__ == other.__set__
         and self.properties == other.properties)

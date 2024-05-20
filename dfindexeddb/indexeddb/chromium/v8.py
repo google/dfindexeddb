@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parsers for v8 javascript serialized objects."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 import io
@@ -59,7 +61,7 @@ class JSArray:
     """Returns the object properties."""
     return self.__dict__
 
-  def __eq__(self, other):
+  def __eq__(self, other: JSArray):
     return (
         self.__array__ == other.__array__
         and self.properties == other.properties)
