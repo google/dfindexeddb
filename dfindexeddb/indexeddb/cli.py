@@ -51,6 +51,8 @@ class Encoder(json.JSONEncoder):
       return o.isoformat()
     if isinstance(o, v8.Undefined):
       return "<undefined>"
+    if isinstance(o, v8.JSArray):
+      return o.__dict__
     if isinstance(o, v8.Null):
       return "<null>"
     if isinstance(o, set):

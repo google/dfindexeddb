@@ -211,7 +211,10 @@ class WebkitTest(unittest.TestCase):
         '0F00000002020000806964051B000000'
         '0500008076616C75651D070502000000'
         '050300000020FFFFFFFFFFFFFFFF')
-    expected_value = {'id': 27, 'value': {1, 2, 3}}
+    expected_set = webkit.JSSet()
+    for i in range(1, 4):
+      expected_set.Add(i)
+    expected_value = {'id': 27, 'value': expected_set}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
@@ -268,6 +271,14 @@ class WebkitTest(unittest.TestCase):
         '6A65637402040000806E616D650205000080666972737410040000804A616E65'
         '040000806C6173741003000080446F65FFFFFFFF030000806167650515000000'
         'FFFFFFFFFFFFFFFF')
+
+    expected_test_array = webkit.JSArray()
+    for value in [123, 456, 'abc', 'def']:
+      expected_test_array.Append(value)
+    expected_set = webkit.JSSet()
+    for i in range(1, 4):
+      expected_set.Add(i)
+
     expected_value = {
        'id': 1,
         'test_undef': webkit.Undefined(),
@@ -282,13 +293,13 @@ class WebkitTest(unittest.TestCase):
         'test_boolean_false_object': False,
         'test_bigint': 12300000000000001048576,
         'test_date': datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
-        'test_set': set([1, 2, 3]),
+        'test_set': expected_set,
         'test_map': {
             'a': 1,
             'b': 2,
             'c': 3},
         'test_regexp': webkit.RegExp('\\w+', ''),
-        'test_array': [123, 456, 'abc', 'def'],
+        'test_array': expected_test_array,
         'test_object': {
             'name': {
                 'first': 'Jane',

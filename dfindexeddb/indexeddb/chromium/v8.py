@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parsers for v8 javascript serialized objects."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 import io
@@ -34,15 +36,22 @@ class BufferArrayView:
   flags: int
 
 
-class JSArray(list):
+class JSArray:
   """A parsed Javascript array.
 
-  This is a wrapper around a standard Python list to allow assigning arbitrary
-  properties as is possible in the Javascript equivalent.
+  A Javascript array behaves like a Python list but allows assigning arbitrary
+  properties.  The array is stored in the attribute __array__.
   """
+  def __init__(self):
+    self.__array__ = []
+
+  def Append(self, element: Any):
+    """Appends a new element to the array."""
+    self.__array__.append(element)
 
   def __repr__(self):
-    array_entries = ", ".join([str(entry) for entry in list(self)])
+    array_entries = ", ".join(
+        [str(entry) for entry in list(self.__array__)])
     properties = ", ".join(
         f'{key}: {value}' for key, value in self.properties.items())
     return f'[{array_entries}, {properties}]'
@@ -51,6 +60,11 @@ class JSArray(list):
   def properties(self) -> Dict[str, Any]:
     """Returns the object properties."""
     return self.__dict__
+
+  def __eq__(self, other: JSArray):
+    return (
+        self.__array__ == other.__array__
+        and self.properties == other.properties)
 
   def __contains__(self, item):
     return item in self.__dict__
@@ -194,6 +208,7 @@ class ValueDeserializer:
     if tag and tag == definitions.V8SerializationTag.ARRAY_BUFFER_VIEW:
       self._ConsumeTag(tag)
       result = self._ReadJSArrayBufferView(result)
+      self.objects[self._GetNextId()] = result
     return result
 
   def _ReadObjectInternal(self) -> Tuple[definitions.V8SerializationTag, Any]:
@@ -385,7 +400,10 @@ class ValueDeserializer:
     while self._PeekTag() != end_tag:
       key = self._ReadObject()
       value = self._ReadObject()
-      js_object[key] = value
+      if isinstance(js_object, dict):
+        js_object[key] = value
+      else:
+        js_object.properties[key] = value
       num_properties += 1
     self._ConsumeTag(end_tag)
     return num_properties
@@ -407,7 +425,7 @@ class ValueDeserializer:
     js_array = JSArray()
     _, length = self.decoder.DecodeUint32Varint()
     for _ in range(length):
-      js_array.append(Undefined())
+      js_array.Append(Undefined())
 
     num_properties = self._ReadJSObjectProperties(
         js_array.__dict__, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY)
@@ -440,7 +458,7 @@ class ValueDeserializer:
 
       if self.version < 11 and isinstance(array_object, Undefined):
         continue
-      js_array.append(array_object)
+      js_array.Append(array_object)
 
     num_properties = self._ReadJSObjectProperties(
         js_array.__dict__, definitions.V8SerializationTag.END_DENSE_JS_ARRAY)
@@ -571,6 +589,7 @@ class ValueDeserializer:
     if is_resizable:
       _, max_byte_length = self.decoder.DecodeUint32Varint()
       if byte_length > max_byte_length:
+        self.objects[next_id] = array_buffer
         return array_buffer
     if byte_length:
       _, array_buffer = self.decoder.ReadBytes(byte_length)

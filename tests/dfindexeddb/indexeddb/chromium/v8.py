@@ -163,7 +163,11 @@ class V8Test(unittest.TestCase):
       # > x['propa'] = 123
       # > console.log(v8.serialize(x)).toString('hex'))
       buffer = bytes.fromhex('ff0d4103490249044906220570726f706149f601240103')
-      expected_value = v8.JSArray([1, 2, 3])
+      expected_value = v8.JSArray()
+      expected_value.Append(1)
+      expected_value.Append(2)
+      expected_value.Append(3)
+      expected_value.properties['propa'] = 123
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
       self.assertTrue(hasattr(parsed_value, 'propa'))
@@ -174,7 +178,9 @@ class V8Test(unittest.TestCase):
       # > x.length = 10
       # > console.log(v8.serialize(x)).toString('hex'))
       buffer = bytes.fromhex('ff0d610a40000a')
-      expected_value = v8.JSArray([v8.Undefined() for i in range(10)])
+      expected_value = v8.JSArray()
+      for _ in range(10):
+        expected_value.Append(v8.Undefined())
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
