@@ -27,8 +27,8 @@ from dfindexeddb.indexeddb.chromium import definitions
 
 
 @dataclass
-class BufferArrayView:
-  """A parsed Javascript BufferArrayView."""
+class ArrayBufferView:
+  """A parsed Javascript ArrayBufferView."""
   buffer: bytes
   tag: definitions.V8ArrayBufferViewTag
   offset: int
@@ -36,6 +36,7 @@ class BufferArrayView:
   flags: int
 
 
+@dataclass
 class JSArray:
   """A parsed Javascript array.
 
@@ -608,7 +609,7 @@ class ValueDeserializer:
     else:
       flags = 0
 
-    return BufferArrayView(
+    return ArrayBufferView(
         buffer=buffer,
         tag=definitions.V8ArrayBufferViewTag(tag[0]),
         offset=byte_offset,
