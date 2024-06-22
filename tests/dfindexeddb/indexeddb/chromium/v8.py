@@ -241,7 +241,7 @@ class V8Test(unittest.TestCase):
     buffer = (
         b'\xff\x0dB\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         b'\x00\x00\x00\x00VB\x00\x10')
-    expected_value = v8.BufferArrayView(
+    expected_value = v8.ArrayBufferView(
         buffer=(
             b'\x00\x00\x00\x00\x00\x00\x00\x00'
             b'\x00\x00\x00\x00\x00\x00\x00\x00'),
