@@ -25,7 +25,7 @@ class IndexedDBKeyType(IntEnum):
   BINARY = 0x40
   ARRAY = 0x50
 
-  
+
 MAX_ARRAY_COLLAPSE = 3
 MAX_RECURSION_DEPTH = 64
 MAX_LENGTH = (1 << 30) - 2
