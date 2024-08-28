@@ -25,6 +25,7 @@ from dfindexeddb import version
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
+from dfindexeddb.indexeddb.firefox import record as firefox_record
 from dfindexeddb.indexeddb.safari import record as safari_record
 
 
@@ -39,7 +40,7 @@ class Encoder(json.JSONEncoder):
     if dataclasses.is_dataclass(o):
       o_dict = utils.asdict(o)
       return o_dict
-    if isinstance(o, bytes):
+    if isinstance(o, (bytes, bytearray)):
       out = []
       for x in o:
         if chr(x) not in _VALID_PRINTABLE_CHARACTERS:
@@ -89,6 +90,9 @@ def DbCommand(args):
         args.source).GetRecords(
             use_manifest=args.use_manifest,
             use_sequence_number=args.use_sequence_number):
+      _Output(db_record, output=args.output)
+  elif args.format == 'firefox':
+    for db_record in firefox_record.FileReader(args.source).Records():
       _Output(db_record, output=args.output)
   elif args.format == 'safari':
     for db_record in safari_record.FileReader(args.source).Records():
@@ -158,7 +162,7 @@ def App():
   parser_db.add_argument(
       '--format',
       required=True,
-      choices=['chromium', 'chrome', 'safari'],
+      choices=['chromium', 'chrome', 'firefox', 'safari'],
       help='The type of IndexedDB to parse.')
   parser_db.add_argument(
       '-o',
