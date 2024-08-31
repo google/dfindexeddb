@@ -25,6 +25,7 @@ from dfindexeddb import version
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.chromium import v8
+from dfindexeddb.indexeddb.firefox import gecko
 from dfindexeddb.indexeddb.firefox import record as firefox_record
 from dfindexeddb.indexeddb.safari import record as safari_record
 
@@ -74,14 +75,19 @@ def _Output(structure, output):
   elif output == 'repr':
     print(structure)
 
-
 def BlinkCommand(args):
-  """The CLI for processing a file as a blink value."""
+  """The CLI for processing a file as a blink-encoded value."""
   with open(args.source, 'rb') as fd:
     buffer = fd.read()
     blink_value = blink.V8ScriptValueDecoder.FromBytes(buffer)
     _Output(blink_value, output=args.output)
 
+def GeckoCommand(args):
+  """The CLI for processing a file as a gecko-encoded value."""
+  with open(args.source, 'rb') as fd:
+    buffer = fd.read()
+    blink_value = gecko.JSStructuredCloneDecoder.FromBytes(buffer)
+    _Output(blink_value, output=args.output)
 
 def DbCommand(args):
   """The CLI for processing a directory as IndexedDB."""
@@ -138,6 +144,25 @@ def App():
       default='json',
       help='Output format.  Default is json')
   parser_blink.set_defaults(func=BlinkCommand)
+
+  parser_gecko = subparsers.add_parser(
+      'gecko', help='Parse a file as a gecko-encoded value.')
+  parser_gecko.add_argument(
+      '-s', '--source',
+      required=True,
+      type=pathlib.Path,
+      help=(
+        'The source file.'))
+  parser_gecko.add_argument(
+      '-o',
+      '--output',
+      choices=[
+          'json',
+          'jsonl',
+          'repr'],
+      default='json',
+      help='Output format.  Default is json')
+  parser_gecko.set_defaults(func=GeckoCommand)
 
   parser_db = subparsers.add_parser(
       'db', help='Parse a directory as IndexedDB.')

@@ -30,6 +30,9 @@ from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.firefox import definitions
 
 
+_FRAME_HEADER = b'\xff\x06\x00\x00sNaPpY'
+
+
 @dataclasses.dataclass
 class IDBKey(utils.FromDecoderMixin):
   """An IndexedDB Key.
@@ -579,6 +582,23 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     Returns:
       A python representation of the parsed JavaScript object.
     """
-    uncompressed_data = snappy.decompress(raw_data)
+    if raw_data.startswith(_FRAME_HEADER):
+      uncompressed_data = bytearray()
+      pos = len(_FRAME_HEADER)
+      while pos < len(raw_data):
+        is_uncompressed = raw_data[pos]
+        block_size = int.from_bytes(
+            raw_data[pos + 1:pos + 4], byteorder="little", signed=False)
+        _masked_checksum = int.from_bytes(
+            raw_data[pos + 4: pos + 9], byteorder="little", signed=False)
+        if is_uncompressed:
+          uncompressed_data += raw_data[pos + 8: pos + 8 + block_size - 4]
+        else:
+          uncompressed_data += snappy.decompress(
+              raw_data[pos + 8: pos + 8 + block_size - 4])
+        pos += block_size + 4
+    else:
+      uncompressed_data = snappy.decompress(raw_data)
     stream = io.BytesIO(uncompressed_data)
+
     return cls.FromStream(stream=stream, base_offset=base_offset)
