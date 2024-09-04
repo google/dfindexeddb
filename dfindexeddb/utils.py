@@ -213,7 +213,7 @@ T = TypeVar('T')
 
 
 class FromDecoderMixin:
-  """A mixin for parsing dataclass attributes using a LevelDBDecoder."""
+  """A mixin for parsing dataclass attributes using a StreamDecoder."""
 
   @classmethod
   def FromDecoder(

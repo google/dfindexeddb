@@ -1,0 +1,157 @@
+<!--
+Copyright 2024 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+  <head></head>
+  <body>
+    <script type='text/javascript'>
+(
+  function() {
+
+    const open = indexedDB.open("IndexedDB test", 1);
+
+    open.onupgradeneeded = function() {
+      var db = open.result;
+      var store_a = db.createObjectStore("test store a", {keyPath: "id", autoIncrement: true});
+      var empty_store = db.createObjectStore("empty store", {keyPath: "id"});
+      var index_a = store_a.createIndex("test store a", "test_date");
+    };
+
+    open.onsuccess = function() {
+      var db = open.result;
+      var tx = db.transaction("test store a", "readwrite");
+      var store_a = tx.objectStore("test store a");
+
+      store_a.put({id: 10, value:undefined});
+      store_a.put({id: 11, value:null});
+      store_a.put({id: 12, value:0})
+      store_a.put({id: 13, value:1})
+      store_a.put({id: 14, value:123})
+      store_a.put({id: 15, value:true})
+      store_a.put({id: 16, value:false})
+      store_a.put({id: 17, value:new Boolean(true)})
+      store_a.put({id: 18, value:new Boolean(false)})
+      store_a.put({id: 19, value:3.14})
+      store_a.put({id: 20, value:new Number(3.14)})
+      store_a.put({id: 21, value:BigInt(123e20)})
+      store_a.put({id: 22, value:new Date(2023, 1, 13, 10, 20, 30, 456)})
+      store_a.put({id: 23, value:'test string value'})
+      store_a.put({id: 24, value:new String('test string object')})
+      store_a.put({id: 25, value:''})
+      store_a.put({id: 26, value:new String('')})
+      store_a.put({id: 27, value:new Set([1, 2, 3])})
+      store_a.put({id: 28, value:new Map()})
+      store_a.put({id: 29, value:new RegExp()})
+      store_a.put({id: 30, value:{}})
+      
+      store_a.put({
+          id: 1,
+          test_undef: undefined,
+          test_null: null,
+          test_bool_true: true,
+          test_bool_false: false,
+          test_string: 'a string value',
+          test_number: 3.14,
+          test_string_object: new String('a string object'),
+          test_number_object: new Number(3.14),
+          test_boolean_true_object: new Boolean(true),
+          test_boolean_false_object: new Boolean(false),
+          test_bigint: BigInt(123e20),
+          test_date: new Date(2023, 1, 13, 10, 20, 30, 456),
+          test_set: new Set([1, 2, 3]),
+          test_map: new Map([
+              ['a', 1], 
+              ['b', 2], 
+              ['c', 3]
+          ]),
+          test_regexp: new RegExp('\\w+'),
+          test_array: [123, 456, 'abc', 'def'],
+          test_object: {
+              name: {
+                  first: 'Jane',
+                  last: 'Doe'
+              },
+              age: 21,
+          }
+        });
+      
+      store_a.put({
+          id: 2,
+          test_date: new Date(2023, 1, 13, 10, 20, 30, 457),
+          test_nested_array: {
+            level_id: 1,
+            child: {
+                level_id: 2,
+                child: {
+                    level_id: 3,
+                    child: {
+                        level_id: 4,
+                        child: {
+                            level_id: 5,
+                            child: {
+                                level_id: 6,
+                                child: {
+                                    level_id: 7
+                                }
+                            }
+                        }
+                    }
+                }
+            }  
+          }
+      })
+  
+      let buffer = new ArrayBuffer(100*1024)
+      let buffer_view = new Uint8Array(buffer)
+      buffer_view.fill(42, 0, 1024)
+
+      store_a.put({
+        id: 3,
+        test_date: new Date(2023, 1, 13, 10, 20, 30, 458),
+        buffer: buffer,
+        buffer_view: buffer_view 
+      })
+
+      let view = new Uint8Array(1000*1024)
+      view = view.fill(41)
+
+      store_a.put({
+        id: 4,
+        test_date: new Date(2023, 1, 13, 10, 20, 30, 459),
+        view: view 
+      })
+      
+            
+      // A key can be one of the following types: string, date, float, 
+      // a binary blob, and array. For arrays, the key can range from 
+      // an empty value to infinity. And you can include an array 
+      // within an array.
+      // https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#key_and_value
+      store_a.put({id: new Date(2023, 1, 13, 10, 20, 30, 456), value:{}})
+      store_a.put({id: -3.14, value:{}})
+      store_a.put({id: 'test string key', value:{}})
+      store_a.put({id: new Uint8Array(3), value:{}})
+      store_a.put({id: [1, 2, 3], value:{}})
+      store_a.put({id: [[1, 2, 3], [1, 2, [1, 2, 3]], [[1, 2, 3], [1, 2, 3], 3]], value:{}})
+      
+      tx.oncomplete = function() {
+          db.close();
+    };
+  }
+})();
+
+    </script>
+  </body>
+</html>
