@@ -107,7 +107,7 @@ class KeyDecoder(utils.StreamDecoder):
       type_offset += definitions.IndexedDBKeyType.ARRAY
       if (type_offset ==
           definitions.IndexedDBKeyType.ARRAY * definitions.MAX_ARRAY_COLLAPSE):
-        self.stream.seek(1, os.SEEK_CUR)
+        _ = self.ReadBytes(1)
         type_offset = 0
       value = []
       while (
@@ -151,7 +151,7 @@ class KeyDecoder(utils.StreamDecoder):
     return result
 
   def _DecodeAsStringy(self, element_size: int = 1) -> Tuple[int, bytes]:
-    """Decode a string buffer.
+    """Decodes a string buffer.
 
     Args:
       element_size: parse string as a multi-byte string.
@@ -180,7 +180,7 @@ class KeyDecoder(utils.StreamDecoder):
         d = c - 0x8000 - definitions.TWO_BYTE_ADJUST
         struct.pack_into('>H', result, i, d)
       else:
-        raise errors.ParserError('Unsupported byte')  # TODO: add support here.
+        raise errors.ParserError('Unsupported byte')  # TODO: add support.
       i += 1
     return offset + 1, result
 
@@ -218,7 +218,7 @@ class KeyDecoder(utils.StreamDecoder):
     """Decodes a binary value.
 
     Returns:
-      A tuple of the offset and the byte-array.
+      A tuple of the offset and the bytearray.
 
     Raises:
       ParserError: when an invalid type byte is encountered.
@@ -253,7 +253,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
 
   Attributes:
     decoder: for decoding the buffer.
-    all_objects: all the objects.
+    all_objects: all the decoded objects.
   """
 
   def __init__(self, decoder: utils.StreamDecoder):
@@ -387,9 +387,9 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     Not currently implemented.
 
     Raises:
-      NotImplementedError: because it's not yet implemented..
+      NotImplementedError: because it's not yet supported.
     """
-    raise NotImplementedError('V1 Array Buffer not implemented')
+    raise NotImplementedError('V1 Array Buffer not supported')
 
   def DecodeValue(self) -> Any:
     """Decodes a Javascript value."""
