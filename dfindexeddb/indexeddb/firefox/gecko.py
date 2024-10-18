@@ -18,7 +18,6 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import io
-import os
 import struct
 from typing import Any, List, Tuple, Union
 
