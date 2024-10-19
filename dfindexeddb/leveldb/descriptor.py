@@ -384,5 +384,6 @@ class FileReader:
 
   def GetLatestVersion(self) -> LevelDBVersion:
     """Returns the latest LevelDBVersion instance."""
-    *_, latest = self.GetVersions()
+    for version in self.GetVersions():
+      latest = version
     return latest
