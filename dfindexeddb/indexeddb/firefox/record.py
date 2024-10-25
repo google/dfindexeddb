@@ -25,7 +25,7 @@ from dfindexeddb.indexeddb.firefox import gecko
 
 @dataclass
 class FirefoxObjectStoreInfo:
-  """An ObjectStoreInfo.
+  """A FireFox ObjectStoreInfo.
 
   Attributes:
     id: the object store ID.
@@ -43,15 +43,15 @@ class FirefoxObjectStoreInfo:
 
 @dataclass
 class FirefoxIndexedDBRecord:
-  """A Safari IndexedDBRecord.
+  """A Firefox IndexedDBRecord.
 
   Attributes:
     key: the parsed key.
     value: the parsed value.
+    file_ids: the file identifiers.
     object_store_id: the object store id.
-    object_store_name: the object store name from the ObjectStoreInfo table.
-    database_name: the IndexedDB database name from the IDBDatabaseInfo table.
-    record_id: the record ID from the Record table.
+    object_store_name: the object store name from the object_store table.
+    database_name: the IndexedDB database name from the database table.
   """
   key: Any
   value: Any
@@ -68,7 +68,6 @@ class FileReader:
     database_name: the database name.
     origin: the database origin.
     metadata_version: the metadata version.
-    max_object_store_id: the maximum object store ID.
     last_vacuum_time: the last vacuum time.
     last_analyze_time: the last analyze time.
   """
