@@ -29,9 +29,6 @@ from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.firefox import definitions
 
 
-_FRAME_HEADER = b'\xff\x06\x00\x00sNaPpY'
-
-
 @dataclasses.dataclass
 class IDBKey(utils.FromDecoderMixin):
   """An IndexedDB Key.
@@ -581,9 +578,9 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     Returns:
       A python representation of the parsed JavaScript object.
     """
-    if raw_data.startswith(_FRAME_HEADER):
+    if raw_data.startswith(definitions.FRAME_HEADER):
       uncompressed_data = bytearray()
-      pos = len(_FRAME_HEADER)
+      pos = len(definitions.FRAME_HEADER)
       while pos < len(raw_data):
         is_uncompressed = raw_data[pos]
         block_size = int.from_bytes(
