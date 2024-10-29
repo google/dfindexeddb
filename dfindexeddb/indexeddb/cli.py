@@ -154,7 +154,7 @@ def App():
       '-s', '--source',
       required=True,
       type=pathlib.Path,
-      help=('The source file.'))
+      help='The source file.')
   parser_gecko.add_argument(
       '-o',
       '--output',
