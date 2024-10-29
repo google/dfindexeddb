@@ -5,8 +5,7 @@ analysis of IndexedDB and LevelDB files.
 
 It parses LevelDB, IndexedDB and JavaScript structures from these files without
 requiring native libraries.  (Note: only a subset of IndexedDB key types and
-JavaScript types for Safari and Chromium-based browsers are currently supported.
-Firefox is under development).
+JavaScript types for Firefox, Safari and Chromium-based browsers are currently supported).
 
 The content of IndexedDB files is dependent on what a web application stores
 locally/offline using the web browser's
@@ -151,7 +150,7 @@ To parse records from a LevelDB folder, use the following command:
 dfleveldb db -s SOURCE
 ```
 
-To parse records from a LevelDB folder, and use the sequence number to 
+To parse records from a LevelDB folder, and use the sequence number to
 determine recovered records and output as JSON, use the
 following command:
 
@@ -184,8 +183,8 @@ $ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_rec
 
 #### Plugins
 
-To apply a plugin parser for a leveldb file/folder, add the 
-`--plugin [Plugin Name]` argument.  Currently, there is support for the 
+To apply a plugin parser for a leveldb file/folder, add the
+`--plugin [Plugin Name]` argument.  Currently, there is support for the
 following artifacts:
 
 | Plugin Name | Artifact Name |
