@@ -75,6 +75,7 @@ def _Output(structure, output):
   elif output == 'repr':
     print(structure)
 
+
 def BlinkCommand(args):
   """The CLI for processing a file as a blink-encoded value."""
   with open(args.source, 'rb') as fd:
@@ -82,12 +83,14 @@ def BlinkCommand(args):
     blink_value = blink.V8ScriptValueDecoder.FromBytes(buffer)
     _Output(blink_value, output=args.output)
 
+
 def GeckoCommand(args):
   """The CLI for processing a file as a gecko-encoded value."""
   with open(args.source, 'rb') as fd:
     buffer = fd.read()
     blink_value = gecko.JSStructuredCloneDecoder.FromBytes(buffer)
     _Output(blink_value, output=args.output)
+
 
 def DbCommand(args):
   """The CLI for processing a directory as IndexedDB."""
@@ -151,8 +154,7 @@ def App():
       '-s', '--source',
       required=True,
       type=pathlib.Path,
-      help=(
-        'The source file.'))
+      help=('The source file.'))
   parser_gecko.add_argument(
       '-o',
       '--output',
