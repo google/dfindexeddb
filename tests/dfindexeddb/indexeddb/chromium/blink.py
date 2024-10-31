@@ -24,16 +24,14 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadBlob(self):
     """Tests Blink Blob decoding."""
-    serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x62, 0x01, 0x61, 0x01, 0x62, 0x00])
+    serialized_value = bytes.fromhex('ff093f00620161016200')
     expected_value = blink.Blob(uuid='a', type='b', size=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadBlobIndex(self):
     """Tests Blink BlobIndex decoding."""
-    serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x69, 0x00])
+    serialized_value = bytes.fromhex('ff093f006900')
     expected_value = blink.BlobIndex(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -41,12 +39,8 @@ class BlinkTest(unittest.TestCase):
   def test_ReadFile(self):
     """Tests Blink File decoding."""
     with self.subTest('file_v3'):
-      serialized_value = bytes([
-          0xff, 0x03, 0x3f, 0x00, 0x66,
-          0x04, 0x70, 0x61, 0x74, 0x68,
-          0x04, 0x75, 0x75, 0x69, 0x64,
-          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
-          0x61, 0x69, 0x6e])
+      serialized_value = bytes.fromhex(
+          'ff033f0066047061746804757569640a746578742f706c61696e')
       expected_value = blink.File(
           path='path',
           name=None,
@@ -60,15 +54,9 @@ class BlinkTest(unittest.TestCase):
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
     with self.subTest('file_v4'):
-      serialized_value = bytes([
-          0xff, 0x04, 0x3f, 0x00, 0x66,
-          0x04, 0x70, 0x61, 0x74, 0x68,
-          0x04, 0x6e, 0x61, 0x6d, 0x65,
-          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76,
-          0x65, 0x5f, 0x70, 0x61, 0x74, 0x68,
-          0x04, 0x75, 0x75, 0x69, 0x64,
-          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
-          0x61, 0x69, 0x6e, 0x00])
+      serialized_value = bytes.fromhex(
+          'ff043f00660470617468046e616d650d72656c61746976655f70617468047575'
+          '69640a746578742f706c61696e00')
       expected_value = blink.File(
           path='path',
           name='name',
@@ -82,16 +70,9 @@ class BlinkTest(unittest.TestCase):
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
     with self.subTest('file_v8'):
-      serialized_value = bytes([
-          0xff, 0x08, 0x3f, 0x00, 0x66,
-          0x04, 0x70, 0x61, 0x74, 0x68,
-          0x04, 0x6e, 0x61, 0x6d, 0x65,
-          0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76,
-          0x65, 0x5f, 0x70, 0x61, 0x74, 0x68,
-          0x04, 0x75, 0x75, 0x69, 0x64,
-          0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c,
-          0x61, 0x69, 0x6e, 0x01, 0x80, 0x04, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0xd0, 0xbf, 0x01, 0x00])
+      serialized_value = bytes.fromhex(
+          'ff083f00660470617468046e616d650d72656c61746976655f70617468047575'
+          '69640a746578742f706c61696e018004000000000000d0bf0100')
       expected_value = blink.File(
           path='path',
           name='name',
@@ -107,21 +88,16 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadFileIndex(self):
     """Tests Blink FileIndex decoding."""
-    serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x65, 0x00])
+    serialized_value = bytes.fromhex('ff093f006500')
     expected_value = blink.FileIndex(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadFileList(self):
     """Tests Blink BlobIndex decoding."""
-    serialized_value = bytes([
-        0xff, 0x03, 0x3f, 0x00, 0x6c, 0x01,
-        0x04, 0x70, 0x61, 0x74, 0x68,
-        0x0d, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x76, 0x65,
-        0x5f, 0x70, 0x61, 0x74, 0x68,
-        0x0a, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 0x6c, 0x61,
-        0x69, 0x6e])
+    serialized_value = bytes.fromhex(
+        'ff033f006c0104706174680d72656c61746976655f706174680a746578742f70'
+        '6c61696e')
     parsed_file = blink.File(
         path='path',
         name=None,
@@ -138,8 +114,7 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadFileListIndex(self):
     """Tests Blink FileListIndex decoding."""
-    serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x4c, 0x01, 0x00, 0x00])
+    serialized_value = bytes.fromhex('ff093f004c010000')
     expected_value = blink.FileListIndex(
         file_indexes=[blink.FileIndex(index=0)])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
@@ -148,15 +123,12 @@ class BlinkTest(unittest.TestCase):
   def test_ReadImageBitmap(self):
     """Tests Blink ImageBitmap decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadImageBitmap'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x67, 0x01, 0x01, 0x02, 0x01,
-          0x08, 0x00, 0x00, 0xff, 0xff, 0x00, 0xff, 0x00, 0xff])
+      serialized_value = bytes.fromhex('ff093f006701010201080000ffff00ff00ff')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadImageBitmapTransfer(self):
     """Tests Blink ImageBitmapTransfer decoding."""
-    serialized_value = bytes([
-        0xff, 0x09, 0x3f, 0x00, 0x47, 0x00])
+    serialized_value = bytes.fromhex('ff093f004700')
     expected_value = blink.ImageBitmapTransfer(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -164,69 +136,53 @@ class BlinkTest(unittest.TestCase):
   def test_ReadImageData(self):
     """Tests Blink ImageData decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadImageData'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x23, 0x00])
+      serialized_value = bytes.fromhex('ff093f002300')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadDOMPoint(self):
     """Tests Blink DOMPoint decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x51,  0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c51000000000000f03f000000000000004000000000000008400000'
+        '000000001040')
     expected_value = blink.DOMPoint(x=1.0, y=2.0, z=3.0, w=4.0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMPointReadOnly(self):
     """Tests Blink DOMPointReadOnly decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x57, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c57000000000000f03f000000000000004000000000000008400000'
+        '000000001040')
     expected_value = blink.DOMPointReadOnly(x=1.0, y=2.0, z=3.0, w=4.0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMRect(self):
     """Tests Blink DOMRect decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x45,  0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c45000000000000f03f000000000000004000000000000008400000'
+        '000000001040')
     expected_value = blink.DOMRect(x=1.0, y=2.0, width=3.0, height=4.0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMRectReadOnly(self):
     """Tests Blink DOMReadReadOnly decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x52,  0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c52000000000000f03f000000000000004000000000000008400000'
+        '000000001040')
     expected_value = blink.DOMRectReadOnly(x=1.0, y=2.0, width=3.0, height=4.0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMQuad(self):
     """Tests Blink DOMQuad decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x22, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x2a, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x18, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x24, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x08, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x1c, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x26, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x2e, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x28, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x30, 0x40])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c54000000000000f03f000000000000144000000000000022400000'
+        '000000002a400000000000000040000000000000184000000000000024400000'
+        '000000002c4000000000000008400000000000001c4000000000000026400000'
+        '000000002e400000000000001040000000000000204000000000000028400000'
+        '000000003040')
     expected_value = blink.DOMQuad(
         p1=blink.DOMPoint(x=1.0, y=5.0, z=9.0, w=13.0),
         p2=blink.DOMPoint(x=2.0, y=6.0, z=10.0, w=14.0),
@@ -237,34 +193,22 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadDOMMatrix2D(self):
     """Tests Blink DOMMatrix2D decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x08, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x18, 0x40, 0xff, 0x11, 0xff, 0x0d, 0x5c, 0x49,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40
-    ])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c49000000000000f03f000000000000004000000000000008400000'
+        '00000000104000000000000014400000000000001840ff11ff0d5c4900000000'
+        '0000f03f00000000000000400000000000000840000000000000104000000000'
+        '000014400000000000001840')
     expected_value = blink.DOMMatrix2D(values=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMMatrix2DReadOnly(self):
     """Tests Blink DOMMatrix2DReadOnly decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x08, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x40, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x18, 0x40, 0xff, 0x11, 0xff, 0x0d, 0x5c, 0x49,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x40,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x14, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x40
-    ])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c4f000000000000f03f000000000000004000000000000008400000'
+        '00000000104000000000000014400000000000001840ff11ff0d5c4900000000'
+        '0000f03f00000000000000400000000000000840000000000000104000000000'
+        '000014400000000000001840')
     expected_value = blink.DOMMatrix2DReadOnly(
         values=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
@@ -272,19 +216,12 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadDOMMatrix(self):
     """Tests Blink DOMMatrix decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x59, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0xf1, 0x3f, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xf3, 0x3f, 0xcd, 0xcc,
-        0xcc, 0xcc, 0xcc, 0xcc, 0xf4, 0x3f, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0xf6, 0x3f, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0x00, 0x40, 0x9a, 0x99,
-        0x99, 0x99, 0x99, 0x99, 0x01, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0x02, 0x40, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x03, 0x40, 0xcd, 0xcc,
-        0xcc, 0xcc, 0xcc, 0xcc, 0x08, 0x40, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0x09, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x0a, 0x40, 0x33, 0x33,
-        0x33, 0x33, 0x33, 0x33, 0x0b, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0x10, 0x40, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0x10, 0x40, 0x33, 0x33,
-        0x33, 0x33, 0x33, 0x33, 0x11, 0x40, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0x11, 0x40,])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c599a9999999999f13f333333333333f33fcdccccccccccf43f6666'
+        '66666666f63fcdcccccccccc00409a9999999999014066666666666602403333'
+        '333333330340cdcccccccccc08409a999999999909406666666666660a403333'
+        '333333330b406666666666661040cdcccccccccc104033333333333311409a99'
+        '999999991140')
     expected_value = blink.DOMMatrix(
         values=[
             1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4,
@@ -294,19 +231,12 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadDOMMatrixReadOnly(self):
     """Tests Blink DOMMatrixReadonly decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x55, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0xf1, 0x3f, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xf3, 0x3f, 0xcd, 0xcc,
-        0xcc, 0xcc, 0xcc, 0xcc, 0xf4, 0x3f, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0xf6, 0x3f, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0x00, 0x40, 0x9a, 0x99,
-        0x99, 0x99, 0x99, 0x99, 0x01, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0x02, 0x40, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x03, 0x40, 0xcd, 0xcc,
-        0xcc, 0xcc, 0xcc, 0xcc, 0x08, 0x40, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0x09, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x0a, 0x40, 0x33, 0x33,
-        0x33, 0x33, 0x33, 0x33, 0x0b, 0x40, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
-        0x10, 0x40, 0xcd, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0x10, 0x40, 0x33, 0x33,
-        0x33, 0x33, 0x33, 0x33, 0x11, 0x40, 0x9a, 0x99, 0x99, 0x99, 0x99, 0x99,
-        0x11, 0x40,])
+    serialized_value = bytes.fromhex(
+        'ff11ff0d5c559a9999999999f13f333333333333f33fcdccccccccccf43f66666'
+        '6666666f63fcdcccccccccc00409a999999999901406666666666660240333333'
+        '3333330340cdcccccccccc08409a999999999909406666666666660a403333333'
+        '333330b406666666666661040cdcccccccccc104033333333333311409a999999'
+        '99991140')
     expected_value = blink.DOMMatrixReadOnly(
         values=[
             1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4,
@@ -316,25 +246,21 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadMessagePort(self):
     """Tests Blink MessagePort decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x4d, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c4d00')
     expected_value = blink.MessagePort(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadMojoHandle(self):
     """Tests Blink MojoHandle decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x68, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c6800')
     expected_value = blink.MojoHandle(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_OffscreenCanvasTransfer(self):
     """Tests Blink OffscreenCanvasTransfer decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x48, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c48000000000000')
     expected_value = blink.OffscreenCanvasTransfer(
         width=0,
         height=0,
@@ -347,33 +273,28 @@ class BlinkTest(unittest.TestCase):
 
   def test_ReadableStreamTransfer(self):
     """Tests Blink ReadableStreamTransfer decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x72, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c7200')
     expected_value = blink.ReadableStreamTransfer(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_WriteableStreamTransfer(self):
     """Tests Blink WriteableStreamTransfer decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x77, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c7700')
     expected_value = blink.WriteableStreamTransfer(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_TransformStreamTransfer(self):
     """Tests Blink TransformStreamTransfer decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x6d, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c6d00')
     expected_value = blink.TransformStreamTransfer(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDOMException(self):
     """Tests Blink DOMException decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x78, 0x01, 0x41, 0x01,
-        0x42, 0x01, 0x43])
+    serialized_value = bytes.fromhex('ff11ff0d5c78014101420143')
     expected_value = blink.DOMException(
         name='A', message='B', stack_unused='C')
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
@@ -382,11 +303,8 @@ class BlinkTest(unittest.TestCase):
   def test_ReadCryptoKey(self):
     """Tests Blink CryptoKey decoding."""
     with self.subTest('AES'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x4b, 0x01, 0x01, 0x10,
-          0x04, 0x10,
-          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,  # key data
-          0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15])
+      serialized_value = bytes.fromhex(
+          'ff093f004b010110041000010203040506070809101112131415')
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.AES_CBC,
@@ -401,17 +319,10 @@ class BlinkTest(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('HMAC'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x4b, 0x02, 0x40, 0x06,
-          0x10, 0x40,
-          0x84, 0x04, 0x10, 0xb5, 0xb3, 0x15, 0xec, 0x95,  # key data
-          0x4c, 0x3b, 0xc7, 0x9c, 0x6a, 0x89, 0x06, 0xaa,
-          0x25, 0x9a, 0xfe, 0xeb, 0x30, 0x14, 0xfa, 0x81,
-          0x95, 0xd2, 0x69, 0x48, 0x87, 0xe8, 0x60, 0x2c,
-          0x89, 0xb3, 0x22, 0xfd, 0x6a, 0x74, 0xe2, 0xdc,
-          0x60, 0xbd, 0xd1, 0xcd, 0x2e, 0x2f, 0x1f, 0xb6,
-          0x7f, 0xf6, 0x22, 0xf1, 0x25, 0xe8, 0xd7, 0x90,
-          0xfb, 0x80, 0x21, 0x7e, 0x79, 0xc3, 0x5f, 0x98])
+      serialized_value = bytes.fromhex(
+          'ff093f004b0240061040840410b5b315ec954c3bc79c6a8906aa259afeeb30'
+          '14fa8195d2694887e8602c89b322fd6a74e2dc60bdd1cd2e2f1fb67ff622f1'
+          '25e8d790fb80217e79c35f98')
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.SHA256,
@@ -432,31 +343,13 @@ class BlinkTest(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('RSAHashedKey'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x4b, 0x04, 0x0d, 0x01,
-          0x80, 0x08, 0x03, 0x01, 0x00, 0x01, 0x06, 0x11,
-          0xa2, 0x01,
-          0x0a, 0xc9, 0x9b, 0xea, 0x4a, 0x34, 0xec, 0x34,  # key data
-          0xe0, 0x79, 0x5e, 0x8d, 0x12, 0x25, 0x4f, 0x19,
-          0x93, 0x82, 0x32, 0xd8, 0x87, 0x60, 0xe7, 0x1d,
-          0x9c, 0xe5, 0x42, 0x49, 0x28, 0x26, 0x45, 0x72,
-          0x9d, 0x69, 0x86, 0x23, 0xd2, 0xa7, 0x51, 0x97,
-          0xb8, 0x06, 0x9c, 0xb2, 0x03, 0xe3, 0xb8, 0xdc,
-          0xab, 0x5f, 0xb4, 0xc1, 0x2b, 0xc2, 0xd5, 0x37,
-          0x12, 0x3d, 0x25, 0x1a, 0xfb, 0x42, 0x6d, 0xd6,
-          0x51, 0xb3, 0x64, 0xbf, 0x50, 0xaf, 0x31, 0x25,
-          0xcb, 0x98, 0x1a, 0xb7, 0xac, 0x67, 0x86, 0x68,
-          0xf1, 0x4c, 0xcc, 0x34, 0x28, 0xa6, 0xc9, 0x9a,
-          0x3e, 0x5c, 0x75, 0x61, 0xa1, 0x78, 0x39, 0x6e,
-          0x4e, 0x10, 0x48, 0xf8, 0x5e, 0x69, 0xf1, 0xb4,
-          0x3c, 0x12, 0x11, 0x63, 0x68, 0x7b, 0x86, 0xd8,
-          0xa8, 0xe3, 0x83, 0xf9, 0x3f, 0xa0, 0xc6, 0xfb,
-          0x0d, 0x5a, 0x01, 0x82, 0x9b, 0x9e, 0x7a, 0xa4,
-          0x57, 0xa3, 0x84, 0x2b, 0xb6, 0xc7, 0xae, 0x0e,
-          0xad, 0xeb, 0x86, 0xc8, 0x72, 0xb3, 0x2a, 0x5e,
-          0xf3, 0x1a, 0x33, 0x59, 0xe3, 0x61, 0xba, 0x91,
-          0x85, 0xf8, 0x48, 0x3b, 0x9a, 0xb6, 0xbf, 0xe9,
-          0xe3, 0xb3])
+      serialized_value = bytes.fromhex(
+          'ff093f004b040d018008030100010611a2010ac99bea4a34ec34e0795e8d12'
+          '254f19938232d88760e71d9ce54249282645729d698623d2a75197b8069cb2'
+          '03e3b8dcab5fb4c12bc2d537123d251afb426dd651b364bf50af3125cb981a'
+          'b7ac678668f14ccc3428a6c99a3e5c7561a178396e4e1048f85e69f1b43c12'
+          '1163687b86d8a8e383f93fa0c6fb0d5a01829b9e7aa457a3842bb6c7ae0ead'
+          'eb86c872b32a5ef31a3359e361ba9185f8483b9ab6bfe9e3b3')
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'id': definitions.CryptoKeyAlgorithm.RSA_PSS,
@@ -495,21 +388,11 @@ class BlinkTest(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('ECDSA Key'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x4b, 0x05, 0x0e, 0x01,
-          0x01, 0x11, 0x5b,
-          0xcb, 0x98, 0x1a, 0xb7, 0xac, 0x67, 0x86, 0x68,  # key data
-          0xf1, 0x4c, 0xcc, 0x34, 0x28, 0xa6, 0xc9, 0x9a,
-          0x3e, 0x5c, 0x75, 0x61, 0xa1, 0x78, 0x39, 0x6e,
-          0x4e, 0x10, 0x48, 0xf8, 0x5e, 0x69, 0xf1, 0xb4,
-          0x3c, 0x12, 0x11, 0x63, 0x68, 0x7b, 0x86, 0xd8,
-          0xa8, 0xe3, 0x83, 0xf9, 0x3f, 0xa0, 0xc6, 0xfb,
-          0x0d, 0x5a, 0x01, 0x82, 0x9b, 0x9e, 0x7a, 0xa4,
-          0x57, 0xa3, 0x84, 0x2b, 0xb6, 0xc7, 0xae, 0x0e,
-          0xad, 0xeb, 0x86, 0xc8, 0x72, 0xb3, 0x2a, 0x5e,
-          0xf3, 0x1a, 0x33, 0x59, 0xe3, 0x61, 0xba, 0x91,
-          0x85, 0xf8, 0x48, 0x3b, 0x9a, 0xb6, 0xbf, 0xe9,
-          0xe3, 0xb3, 0x30])
+      serialized_value = bytes.fromhex(
+          'ff093f004b050e0101115bcb981ab7ac678668f14ccc3428a6c99a3e5c7561'
+          'a178396e4e1048f85e69f1b43c121163687b86d8a8e383f93fa0c6fb0d5a01'
+          '829b9e7aa457a3842bb6c7ae0eadeb86c872b32a5ef31a3359e361ba9185f8'
+          '483b9ab6bfe9e3b330')
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'crypto_key_algorithm': definitions.CryptoKeyAlgorithm.ECDSA,
@@ -536,9 +419,7 @@ class BlinkTest(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('NoParams Key'):
-      serialized_value = bytes([
-          0xff, 0x09, 0x3f, 0x00, 0x4b, 0x06, 0x11, 0xa0, 0x02,
-          0x03, 0x01, 0x02, 0x03, 0x00])
+      serialized_value = bytes.fromhex('ff093f004b0611a0020301020300')
       expected_value = blink.CryptoKey(
           algorithm_parameters={
               'crypto_key_algorithm': definitions.CryptoKeyAlgorithm.PBKDF2},
@@ -547,71 +428,62 @@ class BlinkTest(unittest.TestCase):
           usages=(
               definitions.CryptoKeyUsage.DRIVE_BITS
               | definitions.CryptoKeyUsage.DERIVE_KEY),
-          key_data=b'\x01\x02\x03'
-      )
+          key_data=b'\x01\x02\x03')
       parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
       self.assertEqual(parsed_value, expected_value)
 
   def test_ReadDomFileSystem(self):
     """Tests UnguessableToken decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x64, 0x00, 0x00, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c64000000')
     expected_value = blink.DOMFileSystem(raw_type=0, name='', root_url='')
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadFileSystemFileHandle(self):
     """Tests UnguessableToken decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x64, 0x00, 0x00, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c64000000')
     expected_value = blink.DOMFileSystem(raw_type=0, name='', root_url='')
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadRTCEncodedAudioFrame(self):
     """Tests Blink RTCEncodedAudioFrame decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x41, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c4100')
     expected_value = blink.RTCEncodedAudioFrame(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadRTCEncodedVideoFrame(self):
     """Tests Blink RTCEncodedVideoFrame decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x56, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c5600')
     expected_value = blink.RTCEncodedVideoFrame(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadAudioData(self):
     """Tests AudioData decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x61, 0x00, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c610000')
     expected_value = blink.AudioData(audio_frame_index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadVideoFrame(self):
     """Tests VideoFrame decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x76, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c7600')
     expected_value = blink.VideoFrame(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadEncodedAudioChunk(self):
     """Tests UnguessableToken decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x79, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c7900')
     expected_value = blink.EncodedAudioChunk(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
 
   def test_ReadEncodedVideoChunk(self):
     """Tests UnguessableToken decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x7a, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c7a00')
     expected_value = blink.EncodedVideoChunk(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -619,28 +491,24 @@ class BlinkTest(unittest.TestCase):
   def test_ReadMediaStreamTrack(self):
     """Tests MediaStream decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadMediaStream'):
-      serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x73, 0x00])
+      serialized_value = bytes.fromhex('ff11ff0d5c7300')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadCropTarget(self):
     """Tests CropTarget decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadCropTarget'):
-      serialized_value = bytes([
-          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x63, 0x00])
+      serialized_value = bytes.fromhex('ff11ff0d5c6300')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadRestrictionTarget(self):
     """Tests RestrictionTarget decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadRestrictionTarget'):
-      serialized_value = bytes([
-          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x44, 0x00])
+      serialized_value = bytes.fromhex('ff11ff0d5c4400')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
   def test_ReadMediaSourceHandle(self):
     """Tests MediaSourceHandle decoding."""
-    serialized_value = bytes([
-        0xff, 0x11, 0xff, 0x0d, 0x5c, 0x53, 0x00])
+    serialized_value = bytes.fromhex('ff11ff0d5c5300')
     expected_value = blink.MediaSourceHandle(index=0)
     parsed_value = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
     self.assertEqual(parsed_value, expected_value)
@@ -648,8 +516,7 @@ class BlinkTest(unittest.TestCase):
   def test_ReadFencedFrameConfig(self):
     """Tests FencedFrameConfig decoding."""
     with self.assertRaisesRegex(NotImplementedError, 'ReadFencedFrameConfig'):
-      serialized_value = bytes([
-          0xff, 0x11, 0xff, 0x0d, 0x5c, 0x43, 0x00])
+      serialized_value = bytes.fromhex('ff11ff0d5c4300')
       _ = blink.V8ScriptValueDecoder.FromBytes(serialized_value)
 
 
