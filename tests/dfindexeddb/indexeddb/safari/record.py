@@ -16,6 +16,7 @@
 import datetime
 import unittest
 
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 from dfindexeddb.indexeddb.safari import record
 from dfindexeddb.indexeddb.safari import webkit
@@ -37,7 +38,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     """Tests for an IndexedDB record with an undefined value."""
     expected_record = record.IndexedDBRecord(
         key=10,
-        value={'id': 10, 'value': webkit.Undefined()},
+        value={'id': 10, 'value': types.Undefined()},
         object_store_id=1,
         object_store_name='test store a',
         database_name='IndexedDB test',
@@ -49,7 +50,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     """Tests for an IndexedDB record with a Null value."""
     expected_record = record.IndexedDBRecord(
         key=11,
-        value={'id': 11, 'value': webkit.Null()},
+        value={'id': 11, 'value': types.Null()},
         object_store_id=1,
         object_store_name='test store a',
         database_name='IndexedDB test',
@@ -241,9 +242,9 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_set_record(self):
     """Tests for an IndexedDB record with a set value."""
-    expected_set = webkit.JSSet()
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
 
     expected_record = record.IndexedDBRecord(
         key=27,
@@ -271,7 +272,7 @@ class SafariIndexedDBTest(unittest.TestCase):
     """Tests for an IndexedDB record with a regexp value."""
     expected_record = record.IndexedDBRecord(
         key=29,
-        value={'id': 29, 'value': webkit.RegExp(pattern='', flags='')},
+        value={'id': 29, 'value': types.RegExp(pattern='', flags='')},
         object_store_id=1,
         object_store_name='test store a',
         database_name='IndexedDB test',
@@ -293,19 +294,19 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_mixed_object_record(self):
     """Tests for an IndexedDB record with mixed values within an object."""
-    expected_test_array = webkit.JSArray()
+    expected_test_array = types.JSArray()
     for value in [123, 456, 'abc', 'def']:
-      expected_test_array.Append(value)
-    expected_set = webkit.JSSet()
+      expected_test_array.values.append(value)
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
 
     expected_record = record.IndexedDBRecord(
         key=1,
         value={
             'id': 1,
-            'test_undef': webkit.Undefined(),
-            'test_null': webkit.Null(),
+            'test_undef': types.Undefined(),
+            'test_null': types.Null(),
             'test_bool_true': True,
             'test_bool_false': False,
             'test_string': 'a string value',
@@ -321,7 +322,7 @@ class SafariIndexedDBTest(unittest.TestCase):
                 'a': 1,
                 'b': 2,
                 'c': 3},
-            'test_regexp': webkit.RegExp('\\w+', ''),
+            'test_regexp': types.RegExp('\\w+', ''),
             'test_array': expected_test_array,
             'test_object': {
                 'name': {
@@ -471,9 +472,9 @@ class SafariIndexedDBTest(unittest.TestCase):
 
   def test_array_key_record(self):
     """Tests for an IndexedDB record with an array in the key."""
-    expected_test_array = webkit.JSArray()
+    expected_test_array = types.JSArray()
     for value in [1, 2, 3]:
-      expected_test_array.Append(value)
+      expected_test_array.values.append(value)
     expected_record = record.IndexedDBRecord(
         key=[1.0, 2.0, 3.0],
         value={

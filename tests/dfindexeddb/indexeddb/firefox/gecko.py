@@ -246,7 +246,7 @@ class GeckoTest(unittest.TestCase):
         '50040300010104F1FF0106340800FFFF020000800400FFFF696401122800001D'
         '0000000300FFFF050D181476616C7565000901080600FF013830800400FFFF00'
         '0000001300FFFF')
-    expected_value = {'id': 29, 'value': types.RegExp(pattern='', flags=0)}
+    expected_value = {'id': 29, 'value': types.RegExp(pattern='', flags='0')}
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
@@ -307,7 +307,7 @@ class GeckoTest(unittest.TestCase):
             'a': 1,
             'b': 2,
             'c': 3},
-        'test_regexp': types.RegExp('\\w+', 0),
+        'test_regexp': types.RegExp('\\w+', '0'),
         'test_array': expected_test_array,
         'test_object': {
             'name': {

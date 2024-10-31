@@ -16,6 +16,7 @@
 import datetime
 import unittest
 
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 from dfindexeddb.indexeddb.safari import webkit
 
@@ -25,7 +26,7 @@ class WebkitTest(unittest.TestCase):
 
   def test_parse_undefined(self):
     """Tests parsing an undefined value from an IndexedDB value."""
-    expected_value = {'id': 10, 'value': webkit.Undefined()}
+    expected_value = {'id': 10, 'value': types.Undefined()}
     value_bytes = bytes.fromhex(
         '0F00000002020000 806964050A000000'
         '0500008076616C75 6503FFFFFFFF')
@@ -35,7 +36,7 @@ class WebkitTest(unittest.TestCase):
 
   def test_parse_null(self):
     """Tests parsing a null value from an IndexedDB value."""
-    expected_value = {'id': 11, 'value': webkit.Null()}
+    expected_value = {'id': 11, 'value': types.Null()}
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050B0000000500008076616C756504FFFFFFFF')
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -211,9 +212,9 @@ class WebkitTest(unittest.TestCase):
         '0F00000002020000806964051B000000'
         '0500008076616C75651D070502000000'
         '050300000020FFFFFFFFFFFFFFFF')
-    expected_set = webkit.JSSet()
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
     expected_value = {'id': 27, 'value': expected_set}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
@@ -234,7 +235,7 @@ class WebkitTest(unittest.TestCase):
     value_bytes = bytes.fromhex(
         '0F00000002020000806964051D0000000500008076616C756512'
         '00000080FEFFFFFF02FFFFFFFF')
-    expected_value = {'id': 29, 'value': webkit.RegExp(pattern='', flags='')}
+    expected_value = {'id': 29, 'value': types.RegExp(pattern='', flags='')}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
@@ -272,17 +273,17 @@ class WebkitTest(unittest.TestCase):
         '040000806C6173741003000080446F65FFFFFFFF030000806167650515000000'
         'FFFFFFFFFFFFFFFF')
 
-    expected_test_array = webkit.JSArray()
+    expected_test_array = types.JSArray()
     for value in [123, 456, 'abc', 'def']:
-      expected_test_array.Append(value)
-    expected_set = webkit.JSSet()
+      expected_test_array.values.append(value)
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
 
     expected_value = {
        'id': 1,
-        'test_undef': webkit.Undefined(),
-        'test_null': webkit.Null(),
+        'test_undef': types.Undefined(),
+        'test_null': types.Null(),
         'test_bool_true': True,
         'test_bool_false': False,
         'test_string': 'a string value',
@@ -298,7 +299,7 @@ class WebkitTest(unittest.TestCase):
             'a': 1,
             'b': 2,
             'c': 3},
-        'test_regexp': webkit.RegExp('\\w+', ''),
+        'test_regexp': types.RegExp('\\w+', ''),
         'test_array': expected_test_array,
         'test_object': {
             'name': {

@@ -63,7 +63,7 @@ class RegExp:
     flags: the flags.
   """
   pattern: str
-  flags: int
+  flags: str
 
 
 @dataclasses.dataclass

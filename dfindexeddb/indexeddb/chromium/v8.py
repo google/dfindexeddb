@@ -23,6 +23,7 @@ from typing import Any, BinaryIO, Dict, Optional, Set, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import definitions
 
 
@@ -34,61 +35,6 @@ class ArrayBufferView:
   offset: int
   length: int
   flags: int
-
-
-@dataclass
-class JSArray:
-  """A parsed Javascript array.
-
-  A Javascript array behaves like a Python list but allows assigning arbitrary
-  properties.  The array is stored in the attribute __array__.
-  """
-  def __init__(self):
-    self.__array__ = []
-
-  def Append(self, element: Any):
-    """Appends a new element to the array."""
-    self.__array__.append(element)
-
-  def __repr__(self):
-    array_entries = ', '.join(
-        [str(entry) for entry in list(self.__array__)])
-    properties = ', '.join(
-        f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{array_entries}, {properties}]'
-
-  @property
-  def properties(self) -> Dict[str, Any]:
-    """Returns the object properties."""
-    return self.__dict__
-
-  def __eq__(self, other: JSArray):
-    return (
-        self.__array__ == other.__array__
-        and self.properties == other.properties)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
-  def __getitem__(self, name):
-    return self.__dict__[name]
-
-
-@dataclass
-class Null:
-  """A parsed Javascript Null."""
-
-
-@dataclass
-class RegExp:
-  """A parsed Javascript RegExp."""
-  pattern: str
-  flags: int
-
-
-@dataclass(frozen=True)
-class Undefined:
-  """A parsed Javascript undef."""
 
 
 class ValueDeserializer:
@@ -223,9 +169,9 @@ class ValueDeserializer:
       _ = self.decoder.DecodeUint32Varint()
       parsed_object = self._ReadObject()
     elif tag == definitions.V8SerializationTag.UNDEFINED:
-      parsed_object = Undefined()
+      parsed_object = types.Undefined()
     elif tag == definitions.V8SerializationTag.NULL:
-      parsed_object = Null()
+      parsed_object = types.Null()
     elif tag == definitions.V8SerializationTag.TRUE:
       parsed_object = True
     elif tag == definitions.V8SerializationTag.FALSE:
@@ -385,7 +331,7 @@ class ValueDeserializer:
 
   def _ReadJSObjectProperties(
       self,
-      js_object: Union[Dict, JSArray],
+      js_object: Union[Dict, types.JSArray],
       end_tag: definitions.V8SerializationTag
   ) -> int:
     """Reads key-value properties and sets them to the given js_object.
@@ -415,7 +361,7 @@ class ValueDeserializer:
     self.next_id += 1
     return next_id
 
-  def ReadSparseJSArray(self) -> JSArray:
+  def ReadSparseJSArray(self) -> types.JSArray:
     """Reads a sparse encoded JSArray from the current position.
 
     Raises:
@@ -423,10 +369,10 @@ class ValueDeserializer:
     """
     next_id = self._GetNextId()
 
-    js_array = JSArray()
+    js_array = types.JSArray()
     _, length = self.decoder.DecodeUint32Varint()
     for _ in range(length):
-      js_array.Append(Undefined())
+      js_array.values.append(types.Undefined())
 
     num_properties = self._ReadJSObjectProperties(
         js_array.__dict__, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY)
@@ -440,7 +386,7 @@ class ValueDeserializer:
     self.objects[next_id] = js_array
     return js_array
 
-  def ReadDenseJSArray(self) -> JSArray:
+  def ReadDenseJSArray(self) -> types.JSArray:
     """Reads a dense encoded JSArray from the current position.
 
     Raises:
@@ -448,7 +394,7 @@ class ValueDeserializer:
     """
     next_id = self._GetNextId()
 
-    js_array = JSArray()
+    js_array = types.JSArray()
     _, length = self.decoder.DecodeUint32Varint()
     for _ in range(length):
       tag = self._PeekTag()
@@ -457,12 +403,12 @@ class ValueDeserializer:
         continue
       array_object = self._ReadObject()
 
-      if self.version < 11 and isinstance(array_object, Undefined):
+      if self.version < 11 and isinstance(array_object, types.Undefined):
         continue
-      js_array.Append(array_object)
+      js_array.values.append(array_object)
 
     num_properties = self._ReadJSObjectProperties(
-        js_array.__dict__, definitions.V8SerializationTag.END_DENSE_JS_ARRAY)
+        js_array.properties, definitions.V8SerializationTag.END_DENSE_JS_ARRAY)
     _, expected_num_properties = self.decoder.DecodeUint32Varint()
     _, expected_length = self.decoder.DecodeUint32Varint()
     if num_properties != expected_num_properties:
@@ -515,12 +461,12 @@ class ValueDeserializer:
     self.objects[next_id] = value
     return value
 
-  def _ReadJSRegExp(self) -> RegExp:
+  def _ReadJSRegExp(self) -> types.RegExp:
     """Reads a Javascript regular expression from the current position."""
     next_id = self._GetNextId()
     pattern = self.ReadString()
     _, flags = self.decoder.DecodeUint32Varint()  # TODO: verify flags
-    regexp = RegExp(pattern=pattern, flags=flags)
+    regexp = types.RegExp(pattern=pattern, flags=str(flags))
     self.objects[next_id] = regexp
     return regexp
 

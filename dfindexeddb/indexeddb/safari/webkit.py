@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 
 
@@ -80,102 +81,6 @@ class FileList:
     files: the list of files.
   """
   files: List[FileData]
-
-
-class JSArray:
-  """A parsed Javascript array.
-
-  A Javascript array behaves like a Python list but allows assigning arbitrary
-  properties.  The array is stored in the attribute __array__.
-  """
-  def __init__(self):
-    self.__array__ = []
-
-  def Append(self, element: Any):
-    """Appends a new element to the array."""
-    self.__array__.append(element)
-
-  def __repr__(self):
-    array_entries = ', '.join(
-        [str(entry) for entry in list(self.__array__)])
-    properties = ', '.join(
-        f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{array_entries}, {properties}]'
-
-  @property
-  def properties(self) -> Dict[str, Any]:
-    """Returns the object properties."""
-    return self.__dict__
-
-  def __eq__(self, other: JSArray):
-    return (
-        self.__array__ == other.__array__
-        and self.properties == other.properties)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
-  def __getitem__(self, name):
-    return self.__dict__[name]
-
-
-class JSSet:
-  """A parsed Javascript set.
-
-  A Javascript set behaves like a Python set but allows assigning arbitrary
-  properties.  The array is stored in the attribute __set__.
-  """
-  def __init__(self):
-    self.__set__ = set()
-
-  def Add(self, element: Any):
-    """Adds a new element to the set."""
-    self.__set__.add(element)
-
-  def __repr__(self):
-    array_entries = ', '.join(
-        [str(entry) for entry in list(self.__set__)])
-    properties = ', '.join(
-        f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{array_entries}, {properties}]'
-
-  @property
-  def properties(self) -> Dict[str, Any]:
-    """Returns the object properties."""
-    return self.__dict__
-
-  def __eq__(self, other: JSSet):
-    return (
-        self.__set__ == other.__set__
-        and self.properties == other.properties)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
-  def __getitem__(self, name):
-    return self.__dict__[name]
-
-
-@dataclass
-class Null:
-  """A parsed JavaScript Null."""
-
-
-@dataclass
-class RegExp:
-  """A parsed JavaScript RegExp.
-
-  Attributes:
-    pattern: the pattern.
-    flags: the flags.
-  """
-  pattern: str
-  flags: str
-
-
-@dataclass(frozen=True)
-class Undefined:
-  """A parsed JavaScript undef."""
 
 
 @dataclass
@@ -303,7 +208,7 @@ class SerializedScriptValueDecoder():
       raise errors.ParserError(
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
-  def DecodeArray(self) -> JSArray:
+  def DecodeArray(self) -> types.JSArray:
     """Decodes an Array value.
 
     Returns:
@@ -313,12 +218,12 @@ class SerializedScriptValueDecoder():
       ParserError if an invalid Terminator tag was found.
     """
     _, length = self.decoder.DecodeUint32()
-    array = JSArray()
+    array = types.JSArray()
     self.object_pool.append(array)
     for _ in range(length):
       _, _ = self.decoder.DecodeUint32()
       _, value = self.DecodeValue()
-      array.Append(value)
+      array.values.append(value)
 
     offset, terminator_tag = self.decoder.DecodeUint32()
     if terminator_tag != definitions.TERMINATOR_TAG:
@@ -466,11 +371,11 @@ class SerializedScriptValueDecoder():
       'memory_cost': memory_cost
     }
 
-  def DecodeRegExp(self) -> RegExp:
+  def DecodeRegExp(self) -> types.RegExp:
     """Decodes a RegExp value."""
     pattern = self.DecodeStringData()
     flags = self.DecodeStringData()
-    return RegExp(pattern=pattern, flags=flags)
+    return types.RegExp(pattern=pattern, flags=flags)
 
   def DecodeMapData(self) -> dict:
     """Decodes a Map value."""
@@ -497,15 +402,15 @@ class SerializedScriptValueDecoder():
     _, tag = self.decoder.DecodeUint32()
     return js_map
 
-  def DecodeSetData(self) -> JSSet:
+  def DecodeSetData(self) -> types.JSSet:
     """Decodes a SetData value."""
     tag = self.PeekSerializationTag()
-    js_set = JSSet()
+    js_set = types.JSSet()
     self.object_pool.append(js_set)
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
       _, key = self.DecodeValue()
-      js_set.Add(key)
+      js_set.values.add(key)
       tag = self.PeekSerializationTag()
 
     # consume the NonSetPropertiesTag
@@ -636,9 +541,9 @@ class SerializedScriptValueDecoder():
     elif tag == definitions.SerializationTag.OBJECT:
       value = self.DecodeObject()
     elif tag == definitions.SerializationTag.UNDEFINED:
-      value = Undefined()
+      value = types.Undefined()
     elif tag == definitions.SerializationTag.NULL:
-      value = Null()
+      value = types.Null()
     elif tag == definitions.SerializationTag.INT:
       _, value = self.decoder.DecodeInt32()
     elif tag == definitions.SerializationTag.ZERO:

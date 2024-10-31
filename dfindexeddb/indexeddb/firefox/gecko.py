@@ -454,7 +454,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       raise errors.ParserError('String tag not found')
 
     pattern = self._DecodeString(string_data)
-    return types.RegExp(pattern=pattern, flags=flags)
+    return types.RegExp(pattern=pattern, flags=str(flags))
 
   def _StartRead(self) -> Any:
     """Reads the start of a serialized value.
