@@ -87,6 +87,13 @@ options:
 
 #### Examples:
 
+To parse IndexedDB records from an sqlite file for Firefox and output the
+results as JSON, use the following command:
+
+```
+dfindexeddb db -s SOURCE --format firefox -o json
+```
+
 To parse IndexedDB records from an sqlite file for Safari and output the
 results as JSON-L, use the following command:
 
