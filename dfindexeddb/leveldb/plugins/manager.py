@@ -49,8 +49,8 @@ class LeveldbPluginManager:
     """
     try:
       return cls._class_registry[plugin_name]
-    except KeyError:
-      raise KeyError(f'Plugin not found: {plugin_name}')
+    except KeyError as exc:
+      raise KeyError(f'Plugin not found: {plugin_name}') from exc
 
   @classmethod
   def RegisterPlugin(cls, plugin_class: Type[interface.LeveldbPlugin]):

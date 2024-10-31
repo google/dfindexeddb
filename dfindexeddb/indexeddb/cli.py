@@ -52,11 +52,11 @@ class Encoder(json.JSONEncoder):
     if isinstance(o, datetime):
       return o.isoformat()
     if isinstance(o, v8.Undefined):
-      return "<undefined>"
+      return '<undefined>'
     if isinstance(o, v8.JSArray):
       return o.__dict__
     if isinstance(o, v8.Null):
-      return "<null>"
+      return '<null>'
     if isinstance(o, set):
       return list(o)
     if isinstance(o, v8.RegExp):

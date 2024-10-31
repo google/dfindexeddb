@@ -51,9 +51,9 @@ class JSArray:
     self.__array__.append(element)
 
   def __repr__(self):
-    array_entries = ", ".join(
+    array_entries = ', '.join(
         [str(entry) for entry in list(self.__array__)])
-    properties = ", ".join(
+    properties = ', '.join(
         f'{key}: {value}' for key, value in self.properties.items())
     return f'[{array_entries}, {properties}]'
 
