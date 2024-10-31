@@ -22,9 +22,9 @@ import pathlib
 
 from dfindexeddb import utils
 from dfindexeddb import version
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
-from dfindexeddb.indexeddb.chromium import v8
 from dfindexeddb.indexeddb.firefox import gecko
 from dfindexeddb.indexeddb.firefox import record as firefox_record
 from dfindexeddb.indexeddb.safari import record as safari_record
@@ -51,15 +51,15 @@ class Encoder(json.JSONEncoder):
       return ''.join(out)
     if isinstance(o, datetime):
       return o.isoformat()
-    if isinstance(o, v8.Undefined):
+    if isinstance(o, types.Undefined):
       return '<undefined>'
-    if isinstance(o, v8.JSArray):
+    if isinstance(o, types.JSArray):
       return o.__dict__
-    if isinstance(o, v8.Null):
+    if isinstance(o, types.Null):
       return '<null>'
     if isinstance(o, set):
       return list(o)
-    if isinstance(o, v8.RegExp):
+    if isinstance(o, types.RegExp):
       return str(o)
     if isinstance(o, enum.Enum):
       return o.name
