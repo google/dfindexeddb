@@ -1402,21 +1402,21 @@ class FolderReader:
   """A IndexedDB folder reader for Chrome/Chromium.
 
   Attributes:
-    foldername (str): the source LevelDB folder.
+    folder_name (str): the source LevelDB folder.
   """
 
-  def __init__(self, foldername: pathlib.Path):
+  def __init__(self, folder_name: pathlib.Path):
     """Initializes the FileReader.
 
     Args:
-      foldername: the source IndexedDB folder.
+      folder_name: the source IndexedDB folder.
 
     Raises:
-      ValueError: if foldername is None or not a directory.
+      ValueError: if folder_name is None or not a directory.
     """
-    if not foldername or not foldername.is_dir():
-      raise ValueError(f'{foldername} is None or not a directory')
-    self.foldername = foldername
+    if not folder_name or not folder_name.is_dir():
+      raise ValueError(f'{folder_name} is None or not a directory')
+    self.folder_name = folder_name
 
   def GetRecords(
       self,
@@ -1432,7 +1432,7 @@ class FolderReader:
     Yields:
       IndexedDBRecord.
     """
-    leveldb_folder_reader = record.FolderReader(self.foldername)
+    leveldb_folder_reader = record.FolderReader(self.folder_name)
     for leveldb_record in leveldb_folder_reader.GetRecords(
         use_manifest=use_manifest,
         use_sequence_number=use_sequence_number):
