@@ -659,25 +659,26 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
 
   METADATA_TYPE_TO_CLASS = {
       definitions.GlobalMetadataKeyType
-          .SCHEMA_VERSION: SchemaVersionKey,
-      definitions.GlobalMetadataKeyType
-          .MAX_DATABASE_ID: MaxDatabaseIdKey,
-      definitions.GlobalMetadataKeyType
-          .DATA_VERSION: DataVersionKey,
-      definitions.GlobalMetadataKeyType
-          .RECOVERY_BLOB_JOURNAL: RecoveryBlobJournalKey,
-      definitions.GlobalMetadataKeyType
           .ACTIVE_BLOB_JOURNAL: ActiveBlobJournalKey,
       definitions.GlobalMetadataKeyType
-          .EARLIEST_SWEEP: EarliestSweepKey,
-      definitions.GlobalMetadataKeyType
-          .EARLIEST_COMPACTION_TIME: EarliestCompactionTimeKey,
-      definitions.GlobalMetadataKeyType
-          .SCOPES_PREFIX: ScopesPrefixKey,
+        .DATA_VERSION: DataVersionKey,
       definitions.GlobalMetadataKeyType
           .DATABASE_FREE_LIST: DatabaseFreeListKey,
       definitions.GlobalMetadataKeyType
-          .DATABASE_NAME: DatabaseNameKey}
+          .DATABASE_NAME: DatabaseNameKey,
+      definitions.GlobalMetadataKeyType
+          .EARLIEST_COMPACTION_TIME: EarliestCompactionTimeKey,
+      definitions.GlobalMetadataKeyType
+          .EARLIEST_SWEEP: EarliestSweepKey,
+      definitions.GlobalMetadataKeyType
+          .MAX_DATABASE_ID: MaxDatabaseIdKey,
+      definitions.GlobalMetadataKeyType
+          .RECOVERY_BLOB_JOURNAL: RecoveryBlobJournalKey,
+      definitions.GlobalMetadataKeyType
+          .SCHEMA_VERSION: SchemaVersionKey,
+      definitions.GlobalMetadataKeyType
+          .SCOPES_PREFIX: ScopesPrefixKey,
+  }
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> Any:
     """Decodes the value from the current position of the LevelDBDecoder.
@@ -690,16 +691,16 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
   def FromDecoder(
       cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
       base_offset: int = 0
-  ) -> Union[Type[ActiveBlobJournalKey],
-             Type[DataVersionKey],
-             Type[DatabaseFreeListKey],
-             Type[DatabaseNameKey],
-             Type[EarliestSweepKey],
-             Type[EarliestCompactionTimeKey],
-             Type[MaxDatabaseIdKey],
-             Type[RecoveryBlobJournalKey],
-             Type[SchemaVersionKey],
-             Type[ScopesPrefixKey]]:
+  ) -> Union[ActiveBlobJournalKey,
+             DataVersionKey,
+             DatabaseFreeListKey,
+             DatabaseNameKey,
+             EarliestSweepKey,
+             EarliestCompactionTimeKey,
+             MaxDatabaseIdKey,
+             RecoveryBlobJournalKey,
+             SchemaVersionKey,
+             ScopesPrefixKey]:
     """Decodes the global metadata key.
 
     Raises:
@@ -712,7 +713,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
     if not key_class:
       raise errors.ParserError('Unknown metadata key type')
     return key_class.FromDecoder(
-        decoder, key_prefix, base_offset)  #pytype: disable=bad-return-type
+        decoder, key_prefix, base_offset)
 
 
 @dataclass
@@ -1058,7 +1059,6 @@ class ExistsEntryKey(BaseIndexedDBKey):
     """Decodes the exists entry key."""
     offset = decoder.stream.tell()
     encoded_user_key = IDBKey.FromDecoder(decoder, offset)
-
     return cls(
         offset=base_offset + offset,
         key_prefix=key_prefix, encoded_user_key=encoded_user_key)
@@ -1145,13 +1145,13 @@ class IndexedDbKey(BaseIndexedDBKey):
   """
 
   METADATA_TYPE_TO_CLASS = {
-      definitions.KeyPrefixType.GLOBAL_METADATA: GlobalMetaDataKey,
-      definitions.KeyPrefixType.DATABASE_METADATA: DatabaseMetaDataKey,
-      definitions.KeyPrefixType.OBJECT_STORE_DATA: ObjectStoreDataKey,
-      definitions.KeyPrefixType.EXISTS_ENTRY: ExistsEntryKey,
-      definitions.KeyPrefixType.INDEX_DATA: IndexDataKey,
       definitions.KeyPrefixType.BLOB_ENTRY: BlobEntryKey,
-      definitions.KeyPrefixType.INVALID_TYPE: None
+      definitions.KeyPrefixType.DATABASE_METADATA: DatabaseMetaDataKey,
+      definitions.KeyPrefixType.EXISTS_ENTRY: ExistsEntryKey,
+      definitions.KeyPrefixType.GLOBAL_METADATA: GlobalMetaDataKey,
+      definitions.KeyPrefixType.INVALID_TYPE: None,
+      definitions.KeyPrefixType.INDEX_DATA: IndexDataKey,
+      definitions.KeyPrefixType.OBJECT_STORE_DATA: ObjectStoreDataKey,
   }
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> Any:
@@ -1167,9 +1167,9 @@ class IndexedDbKey(BaseIndexedDBKey):
       decoder: utils.LevelDBDecoder,
       key_prefix: KeyPrefix,
       base_offset: int = 0
-  ) -> Union[Type[DatabaseMetaDataKey], Type[ExistsEntryKey],
-             Type[BlobEntryKey], Type[GlobalMetaDataKey],
-             Type[IndexDataKey], Type[ObjectStoreDataKey]]:
+  ) -> Union[DatabaseMetaDataKey, ExistsEntryKey,
+             BlobEntryKey, GlobalMetaDataKey,
+             IndexDataKey, ObjectStoreDataKey]:
     """Decodes the IndexedDB key."""
     key_type = key_prefix.GetKeyPrefixType()
     key_class = cls.METADATA_TYPE_TO_CLASS.get(key_type)

@@ -375,7 +375,7 @@ class ValueDeserializer:
       js_array.values.append(types.Undefined())
 
     num_properties = self._ReadJSObjectProperties(
-        js_array.__dict__, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY)
+        js_array.properties, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY)
     _, expected_num_properties = self.decoder.DecodeUint32Varint()
     _, expected_length = self.decoder.DecodeUint32Varint()
 
