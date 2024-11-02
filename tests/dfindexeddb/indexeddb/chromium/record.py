@@ -576,7 +576,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         encoded_user_key=record.IDBKey(
             offset=4, type=definitions.IDBKeyType.NUMBER, value=3.0))
     expected_value = record.ObjectStoreDataValue(
-        version=4,
+        unknown=4,
         is_wrapped=True,
         blob_offset=1,
         blob_size=2303,
