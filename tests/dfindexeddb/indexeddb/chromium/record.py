@@ -95,7 +95,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_key = record.DataVersionKey(
         offset=4, key_prefix=record.KeyPrefix(
             offset=0, database_id=0, object_store_id=0, index_id=0))
-    expected_value = 64424509460
+    expected_value = 20
 
     record_bytes = (bytes.fromhex('0000000002'), bytes.fromhex('140000000f'))
     parsed_key = record.DataVersionKey.FromBytes(record_bytes[0])
