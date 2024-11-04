@@ -581,8 +581,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = record.ObjectStoreDataValue(
         version=4,
         is_wrapped=True,
-        blob_offset=1,
-        blob_size=2303,
+        blob_offset=0,
+        blob_size=102480,
         value=None)
     record_bytes = (
         b'\x00\x01\x01\x01\x03\x00\x00\x00\x00\x00\x00\x08@',
