@@ -29,8 +29,7 @@ class GeckoTest(unittest.TestCase):
     expected_value = {'id': 10, 'value': types.Undefined()}
     value_bytes = bytes.fromhex(
         '48040300010104F1FF0106340800FFFF020000800400FFFF696401122800000A'
-        '0000000300FFFF050D181476616C75650009012C0100FFFF000000001300FFFF'
-    )
+        '0000000300FFFF050D181476616C75650009012C0100FFFF000000001300FFFF')
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
