@@ -41,7 +41,10 @@ class InternalKey:
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> InternalKey:
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> InternalKey:
     """Decodes an InternalKey from the current position of a LevelDBDecoder.
 
     Args:
@@ -91,7 +94,10 @@ class NewFile(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> NewFile:
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> NewFile:
     """Decodes a NewFile from the current position of a LevelDBDecoder.
 
     Args:
@@ -131,7 +137,9 @@ class CompactPointer(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
   ) -> CompactPointer:
     """Decodes a CompactPointer from the current position of a LevelDBDecoder.
 
@@ -162,7 +170,10 @@ class DeletedFile(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> DeletedFile:
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> DeletedFile:
     """Decodes a DeletedFile from the current position of a LevelDBDecoder.
 
     Args:
@@ -204,7 +215,10 @@ class VersionEdit(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> VersionEdit:
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> VersionEdit:
     """Decodes a VersionEdit from the current position of a LevelDBDecoder.
 
     Args:
@@ -332,6 +346,7 @@ class FileReader:
       VersionEdit
     """
     buffer = bytearray()
+    offset = None
     for physical_record in self.GetPhysicalRecords():
       if (physical_record.record_type ==
           definitions.LogFilePhysicalRecordType.FULL):
@@ -382,8 +397,9 @@ class FileReader:
           version_edit_offset=version_edit.offset,
           last_sequence=version_edit.last_sequence)
 
-  def GetLatestVersion(self) -> LevelDBVersion:
+  def GetLatestVersion(self) -> Optional[LevelDBVersion]:
     """Returns the latest LevelDBVersion instance."""
+    latest = None
     for version in self.GetVersions():
       latest = version
     return latest

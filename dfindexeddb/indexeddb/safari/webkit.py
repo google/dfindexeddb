@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb import utils
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 
 
@@ -82,102 +83,6 @@ class FileList:
   files: List[FileData]
 
 
-class JSArray:
-  """A parsed Javascript array.
-
-  A Javascript array behaves like a Python list but allows assigning arbitrary
-  properties.  The array is stored in the attribute __array__.
-  """
-  def __init__(self):
-    self.__array__ = []
-
-  def Append(self, element: Any):
-    """Appends a new element to the array."""
-    self.__array__.append(element)
-
-  def __repr__(self):
-    array_entries = ", ".join(
-        [str(entry) for entry in list(self.__array__)])
-    properties = ", ".join(
-        f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{array_entries}, {properties}]'
-
-  @property
-  def properties(self) -> Dict[str, Any]:
-    """Returns the object properties."""
-    return self.__dict__
-
-  def __eq__(self, other: JSArray):
-    return (
-        self.__array__ == other.__array__
-        and self.properties == other.properties)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
-  def __getitem__(self, name):
-    return self.__dict__[name]
-
-
-class JSSet:
-  """A parsed Javascript set.
-
-  A Javascript set behaves like a Python set but allows assigning arbitrary
-  properties.  The array is stored in the attribute __set__.
-  """
-  def __init__(self):
-    self.__set__ = set()
-
-  def Add(self, element: Any):
-    """Adds a new element to the set."""
-    self.__set__.add(element)
-
-  def __repr__(self):
-    array_entries = ", ".join(
-        [str(entry) for entry in list(self.__set__)])
-    properties = ", ".join(
-        f'{key}: {value}' for key, value in self.properties.items())
-    return f'[{array_entries}, {properties}]'
-
-  @property
-  def properties(self) -> Dict[str, Any]:
-    """Returns the object properties."""
-    return self.__dict__
-
-  def __eq__(self, other: JSSet):
-    return (
-        self.__set__ == other.__set__
-        and self.properties == other.properties)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
-  def __getitem__(self, name):
-    return self.__dict__[name]
-
-
-@dataclass
-class Null:
-  """A parsed JavaScript Null."""
-
-
-@dataclass
-class RegExp:
-  """A parsed JavaScript RegExp.
-
-  Attributes:
-    pattern: the pattern.
-    flags: the flags.
-  """
-  pattern: str
-  flags: str
-
-
-@dataclass(frozen=True)
-class Undefined:
-  """A parsed JavaScript undef."""
-
-
 @dataclass
 class IDBKeyData(utils.FromDecoderMixin):
   """An IDBKeyData.
@@ -193,7 +98,10 @@ class IDBKeyData(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> IDBKeyData:
+      cls,
+      decoder: utils.StreamDecoder,
+      base_offset: int = 0
+  ) -> IDBKeyData:
     """Decodes an IDBKeyData from the current position of decoder.
 
     Refer to IDBSerialization.cpp for the encoding scheme.
@@ -235,7 +143,7 @@ class IDBKeyData(utils.FromDecoderMixin):
       return data
 
     offset, version_header = decoder.DecodeUint8()
-    if version_header != definitions.SIDBKeyVersion:
+    if version_header != definitions.SIDB_KEY_VERSION:
       raise errors.ParserError('SIDBKeyVersion not found.')
 
     _, raw_key_type = decoder.DecodeUint8()
@@ -303,7 +211,7 @@ class SerializedScriptValueDecoder():
       raise errors.ParserError(
           f'Invalid terminal {terminal_byte} at offset {offset}') from error
 
-  def DecodeArray(self) -> JSArray:
+  def DecodeArray(self) -> types.JSArray:
     """Decodes an Array value.
 
     Returns:
@@ -313,25 +221,25 @@ class SerializedScriptValueDecoder():
       ParserError if an invalid Terminator tag was found.
     """
     _, length = self.decoder.DecodeUint32()
-    array = JSArray()
+    array = types.JSArray()
     self.object_pool.append(array)
     for _ in range(length):
       _, _ = self.decoder.DecodeUint32()
       _, value = self.DecodeValue()
-      array.Append(value)
+      array.values.append(value)
 
     offset, terminator_tag = self.decoder.DecodeUint32()
-    if terminator_tag != definitions.TerminatorTag:
+    if terminator_tag != definitions.TERMINATOR_TAG:
       raise errors.ParserError(f'Terminator tag not found at offset {offset}.')
 
     offset, tag = self.decoder.DecodeUint32()
-    if tag == definitions.NonIndexPropertiesTag:
-      while tag != definitions.TerminatorTag:
+    if tag == definitions.NON_INDEX_PROPERTIES_TAG:
+      while tag != definitions.TERMINATOR_TAG:
         name = self.DecodeStringData()
         _, value = self.DecodeValue()
         _, tag = self.decoder.DecodeUint32()
         array.properties[name] = value
-    elif tag != definitions.TerminatorTag:
+    elif tag != definitions.TERMINATOR_TAG:
       raise errors.ParserError(f'Terminator tag not found at offset {offset}.')
     return array
 
@@ -340,7 +248,7 @@ class SerializedScriptValueDecoder():
     tag = self.PeekTag()
     js_object = {}
     self.object_pool.append(js_object)
-    while tag != definitions.TerminatorTag:
+    while tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
       _, value = self.DecodeValue()
       js_object[name] = value
@@ -362,10 +270,10 @@ class SerializedScriptValueDecoder():
           * unable to to decode a buffer as utf-16-le.
     """
     peeked_tag = self.PeekTag()
-    if peeked_tag == definitions.TerminatorTag:
+    if peeked_tag == definitions.TERMINATOR_TAG:
       raise errors.ParserError('Unexpected TerminatorTag found')
 
-    if peeked_tag == definitions.StringPoolTag:
+    if peeked_tag == definitions.STRING_POOL_TAG:
       _ = self.decoder.DecodeUint32()
       if len(self.constant_pool) <= 0xff:
         _, cp_index = self.decoder.DecodeUint8()
@@ -378,11 +286,11 @@ class SerializedScriptValueDecoder():
       return self.constant_pool[cp_index]
 
     _, length_with_8bit_flag = self.decoder.DecodeUint32()
-    if length_with_8bit_flag == definitions.TerminatorTag:
+    if length_with_8bit_flag == definitions.TERMINATOR_TAG:
       raise errors.ParserError('Disallowed string length found.')
 
     length = length_with_8bit_flag & 0x7FFFFFFF
-    is_8bit = length_with_8bit_flag & definitions.StringDataIs8BitFlag
+    is_8bit = length_with_8bit_flag & definitions.STRING_DATA_IS_8BIT_FLAG
 
     if is_8bit:
       _, characters = self.decoder.ReadBytes(length)
@@ -391,9 +299,10 @@ class SerializedScriptValueDecoder():
       _, characters = self.decoder.ReadBytes(2*length)
       try:
         value = characters.decode('utf-16-le')
-      except UnicodeDecodeError:
+      except UnicodeDecodeError as exc:
         raise errors.ParserError(
-            f'Unable to decode {len(characters)} characters as utf-16-le')
+            f'Unable to decode {len(characters)} characters as utf-16-le'
+        ) from exc
     self.constant_pool.append(value)
     return value
 
@@ -465,11 +374,11 @@ class SerializedScriptValueDecoder():
       'memory_cost': memory_cost
     }
 
-  def DecodeRegExp(self) -> RegExp:
+  def DecodeRegExp(self) -> types.RegExp:
     """Decodes a RegExp value."""
     pattern = self.DecodeStringData()
     flags = self.DecodeStringData()
-    return RegExp(pattern=pattern, flags=flags)
+    return types.RegExp(pattern=pattern, flags=flags)
 
   def DecodeMapData(self) -> dict:
     """Decodes a Map value."""
@@ -487,7 +396,7 @@ class SerializedScriptValueDecoder():
     _, tag = self.DecodeSerializationTag()
 
     pool_tag = self.PeekTag()
-    while pool_tag != definitions.TerminatorTag:
+    while pool_tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
       value = self.DecodeValue()
       js_map[name] = value
@@ -496,22 +405,22 @@ class SerializedScriptValueDecoder():
     _, tag = self.decoder.DecodeUint32()
     return js_map
 
-  def DecodeSetData(self) -> JSSet:
+  def DecodeSetData(self) -> types.JSSet:
     """Decodes a SetData value."""
     tag = self.PeekSerializationTag()
-    js_set = JSSet()
+    js_set = types.JSSet()
     self.object_pool.append(js_set)
 
     while tag != definitions.SerializationTag.NON_SET_PROPERTIES:
       _, key = self.DecodeValue()
-      js_set.Add(key)
+      js_set.values.add(key)
       tag = self.PeekSerializationTag()
 
     # consume the NonSetPropertiesTag
     _, tag = self.DecodeSerializationTag()
 
     pool_tag = self.PeekTag()
-    while pool_tag != definitions.TerminatorTag:
+    while pool_tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
       value = self.DecodeValue()
       js_set.properties[name] = value
@@ -614,7 +523,7 @@ class SerializedScriptValueDecoder():
       ParserError when CurrentVersion is not found.
     """
     _, current_version = self.decoder.DecodeUint32()
-    if current_version != definitions.CurrentVersion:
+    if current_version != definitions.CURRENT_VERSION:
       raise errors.ParserError(
           f'{current_version} is not the expected CurrentVersion')
     _, value = self.DecodeValue()
@@ -635,9 +544,9 @@ class SerializedScriptValueDecoder():
     elif tag == definitions.SerializationTag.OBJECT:
       value = self.DecodeObject()
     elif tag == definitions.SerializationTag.UNDEFINED:
-      value = Undefined()
+      value = types.Undefined()
     elif tag == definitions.SerializationTag.NULL:
-      value = Null()
+      value = types.Null()
     elif tag == definitions.SerializationTag.INT:
       _, value = self.decoder.DecodeInt32()
     elif tag == definitions.SerializationTag.ZERO:

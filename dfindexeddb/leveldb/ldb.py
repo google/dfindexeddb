@@ -46,7 +46,10 @@ class KeyValueRecord:
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, block_offset: int, shared_key: bytes
+      cls,
+      decoder: utils.LevelDBDecoder,
+      block_offset: int,
+      shared_key: bytes
   ) -> Tuple[KeyValueRecord, bytes]:
     """Decodes a ldb key value record.
 
@@ -259,4 +262,4 @@ class FileReader:
       A tuple of key and value as bytes.
     """
     for record in self.GetKeyValueRecords():
-      yield (record.key, record.value)
+      yield record.key, record.value

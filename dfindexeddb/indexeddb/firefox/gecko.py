@@ -345,10 +345,10 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
 
     if is_version1:
       value = self._DecodeV1ArrayBuffer(array_type, number_elements)
-      _byte_offset = 0
+      byte_offset = 0  # pylint: disable=unused-variable
     else:
       value = self._StartRead()
-      _byte_offset = self.decoder.DecodeUint64()
+      byte_offset = self.decoder.DecodeUint64()  # pylint: disable=unused-variable
 
     self.all_objects[dummy_index] = value
     return value
@@ -370,7 +370,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     elif (buffer_type ==
           definitions.StructuredDataType.RESIZABLE_ARRAY_BUFFER_OBJECT):
       _, number_bytes = self.decoder.DecodeUint64()
-      _, _max_bytes = self.decoder.DecodeUint64()
+      _, max_bytes = self.decoder.DecodeUint64()  # pylint: disable=unused-variable
     else:
       number_bytes = data
 
@@ -454,7 +454,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       raise errors.ParserError('String tag not found')
 
     pattern = self._DecodeString(string_data)
-    return types.RegExp(pattern=pattern, flags=flags)
+    return types.RegExp(pattern=pattern, flags=str(flags))
 
   def _StartRead(self) -> Any:
     """Reads the start of a serialized value.
@@ -550,7 +550,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     # align the stream to an 8 byte boundary
     offset = self.decoder.stream.tell() % 8
     if offset:
-      _, _slack_bytes = self.decoder.ReadBytes(8 - offset)
+      _, slack_bytes = self.decoder.ReadBytes(8 - offset)  # pylint: disable=unused-variable
 
     return value
 
@@ -584,9 +584,9 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       while pos < len(raw_data):
         is_uncompressed = raw_data[pos]
         block_size = int.from_bytes(
-            raw_data[pos + 1:pos + 4], byteorder="little", signed=False)
-        _masked_checksum = int.from_bytes(
-            raw_data[pos + 4: pos + 9], byteorder="little", signed=False)
+            raw_data[pos + 1:pos + 4], byteorder='little', signed=False)
+        masked_checksum = int.from_bytes(  # pylint: disable=unused-variable
+            raw_data[pos + 4: pos + 9], byteorder='little', signed=False)
         if is_uncompressed:
           uncompressed_data += raw_data[pos + 8: pos + 8 + block_size - 4]
         else:

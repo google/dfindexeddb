@@ -16,6 +16,7 @@
 import datetime
 import unittest
 
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 from dfindexeddb.indexeddb.safari import webkit
 
@@ -25,17 +26,16 @@ class WebkitTest(unittest.TestCase):
 
   def test_parse_undefined(self):
     """Tests parsing an undefined value from an IndexedDB value."""
-    expected_value = {'id': 10, 'value': webkit.Undefined()}
+    expected_value = {'id': 10, 'value': types.Undefined()}
     value_bytes = bytes.fromhex(
-        '0F00000002020000 806964050A000000'
-        '0500008076616C75 6503FFFFFFFF')
+        '0F00000002020000806964050A0000000500008076616C756503FFFFFFFF')
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
   def test_parse_null(self):
     """Tests parsing a null value from an IndexedDB value."""
-    expected_value = {'id': 11, 'value': webkit.Null()}
+    expected_value = {'id': 11, 'value': types.Null()}
     value_bytes = bytes.fromhex(
         '0F00000002020000806964050B0000000500008076616C756504FFFFFFFF')
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -63,8 +63,7 @@ class WebkitTest(unittest.TestCase):
   def test_parse_integer(self):
     """Tests parsing an integer value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F00000002020000806964050E000000'
-        '0500008076616C7565057B000000FFFF'
+        '0F00000002020000806964050E0000000500008076616C7565057B000000FFFF'
         'FFFF')
     expected_value = {'id': 14, 'value': 123}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -110,8 +109,7 @@ class WebkitTest(unittest.TestCase):
   def test_parse_number(self):
     """Tests parsing a number from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640513000000'
-        '0500008076616C75650A1F85EB51B81E'
+        '0F0000000202000080696405130000000500008076616C75650A1F85EB51B81E'
         '0940FFFFFFFF')
     expected_value = {'id': 19, 'value': 3.14}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -121,8 +119,7 @@ class WebkitTest(unittest.TestCase):
   def test_parse_number_object(self):
     """Tests parsing a number object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640514000000'
-        '0500008076616C75651C1F85EB51B81E'
+        '0F0000000202000080696405140000000500008076616C75651C1F85EB51B81E'
         '0940FFFFFFFF')
     expected_value = {'id': 20, 'value': 3.14}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -132,13 +129,8 @@ class WebkitTest(unittest.TestCase):
   def test_parse_bigint(self):
     """Tests parsing a bigint from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640515000000'
-        '0500008076616C7565'
-        '2F'
-        '00'
-        '02000000'
-        '0000C098CE3FCAC8' '9A02000000000000'
-        'FFFFFFFF')
+        '0F0000000202000080696405150000000500008076616C75652F000200000000'
+        '00C098CE3FCAC89A02000000000000FFFFFFFF')
     # BigInt(123e20) === 12300000000000001048576n
     expected_value = {'id': 21, 'value': 12300000000000001048576}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
@@ -148,8 +140,7 @@ class WebkitTest(unittest.TestCase):
   def test_parse_date(self):
     """Tests parsing a date from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640516000000'
-        '0500008076616C75650B00803FE17E64'
+        '0F0000000202000080696405160000000500008076616C75650B00803FE17E64'
         '7842FFFFFFFF')
     # Date(2023, 1, 13, 10, 20, 30, 456)
     # note JavaScript dates, month is 0-indexed and the date is in localtime
@@ -166,10 +157,8 @@ class WebkitTest(unittest.TestCase):
   def test_parse_string(self):
     """Tests parsing a string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640517000000'
-        '0500008076616C756510110000807465'
-        '737420737472696E672076616C7565FF'
-        'FFFFFF')
+        '0F0000000202000080696405170000000500008076616C756510110000807465'
+        '737420737472696E672076616C7565FFFFFFFF')
     expected_value = {'id': 23, 'value': 'test string value'}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
@@ -178,10 +167,8 @@ class WebkitTest(unittest.TestCase):
   def test_parse_string_object(self):
     """Tests parsing a string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F000000020200008069640518000000'
-        '0500008076616C75651A120000807465'
-        '737420737472696E67206F626A656374'
-        'FFFFFFFF')
+        '0F0000000202000080696405180000000500008076616C75651A120000807465'
+        '737420737472696E67206F626A656374FFFFFFFF')
     expected_value = {'id': 24, 'value': 'test string object'}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
@@ -208,12 +195,11 @@ class WebkitTest(unittest.TestCase):
   def test_parse_set(self):
     """Tests parsing a set from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F00000002020000806964051B000000'
-        '0500008076616C75651D070502000000'
+        '0F00000002020000806964051B0000000500008076616C75651D070502000000'
         '050300000020FFFFFFFFFFFFFFFF')
-    expected_set = webkit.JSSet()
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
     expected_value = {'id': 27, 'value': expected_set}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
@@ -232,9 +218,9 @@ class WebkitTest(unittest.TestCase):
   def test_parse_regexp(self):
     """Tests parsing a regexp from an IndexedDB record."""
     value_bytes = bytes.fromhex(
-        '0F00000002020000806964051D0000000500008076616C756512'
-        '00000080FEFFFFFF02FFFFFFFF')
-    expected_value = {'id': 29, 'value': webkit.RegExp(pattern='', flags='')}
+        '0F00000002020000806964051D0000000500008076616C75651200000080FEFF'
+        'FFFF02FFFFFFFF')
+    expected_value = {'id': 29, 'value': types.RegExp(pattern='', flags='')}
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(
         value_bytes)
     self.assertEqual(parsed_value, expected_value)
@@ -272,17 +258,17 @@ class WebkitTest(unittest.TestCase):
         '040000806C6173741003000080446F65FFFFFFFF030000806167650515000000'
         'FFFFFFFFFFFFFFFF')
 
-    expected_test_array = webkit.JSArray()
+    expected_test_array = types.JSArray()
     for value in [123, 456, 'abc', 'def']:
-      expected_test_array.Append(value)
-    expected_set = webkit.JSSet()
+      expected_test_array.values.append(value)
+    expected_set = types.JSSet()
     for i in range(1, 4):
-      expected_set.Add(i)
+      expected_set.values.add(i)
 
     expected_value = {
        'id': 1,
-        'test_undef': webkit.Undefined(),
-        'test_null': webkit.Null(),
+        'test_undef': types.Undefined(),
+        'test_null': types.Null(),
         'test_bool_true': True,
         'test_bool_false': False,
         'test_string': 'a string value',
@@ -298,7 +284,7 @@ class WebkitTest(unittest.TestCase):
             'a': 1,
             'b': 2,
             'c': 3},
-        'test_regexp': webkit.RegExp('\\w+', ''),
+        'test_regexp': types.RegExp('\\w+', ''),
         'test_array': expected_test_array,
         'test_object': {
             'name': {

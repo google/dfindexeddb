@@ -268,7 +268,7 @@ def asdict(obj, *, dict_factory=dict):  # pylint: disable=invalid-name
   class name under the __type__ attribute name.
   """
   if not dataclasses.is_dataclass(obj):
-    raise TypeError("asdict() should be called on dataclass instances")
+    raise TypeError('asdict() should be called on dataclass instances')
   return _asdict_inner(obj, dict_factory)
 
 

@@ -16,6 +16,7 @@
 from datetime import datetime
 import unittest
 
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import definitions
 from dfindexeddb.indexeddb.chromium import v8
 
@@ -27,25 +28,25 @@ class V8Test(unittest.TestCase):
     """Tests Javascript oddballs."""
     with self.subTest('undef'):
       # v8.serialize(undefined)
-      buffer = b'\xff\x0d\x5f'
+      buffer = bytes.fromhex('ff0d5f')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
-      self.assertIsInstance(parsed_value, v8.Undefined)
+      self.assertIsInstance(parsed_value, types.Undefined)
 
     with self.subTest('None'):
       # v8.serialize(null)
-      buffer = b'\xff\x0d\x30'
+      buffer = bytes.fromhex('ff0d30')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
-      self.assertIsInstance(parsed_value, v8.Null)
+      self.assertIsInstance(parsed_value, types.Null)
 
     with self.subTest('true'):
       # v8.serialize(True)
-      buffer = b'\xff\x0d\x54'
+      buffer = bytes.fromhex('ff0d54')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, True)
 
     with self.subTest('false'):
       # v8.serialize(False)
-      buffer = b'\xff\x0d\x46'
+      buffer = bytes.fromhex('ff0d46')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, False)
 
@@ -54,14 +55,14 @@ class V8Test(unittest.TestCase):
 
     with self.subTest('positive'):
       # v8.serialize(1234)
-      buffer = b'\xff\x0d\x49\xa4\x13'
+      buffer = bytes.fromhex('ff0d49a413')
       expected_value = 1234
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('negative'):
       # v8.serialize(-1234)
-      buffer = b'\xff\x0d\x49\xa3\x13'
+      buffer = bytes.fromhex('ff0d49a313')
       expected_value = -1234
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
@@ -71,14 +72,14 @@ class V8Test(unittest.TestCase):
 
     with self.subTest('positive'):
       # v8.serialize(1234.456)
-      buffer = b'\xff\x0d\x4e\xe7\xfb\xa9\xf1\xd2\x49\x93\x40'
+      buffer = bytes.fromhex('ff0d4ee7fba9f1d2499340')
       expected_value = 1234.456
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('negative'):
       # v8.serialize(-1234.456)
-      buffer = b'\xff\x0d\x4e\xe7\xfb\xa9\xf1\xd2\x49\x93\xc0'
+      buffer = bytes.fromhex('ff0d4ee7fba9f1d24993c0')
       expected_value = -1234.456
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
@@ -154,7 +155,7 @@ class V8Test(unittest.TestCase):
     with self.subTest('empty'):
       # console.log(v8.serialize([]).toString('hex'))
       buffer = bytes.fromhex('ff0d4100240000')
-      expected_value = v8.JSArray()
+      expected_value = types.JSArray()
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -163,14 +164,13 @@ class V8Test(unittest.TestCase):
       # > x['propa'] = 123
       # > console.log(v8.serialize(x)).toString('hex'))
       buffer = bytes.fromhex('ff0d4103490249044906220570726f706149f601240103')
-      expected_value = v8.JSArray()
-      expected_value.Append(1)
-      expected_value.Append(2)
-      expected_value.Append(3)
+      expected_value = types.JSArray()
+      expected_value.values.append(1)
+      expected_value.values.append(2)
+      expected_value.values.append(3)
       expected_value.properties['propa'] = 123
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
-      self.assertTrue(hasattr(parsed_value, 'propa'))
       self.assertEqual(parsed_value.properties['propa'], 123)
 
     with self.subTest('increase length'):
@@ -178,9 +178,9 @@ class V8Test(unittest.TestCase):
       # > x.length = 10
       # > console.log(v8.serialize(x)).toString('hex'))
       buffer = bytes.fromhex('ff0d610a40000a')
-      expected_value = v8.JSArray()
+      expected_value = types.JSArray()
       for _ in range(10):
-        expected_value.Append(v8.Undefined())
+        expected_value.values.append(types.Undefined())
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -232,19 +232,15 @@ class V8Test(unittest.TestCase):
     with self.subTest('initialised'):
       # console.log(v8.serialize(new ArrayBuffer(8)).toString('hex'))
       buffer = bytes.fromhex('ff0d42080000000000000000')
-      expected_value = b'\x00\x00\x00\x00\x00\x00\x00\x00'
+      expected_value = bytes.fromhex('0000000000000000')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
   def test_arraybufferview(self):
     """Tests ArrayBufferView decoding."""
-    buffer = (
-        b'\xff\x0dB\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        b'\x00\x00\x00\x00VB\x00\x10')
+    buffer = bytes.fromhex('ff0d42100000000000000000000000000000000056420010')
     expected_value = v8.ArrayBufferView(
-        buffer=(
-            b'\x00\x00\x00\x00\x00\x00\x00\x00'
-            b'\x00\x00\x00\x00\x00\x00\x00\x00'),
+        buffer=bytes.fromhex('00000000000000000000000000000000'),
         flags=0,
         length=16,
         offset=0,
@@ -266,13 +262,13 @@ class V8Test(unittest.TestCase):
 
     with self.subTest('true'):
       # v8.serialize(new Boolean(True))
-      buffer = b'\xff\x0d\x79'
+      buffer = bytes.fromhex('ff0d79')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, True)
 
     with self.subTest('false'):
       # v8.serialize(new Boolean(False))
-      buffer = b'\xff\x0d\x78'
+      buffer = bytes.fromhex('ff0d78')
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, False)
 
@@ -305,14 +301,14 @@ class V8Test(unittest.TestCase):
       # console.log(v8.serialize(new RegExp()).toString('hex'))
       # /(?:)/
       buffer = bytes.fromhex('ff0d522204283f3a2900')
-      expected_value = v8.RegExp(pattern='(?:)', flags=0)
+      expected_value = types.RegExp(pattern='(?:)', flags=str(0))
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest('basic'):
       # console.log(v8.serialize(new RegExp('\\w+')).toString('hex'))
       buffer = bytes.fromhex('ff0d5222035c772b00')
-      expected_value = v8.RegExp(pattern='\\w+', flags=0)
+      expected_value = types.RegExp(pattern='\\w+', flags=str(0))
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 

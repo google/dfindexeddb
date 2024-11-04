@@ -22,9 +22,9 @@ import pathlib
 
 from dfindexeddb import utils
 from dfindexeddb import version
+from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import record as chromium_record
-from dfindexeddb.indexeddb.chromium import v8
 from dfindexeddb.indexeddb.firefox import gecko
 from dfindexeddb.indexeddb.firefox import record as firefox_record
 from dfindexeddb.indexeddb.safari import record as safari_record
@@ -51,15 +51,15 @@ class Encoder(json.JSONEncoder):
       return ''.join(out)
     if isinstance(o, datetime):
       return o.isoformat()
-    if isinstance(o, v8.Undefined):
-      return "<undefined>"
-    if isinstance(o, v8.JSArray):
+    if isinstance(o, types.Undefined):
+      return '<undefined>'
+    if isinstance(o, types.JSArray):
       return o.__dict__
-    if isinstance(o, v8.Null):
-      return "<null>"
+    if isinstance(o, types.Null):
+      return '<null>'
     if isinstance(o, set):
       return list(o)
-    if isinstance(o, v8.RegExp):
+    if isinstance(o, types.RegExp):
       return str(o)
     if isinstance(o, enum.Enum):
       return o.name
@@ -130,13 +130,13 @@ def App():
   subparsers = parser.add_subparsers()
 
   parser_blink = subparsers.add_parser(
-      'blink', help='Parse a file as a blink value.')
+      'blink', help='Parse a file as a blink-encoded value.')
   parser_blink.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
-      help=(
-        'The source file.'))
+      help='The source file.')
   parser_blink.add_argument(
       '-o',
       '--output',
@@ -145,13 +145,14 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_blink.set_defaults(func=BlinkCommand)
 
   parser_gecko = subparsers.add_parser(
       'gecko', help='Parse a file as a gecko-encoded value.')
   parser_gecko.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
       help='The source file.')
@@ -163,18 +164,19 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_gecko.set_defaults(func=GeckoCommand)
 
   parser_db = subparsers.add_parser(
-      'db', help='Parse a directory as IndexedDB.')
+      'db', help='Parse a directory/file as IndexedDB.')
   parser_db.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
       help=(
-        'The source IndexedDB folder (for chrome/chromium) '
-        'or file (for safari).'))
+          'The source IndexedDB folder (for chrome/chromium) '
+          'or sqlite3 file (for firefox/safari).'))
   recover_group = parser_db.add_mutually_exclusive_group()
   recover_group.add_argument(
       '--use_manifest',
@@ -189,7 +191,11 @@ def App():
   parser_db.add_argument(
       '--format',
       required=True,
-      choices=['chromium', 'chrome', 'firefox', 'safari'],
+      choices=[
+          'chromium',
+          'chrome',
+          'firefox',
+          'safari'],
       help='The type of IndexedDB to parse.')
   parser_db.add_argument(
       '-o',
@@ -199,14 +205,15 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_db.set_defaults(func=DbCommand)
 
   parser_ldb = subparsers.add_parser(
       'ldb',
       help='Parse a ldb file as IndexedDB.')
   parser_ldb.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
       help='The source .ldb file.')
@@ -218,7 +225,7 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_ldb.set_defaults(func=LdbCommand)
 
   parser_log = subparsers.add_parser(
@@ -237,7 +244,7 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_log.set_defaults(func=LogCommand)
 
   args = parser.parse_args()

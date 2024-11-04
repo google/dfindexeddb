@@ -27,7 +27,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     """Tests the KeyPrefix class."""
     expected_key_prefix = record.KeyPrefix(
         offset=0, database_id=1, object_store_id=2, index_id=3)
-    key_bytes = b'\x00\x01\x02\x03\x00'
+    key_bytes = bytes.fromhex('0001020300')
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
@@ -35,7 +35,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     """Tests the IDBKey class."""
     expected_idbkey = record.IDBKey(
         offset=4, type=definitions.IDBKeyType.NUMBER, value=2.0)
-    key_bytes = b'\x03\x00\x00\x00\x00\x00\x00\x00@'
+    key_bytes = bytes.fromhex('030000000000000040')
     parsed_idbkey = record.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_idbkey, expected_idbkey)
 
@@ -43,7 +43,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     """Tests the IDBKeyPath class."""
     expected_key = record.IDBKeyPath(
         offset=3, type=definitions.IDBKeyPathType.STRING, value='id')
-    key_bytes = b'\x00\x00\x01\x02\x00i\x00d'
+    key_bytes = bytes.fromhex('0000010200690064')
     parsed_key = record.IDBKeyPath.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
@@ -63,7 +63,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 5
 
-    record_bytes = ((b'\x00\x00\x00\x00\x00'), (b'\x05'))
+    record_bytes = (bytes.fromhex('0000000000'), bytes.fromhex('05'))
     parsed_key = record.SchemaVersionKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -80,7 +80,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 4
 
-    record_bytes = ((b'\x00\x00\x00\x00\x01'), (b'\x04'))
+    record_bytes = (bytes.fromhex('0000000001'), bytes.fromhex('04'))
     parsed_key = record.MaxDatabaseIdKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -97,7 +97,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 64424509460
 
-    record_bytes = ((b'\x00\x00\x00\x00\x02'), (b'\x14\x00\x00\x00\x0f'))
+    record_bytes = (bytes.fromhex('0000000002'), bytes.fromhex('140000000f'))
     parsed_key = record.DataVersionKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -114,7 +114,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 13318143299762026
 
-    record_bytes = ((b'\x00\x00\x00\x00\x05'), (b'j7s\xe0\xc7P/'))
+    record_bytes = (
+        bytes.fromhex('0000000005'),
+        bytes.fromhex('6a3773e0c7502f'))
     parsed_key = record.EarliestSweepKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -131,7 +133,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=0, database_id=0, object_store_id=0, index_id=0))
     expected_value = 13318229420051176
 
-    record_bytes = ((b'\x00\x00\x00\x00\x06'), (b'\xe8\x8a\x9e\xed\xdbP/'))
+    record_bytes = (
+        bytes.fromhex('0000000006'), bytes.fromhex('e88a9eeddb502f'))
     parsed_key = record.EarliestCompactionTimeKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -146,9 +149,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_key = record.ScopesPrefixKey(
         offset=4, key_prefix=record.KeyPrefix(
             offset=0, database_id=0, object_store_id=0, index_id=0))
-    expected_value = b'\x08\x01'
+    expected_value = bytes.fromhex('0801')
 
-    record_bytes = ((b'\x00\x00\x00\x002\x00'), (b'\x08\x01'))
+    record_bytes = (bytes.fromhex('000000003200'), bytes.fromhex('0801'))
     parsed_key = record.ScopesPrefixKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -166,10 +169,11 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         origin='file__0@1', database_name='IndexedDB test')
     expected_value = 4
 
-    record_bytes = ((
-        b'\x00\x00\x00\x00\xc9\t\x00f\x00i\x00l\x00e\x00_\x00_\x000\x00@\x00'
-        b'1\x0e\x00I\x00n\x00d\x00e\x00x\x00e\x00d\x00D\x00B\x00 \x00t\x00e'
-        b'\x00s\x00t'), (b'\x04'))
+    record_bytes = (
+        bytes.fromhex(
+            '00000000c90900660069006c0065005f005f0030004000310e0049006e006400'
+            '650078006500640044004200200074006500730074'),
+        bytes.fromhex('04'))
     parsed_key = record.DatabaseNameKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
@@ -189,7 +193,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           metadata_type=definitions.DatabaseMetaDataKeyType.ORIGIN_NAME)
       expected_value = 'a'
 
-      record_bytes = (b'\x00\x04\x00\x00\x00', b'\x00a')
+      record_bytes = (bytes.fromhex('0004000000'), bytes.fromhex('0061'))
 
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -205,7 +209,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .DATABASE_NAME))
       expected_value = 'test'
 
-      record_bytes = (b'\x00\x04\x00\x00\x01', b'\x00t\x00e\x00s\x00t')
+      record_bytes = (
+            bytes.fromhex('0004000001'), bytes.fromhex('0074006500730074'))
 
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -221,7 +226,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .MAX_ALLOCATED_OBJECT_STORE_ID))
       expected_value = 2
 
-      record_bytes = (b'\x00\x04\x00\x00\x03', b'\x02')
+      record_bytes = (bytes.fromhex('0004000003'), bytes.fromhex('02'))
 
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -236,7 +241,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           metadata_type=definitions.DatabaseMetaDataKeyType.IDB_INTEGER_VERSION)
       expected_value = 1
 
-      record_bytes = (b'\x00\x04\x00\x00\x04', b'\x01')
+      record_bytes = (bytes.fromhex('0004000004'), bytes.fromhex('01'))
 
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -252,7 +257,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .BLOB_NUMBER_GENERATOR_CURRENT_NUMBER))
       expected_value = 1
 
-      record_bytes = (b'\x00\x04\x00\x00\x05', b'\x01')
+      record_bytes = (bytes.fromhex('0004000005'), bytes.fromhex('01'))
 
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -270,8 +275,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       expected_value = 'test index a'
 
       record_bytes = (
-          (b'\x00\x04\x00\x00d\x01\x1f\x00'),
-          (b'\x00t\x00e\x00s\x00t\x00 \x00i\x00n\x00d\x00e\x00x\x00 \x00a'))
+          bytes.fromhex('0004000064011f00'),
+          bytes.fromhex('007400650073007400200069006e00640065007800200061'))
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
@@ -289,8 +294,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       expected_value = 'test index a'
 
       record_bytes = (
-          (b'\x00\x04\x00\x00d\x01\x1f\x00'),
-          (b'\x00t\x00e\x00s\x00t\x00 \x00i\x00n\x00d\x00e\x00x\x00 \x00a'))
+          bytes.fromhex('0004000064011f00'),
+          bytes.fromhex('007400650073007400200069006e00640065007800200061'))
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
@@ -309,7 +314,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           metadata_type=definitions.IndexMetaDataKeyType.UNIQUE_FLAG)
       expected_value = True
 
-      record_bytes = (b'\x00\x04\x00\x00d\x01\x1f\x01', b'\x00')
+      record_bytes = (
+            bytes.fromhex('0004000064011f01'), bytes.fromhex('00'))
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
@@ -330,8 +336,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           offset=3, type=definitions.IDBKeyPathType.STRING, value='test_date')
 
       record_bytes = (
-          b'\x00\x04\x00\x00d\x01\x1f\x02',
-          b'\x00\x00\x01\t\x00t\x00e\x00s\x00t\x00_\x00d\x00a\x00t\x00e')
+          bytes.fromhex('0004000064011f02'),
+          bytes.fromhex('000001090074006500730074005f0064006100740065'))
 
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -351,7 +357,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           metadata_type=definitions.IndexMetaDataKeyType.MULTI_ENTRY_FLAG)
       expected_value = True
 
-      record_bytes = (b'\x00\x04\x00\x00d\x01\x1f\x03', b'\x00')
+      record_bytes = (bytes.fromhex('0004000064011f03'), bytes.fromhex('00'))
 
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -374,8 +380,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       expected_value = 'test store a'
 
       record_bytes = (
-          b'\x00\x04\x00\x002\x01\x00',
-          b'\x00t\x00e\x00s\x00t\x00 \x00s\x00t\x00o\x00r\x00e\x00 \x00a')
+          bytes.fromhex('00040000320100'),
+          bytes.fromhex('0074006500730074002000730074006f0072006500200061'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -399,8 +405,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           value='id')
 
       record_bytes = (
-          b'\x00\x04\x00\x002\x01\x01',
-          b'\x00\x00\x01\x02\x00i\x00d')
+          bytes.fromhex('00040000320101'), bytes.fromhex('0000010200690064'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -420,9 +425,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .AUTO_INCREMENT_FLAG))
       expected_value = True
 
-      record_bytes = (
-          b'\x00\x04\x00\x002\x01\x02',
-          b'\x00')
+      record_bytes = (bytes.fromhex('00040000320102'), bytes.fromhex('00'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -442,9 +445,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .IS_EVICTABLE))
       expected_value = True
 
-      record_bytes = (
-          b'\x00\x04\x00\x002\x01\x03',
-          b'\x00')
+      record_bytes = (bytes.fromhex('00040000320103'), bytes.fromhex('00'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -464,9 +465,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .LAST_VERSION_NUMBER))
       expected_value = 3
 
-      record_bytes = (
-          b'\x00\x04\x00\x002\x01\x04',
-          b'\x03')
+      record_bytes = (bytes.fromhex('00040000320104'), bytes.fromhex('03'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -486,9 +485,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .MAXIMUM_ALLOCATED_INDEX_ID))
       expected_value = 31
 
-      record_bytes = (
-          b'\x00\x04\x00\x002\x01\x05',
-          b'\x1f')
+      record_bytes = (bytes.fromhex('00040000320105'), bytes.fromhex('1f'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -507,7 +504,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           metadata_type=definitions.ObjectStoreMetaDataKeyType.HAS_KEY_PATH)
       expected_value = True
 
-      record_bytes = (b'\x00\x04\x00\x002\x01\x06', b'\x01')
+      record_bytes = (bytes.fromhex('00040000320106'), bytes.fromhex('01'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -527,7 +524,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               .KEY_GENERATOR_CURRENT_NUMBER))
       expected_value = 1
 
-      record_bytes = (b'\x00\x04\x00\x002\x01\x07', b'\x01')
+      record_bytes = (bytes.fromhex('00040000320107'), bytes.fromhex('01'))
 
       parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -554,9 +551,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           object_store_name='empty store')
     expected_value = 2
     record_bytes = (
-        (b'\x00\x04\x00\x00\xc8\x0b\x00e\x00m\x00p\x00t'
-         b'\x00y\x00 \x00s\x00t\x00o\x00r\x00e'),
-        b'\x02')
+        bytes.fromhex(
+            '00040000c80b0065006d007000740079002000730074006f00720065'),
+        bytes.fromhex('02'))
 
     parsed_key = record.ObjectStoreNamesKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -585,8 +582,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         blob_size=102480,
         value=None)
     record_bytes = (
-        b'\x00\x01\x01\x01\x03\x00\x00\x00\x00\x00\x00\x08@',
-        b'\x04\xff\x11\x01\xd0\xa0\x06\x00')
+        bytes.fromhex('00010101030000000000000840'),
+        bytes.fromhex('04ff1101d0a00600'))
 
     parsed_key = record.ObjectStoreDataKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -609,7 +606,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = 2
 
     record_bytes = (
-        b'\x00\x01\x01\x02\x03\x00\x00\x00\x00\x00\x00\xf0?', b'\x02')
+        bytes.fromhex('0001010203000000000000f03f'), bytes.fromhex('02'))
 
     parsed_key = record.ExistsEntryKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -640,10 +637,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           type=definitions.IDBKeyType.NUMBER,
           value=4.0))
 
-    record_bytes = ((
-        b'\x00\x01\x01\x1f\x02\x00\xb0?\xe1~dxB\x00\x03\x00\x00\x00\x00'
-        b'\x00\x00\x10@'),
-        b'\x05\x03\x00\x00\x00\x00\x00\x00\x10@')
+    record_bytes = (
+        bytes.fromhex('0001011f0200b03fe17e64784200030000000000001040'),
+        bytes.fromhex('05030000000000001040'))
 
     parsed_key = record.IndexDataKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
@@ -675,11 +671,11 @@ class ChromiumIndexedDBTest(unittest.TestCase):
                 token=None)])
 
     record_bytes = (
-      b'\x00\x01\x01\x03\x03\x00\x00\x00\x00\x00\x00\x08@',
-      (b'\x00\x02\'\x00a\x00p\x00p\x00l\x00i\x00c\x00a\x00t\x00i\x00o\x00n\x00/'
-       b'\x00v\x00n\x00d\x00.\x00b\x00l\x00i\x00n\x00k\x00-\x00i\x00d\x00b\x00-'
-       b'\x00v\x00a\x00l\x00u\x00e\x00-\x00w\x00r\x00a\x00p\x00p\x00e\x00r\xd0'
-       b'\xa0\x06'))
+      bytes.fromhex('00010103030000000000000840'),
+      bytes.fromhex(
+          '000227006100700070006c00690063006100740069006f006e002f0076006e00'
+          '64002e0062006c0069006e006b002d006900640062002d00760061006c007500'
+          '65002d0077007200610070007000650072d0a006'))
 
     parsed_key = record.BlobEntryKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
