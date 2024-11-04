@@ -436,7 +436,7 @@ class SchemaVersionKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the schema version value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -456,7 +456,7 @@ class MaxDatabaseIdKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the maximum database value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -476,7 +476,7 @@ class DataVersionKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the data version value."""
-    return decoder.DecodeUint64Varint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -638,7 +638,7 @@ class DatabaseNameKey(BaseIndexedDBKey):
 
     The value is the corresponding database ID.
     """
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -785,7 +785,7 @@ class ObjectStoreNamesKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the object store names value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
@@ -810,7 +810,7 @@ class IndexNamesKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the index names value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
@@ -847,7 +847,7 @@ class DatabaseMetaDataKey(BaseIndexedDBKey):
       return decoder.DecodeString()[1]
     if (self.metadata_type ==
         definitions.DatabaseMetaDataKeyType.MAX_ALLOCATED_OBJECT_STORE_ID):
-      return decoder.DecodeVarint()[1]
+      return decoder.DecodeInt()[1]
     if (self.metadata_type ==
         definitions.DatabaseMetaDataKeyType.IDB_INTEGER_VERSION):
       return decoder.DecodeVarint()[1]
