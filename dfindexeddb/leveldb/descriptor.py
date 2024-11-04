@@ -397,7 +397,7 @@ class FileReader:
           version_edit_offset=version_edit.offset,
           last_sequence=version_edit.last_sequence)
 
-  def GetLatestVersion(self) -> LevelDBVersion:
+  def GetLatestVersion(self) -> Optional[LevelDBVersion]:
     """Returns the latest LevelDBVersion instance."""
     latest = None
     for version in self.GetVersions():
