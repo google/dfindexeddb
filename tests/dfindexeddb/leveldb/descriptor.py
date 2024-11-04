@@ -81,7 +81,7 @@ class DescriptorTests(unittest.TestCase):
     manifest_file = descriptor.FileReader(
         './test_data/leveldb/100k keys delete/MANIFEST-000002')
     latest_version = manifest_file.GetLatestVersion()
-
+    self.assertIsNotNone(latest_version)
     self.assertEqual(len(latest_version.active_files), 1)
     self.assertIn(2, latest_version.active_files)
     self.assertIn('000005.ldb', latest_version.active_files[2])
