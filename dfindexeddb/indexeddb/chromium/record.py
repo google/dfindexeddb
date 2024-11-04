@@ -1008,11 +1008,9 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
         wrapped_header_bytes[1] ==
             definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
         wrapped_header_bytes[2] == definitions.REPLACE_WITH_BLOB):
+      _ = decoder.ReadBytes(3)
       _, blob_size = decoder.DecodeVarint()
       _, blob_offset = decoder.DecodeVarint()
-      print(
-          f'Warning: ObjectStoreDataKey at offset {self.offset}'
-          'with blob found.', file=sys.stderr)
       return ObjectStoreDataValue(
           version=version,
           is_wrapped=True,
@@ -1020,18 +1018,20 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
           blob_offset=blob_offset,
           value=None)
     _, blink_bytes = decoder.ReadBytes()
+    is_wrapped = False
     if (
         wrapped_header_bytes[0] ==
         definitions.BlinkSerializationTag.VERSION and
         wrapped_header_bytes[1] ==
         definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
         wrapped_header_bytes[2] == definitions.COMPRESSED_WITH_SNAPPY):
+      is_wrapped = True
       # ignore the wrapped header bytes when decompressing
       blink_bytes = snappy.decompress(blink_bytes[3:])
     blink_value = blink.V8ScriptValueDecoder.FromBytes(blink_bytes)
     return ObjectStoreDataValue(
         version=version,
-        is_wrapped=False,
+        is_wrapped=is_wrapped,
         blob_size=None,
         blob_offset=None,
         value=blink_value)
