@@ -203,10 +203,11 @@ def App():
   parser_db = subparsers.add_parser(
       'db', help='Parse a directory as leveldb.')
   parser_db.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
-      help='The source leveldb directory')
+      help='The source leveldb directory.')
   recover_group = parser_db.add_mutually_exclusive_group()
   recover_group.add_argument(
       '--use_manifest',
@@ -226,7 +227,7 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_db.add_argument(
       '--plugin',
       help='Use plugin to parse records.')
@@ -235,10 +236,11 @@ def App():
   parser_log = subparsers.add_parser(
       'log', help='Parse a leveldb log file.')
   parser_log.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
-      help='The source leveldb file')
+      help='The source leveldb file.')
   parser_log.add_argument(
       '-o',
       '--output',
@@ -247,7 +249,7 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_log.add_argument(
       '--plugin',
       help='Use plugin to parse records.')
@@ -265,7 +267,8 @@ def App():
   parser_ldb = subparsers.add_parser(
       'ldb', help='Parse a leveldb table (.ldb) file.')
   parser_ldb.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
       help='The source leveldb file')
@@ -277,7 +280,7 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   parser_ldb.add_argument(
       '--plugin',
       help='Use plugin to parse records.')
@@ -293,7 +296,8 @@ def App():
   parser_descriptor = subparsers.add_parser(
       'descriptor', help='Parse a leveldb descriptor (MANIFEST) file.')
   parser_descriptor.add_argument(
-      '-s', '--source',
+      '-s',
+      '--source',
       required=True,
       type=pathlib.Path,
       help='The source leveldb file')
@@ -305,13 +309,16 @@ def App():
           'jsonl',
           'repr'],
       default='json',
-      help='Output format.  Default is json')
+      help='Output format.  Default is json.')
   db_group = parser_descriptor.add_mutually_exclusive_group()
   db_group.add_argument(
       '-t',
       '--structure_type',
       choices=[
-          'blocks', 'physical_records', 'versionedit'],
+          'blocks',
+          'physical_records',
+          'versionedit'
+      ],
       help='Parses the specified structure.  Default is versionedit.')
   db_group.add_argument(
       '-v',

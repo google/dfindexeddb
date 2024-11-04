@@ -518,7 +518,10 @@ class ValueDeserializer:
     return js_set
 
   def _ReadJSArrayBuffer(
-      self, is_shared: bool, is_resizable: bool) -> bytes:
+      self,
+      is_shared: bool,
+      is_resizable: bool
+  ) -> bytes:
     """Reads a Javascript ArrayBuffer from the current position.
 
     Args:

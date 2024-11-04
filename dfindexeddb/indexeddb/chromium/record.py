@@ -53,7 +53,10 @@ class KeyPrefix(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0) -> KeyPrefix:
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> KeyPrefix:
     """Decodes a KeyPrefix from the current position of a LevelDBDecoder.
 
     Args:
@@ -154,7 +157,8 @@ class IDBKey(utils.FromDecoderMixin):
 
     def RecursiveParse(depth: int) -> Tuple[
         int, definitions.IDBKeyType, Union[
-            list, bytes, str, float, datetime, None]]:
+            list, bytes, str, float, datetime, None
+        ]]:
       """Recursively parses IDBKeys.
 
       Args:
@@ -218,8 +222,11 @@ class IDBKeyPath(utils.FromDecoderMixin):
   value: Union[str, list[str], None]
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder,
-                   base_offset: int = 0) -> IDBKeyPath:
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> IDBKeyPath:
     """Decodes an IDBKeyPath from the current position of a LevelDBDecoder.
 
     Args:
@@ -231,7 +238,7 @@ class IDBKeyPath(utils.FromDecoderMixin):
 
     Raises:
       ParserError: on insufficient bytes or invalid array length during
-        parsing.
+        parsing or unsupported key path type.
     """
     buffer = decoder.stream.getvalue()  #pytype: disable=attribute-error
     if len(buffer) < 3:
@@ -258,6 +265,8 @@ class IDBKeyPath(utils.FromDecoderMixin):
       for _ in range(count):
         _, entry = decoder.DecodeStringWithLength()
         value.append(entry)
+    else:
+      raise errors.ParserError(f'Unsupported key_path_type {key_path_type}.')
     return IDBKeyPath(base_offset + offset, key_path_type, value)
 
 
@@ -275,8 +284,11 @@ class BlobJournalEntry(utils.FromDecoderMixin):
   blob_number: int
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder,
-                   base_offset: int = 0) -> BlobJournalEntry:
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> BlobJournalEntry:
     """Decodes a BlobJournalEntry from the current position of a LevelDBDecoder.
 
     Args:
@@ -304,8 +316,11 @@ class BlobJournal(utils.FromDecoderMixin):
   entries: list[BlobJournalEntry]
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder,
-                   base_offset: int = 0) -> BlobJournal:
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
+  ) -> BlobJournal:
     """Decodes a BlobJournal from the current position of a LevelDBDecoder.
 
     Blob journals are zero-or-more instances of BlobJournalEntry.  There is no
@@ -398,8 +413,7 @@ class BaseIndexedDBKey:
     raise NotImplementedError(f'{cls.__class__.__name__}.decode_key')
 
   @classmethod
-  def FromStream(
-      cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:
+  def FromStream(cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:
     """Parses the key from the current position of the binary stream.
 
     Args:
@@ -415,8 +429,7 @@ class BaseIndexedDBKey:
         decoder=decoder, key_prefix=key_prefix, base_offset=base_offset)
 
   @classmethod
-  def FromBytes(
-      cls: Type[T], raw_data: bytes, base_offset: int = 0) -> T:
+  def FromBytes(cls: Type[T], raw_data: bytes, base_offset: int = 0) -> T:
     """Parses the key from the raw key bytes.
 
     Args:
@@ -440,7 +453,9 @@ class SchemaVersionKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> SchemaVersionKey:
     """Decodes the schema version key."""
@@ -460,7 +475,9 @@ class MaxDatabaseIdKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> MaxDatabaseIdKey:
     """Decodes the maximum database key."""
@@ -480,7 +497,9 @@ class DataVersionKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> DataVersionKey:
     """Decodes the data version key."""
@@ -500,7 +519,9 @@ class RecoveryBlobJournalKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> RecoveryBlobJournalKey:
     """Decodes the recovery blob journal key."""
@@ -520,7 +541,9 @@ class ActiveBlobJournalKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ActiveBlobJournalKey:
     """Decodes the active blob journal value."""
@@ -541,7 +564,9 @@ class EarliestSweepKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> EarliestSweepKey:
     """Decodes the earliest sweep value."""
@@ -562,7 +587,9 @@ class EarliestCompactionTimeKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> EarliestCompactionTimeKey:
     """Decodes the earliest compaction time key."""
@@ -584,7 +611,9 @@ class ScopesPrefixKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ScopesPrefixKey:
     """Decodes the scopes prefix key."""
@@ -609,7 +638,9 @@ class DatabaseFreeListKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> DatabaseFreeListKey:
     """Decodes the database free list key."""
@@ -642,7 +673,9 @@ class DatabaseNameKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> DatabaseNameKey:
     """Decodes the database name key."""
@@ -692,7 +725,9 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> Union[ActiveBlobJournalKey,
              DataVersionKey,
@@ -734,7 +769,9 @@ class ObjectStoreFreeListKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ObjectStoreFreeListKey:
     """Decodes the object store free list key."""
@@ -762,7 +799,9 @@ class IndexFreeListKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
     ) -> IndexFreeListKey:
     """Decodes the index free list key."""
@@ -789,8 +828,11 @@ class ObjectStoreNamesKey(BaseIndexedDBKey):
     return decoder.DecodeInt()[1]
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
-                 base_offset: int = 0) -> ObjectStoreNamesKey:
+  def FromDecoder(
+      cls, decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
+      base_offset: int = 0
+  ) -> ObjectStoreNamesKey:
     """Decodes the object store names key."""
     offset, key_type = decoder.DecodeUint8()
     if key_type != definitions.DatabaseMetaDataKeyType.OBJECT_STORE_NAMES:
@@ -814,8 +856,12 @@ class IndexNamesKey(BaseIndexedDBKey):
     return decoder.DecodeInt()[1]
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
-                 base_offset: int = 0) -> IndexNamesKey:
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
+      base_offset: int = 0
+  ) -> IndexNamesKey:
     """Decodes the index names key."""
     offset, key_type = decoder.DecodeUint8()
     if key_type != definitions.DatabaseMetaDataKeyType.INDEX_NAMES:
@@ -923,7 +969,9 @@ class ObjectStoreMetaDataKey(BaseIndexedDBKey):
   metadata_type: definitions.ObjectStoreMetaDataKeyType
 
   def DecodeValue(
-      self, decoder: utils.LevelDBDecoder) -> Union[IDBKeyPath, str, bool, int]:
+      self,
+      decoder: utils.LevelDBDecoder
+  ) -> Union[IDBKeyPath, str, bool, int]:
     """Decodes the object store metadata value."""
     if (self.metadata_type ==
         definitions.ObjectStoreMetaDataKeyType.OBJECT_STORE_NAME):
@@ -952,7 +1000,9 @@ class ObjectStoreMetaDataKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ObjectStoreMetaDataKey:
     """Decodes the object store metadata key."""
@@ -996,7 +1046,9 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
   encoded_user_key: IDBKey
 
   def DecodeValue(
-      self, decoder: utils.LevelDBDecoder) -> ObjectStoreDataValue:
+      self,
+      decoder: utils.LevelDBDecoder
+  ) -> ObjectStoreDataValue:
     """Decodes the object store data value."""
     _, version = decoder.DecodeVarint()
 
@@ -1039,7 +1091,9 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ObjectStoreDataKey:
     """Decodes the object store data key."""
@@ -1069,7 +1123,9 @@ class ExistsEntryKey(BaseIndexedDBKey):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> ExistsEntryKey:
     """Decodes the exists entry key."""
@@ -1100,8 +1156,12 @@ class IndexDataKey(BaseIndexedDBKey):
     return version, idb_key
 
   @classmethod
-  def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
-                 base_offset: int = 0) -> IndexDataKey:
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
+      base_offset: int = 0
+  ) -> IndexDataKey:
     """Decodes the index data key."""
     offset = decoder.stream.tell()
     encoded_user_key = IDBKey.FromDecoder(decoder, offset)
@@ -1136,13 +1196,17 @@ class BlobEntryKey(BaseIndexedDBKey):
   user_key: IDBKey
 
   def DecodeValue(
-      self, decoder: utils.LevelDBDecoder) -> IndexedDBExternalObject:
+      self,
+      decoder: utils.LevelDBDecoder
+  ) -> IndexedDBExternalObject:
     """Decodes the blob entry value."""
     return IndexedDBExternalObject.FromDecoder(decoder)
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
+      cls,
+      decoder: utils.LevelDBDecoder,
+      key_prefix: KeyPrefix,
       base_offset: int = 0
   ) -> BlobEntryKey:
     """Decodes the blob entry key."""
@@ -1183,9 +1247,13 @@ class IndexedDbKey(BaseIndexedDBKey):
       decoder: utils.LevelDBDecoder,
       key_prefix: KeyPrefix,
       base_offset: int = 0
-  ) -> Union[DatabaseMetaDataKey, ExistsEntryKey,
-             BlobEntryKey, GlobalMetaDataKey,
-             IndexDataKey, ObjectStoreDataKey]:
+  ) -> Union[
+      BlobEntryKey,
+      DatabaseMetaDataKey,
+      ExistsEntryKey,
+      GlobalMetaDataKey,
+      IndexDataKey,
+      ObjectStoreDataKey]:
     """Decodes the IndexedDB key."""
     key_type = key_prefix.GetKeyPrefixType()
     key_class = cls.METADATA_TYPE_TO_CLASS.get(key_type)
@@ -1211,7 +1279,9 @@ class IndexMetaDataKey(BaseIndexedDBKey):
   metadata_type: definitions.IndexMetaDataKeyType
 
   def DecodeValue(
-      self, decoder: utils.LevelDBDecoder) -> Union[bool, IDBKeyPath, str]:
+      self,
+      decoder: utils.LevelDBDecoder
+  ) -> Union[bool, IDBKeyPath, str]:
     """Decodes the index metadata value."""
     if self.metadata_type == definitions.IndexMetaDataKeyType.INDEX_NAME:
       return decoder.DecodeString()[1]
@@ -1229,7 +1299,8 @@ class IndexMetaDataKey(BaseIndexedDBKey):
   def FromDecoder(
       cls,
       decoder: utils.LevelDBDecoder,
-      key_prefix: KeyPrefix, base_offset: int = 0
+      key_prefix: KeyPrefix,
+      base_offset: int = 0
   ) -> IndexMetaDataKey:
     """Decodes the index metadata key."""
     offset, key_type = decoder.DecodeUint8()
@@ -1453,8 +1524,7 @@ class FolderReader:
         use_manifest=use_manifest,
         use_sequence_number=use_sequence_number):
       try:
-        yield IndexedDBRecord.FromLevelDBRecord(
-            leveldb_record)
+        yield IndexedDBRecord.FromLevelDBRecord(leveldb_record)
       except(
           errors.ParserError,
           errors.DecoderError,

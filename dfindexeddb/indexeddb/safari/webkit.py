@@ -98,7 +98,10 @@ class IDBKeyData(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> IDBKeyData:
+      cls,
+      decoder: utils.StreamDecoder,
+      base_offset: int = 0
+  ) -> IDBKeyData:
     """Decodes an IDBKeyData from the current position of decoder.
 
     Refer to IDBSerialization.cpp for the encoding scheme.

@@ -98,7 +98,9 @@ class WriteBatch(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-    cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
+    cls,
+    decoder: utils.LevelDBDecoder,
+    base_offset: int = 0
   ) -> WriteBatch:
     """Parses a WriteBatch from a binary stream.
 
@@ -132,10 +134,11 @@ class PhysicalRecord(utils.FromDecoderMixin):
   """A physical record from a leveldb log file.
 
   Attributes:
-    offset: the record offset.
+    base_offset: the base offset.
     checksum: the record checksum.
     length: the length of the record in bytes.
-    type: the record type.
+    offset: the record offset.
+    record_type: the record type.
     contents: the record contents.
     contents_offset: the offset of where the record contents are stored.
   """
@@ -151,7 +154,9 @@ class PhysicalRecord(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0
   ) -> Optional[PhysicalRecord]:
     """Decodes a PhysicalRecord from the current position of a LevelDBDecoder.
 
@@ -237,7 +242,7 @@ class FileReader:
   A Log FileReader provides read-only sequential iteration of serialized
   structures in a leveldb logfile.  These structures include:
   * blocks (Block)
-  * phyiscal records (PhysicalRecord)
+  * physical records (PhysicalRecord)
   * batches (WriteBatch) and
   * key/value records (ParsedInternalKey).
 
@@ -288,6 +293,7 @@ class FileReader:
       WriteBatch
     """
     buffer = bytearray()
+    offset = None
     for physical_record in self.GetPhysicalRecords():
       if (physical_record.record_type ==
          definitions.LogFilePhysicalRecordType.FULL):
