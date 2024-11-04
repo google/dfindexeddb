@@ -14,6 +14,7 @@
 # limitations under the License.
 """Parses Chromium IndexedDb structures."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 import io
@@ -22,6 +23,8 @@ import sys
 import traceback
 from typing import Any, BinaryIO, Generator, Optional, Tuple, Type, TypeVar, \
     Union
+
+import snappy
 
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink
@@ -433,7 +436,7 @@ class SchemaVersionKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the schema version value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -453,7 +456,7 @@ class MaxDatabaseIdKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the maximum database value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -473,7 +476,7 @@ class DataVersionKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the data version value."""
-    return decoder.DecodeUint64Varint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -635,7 +638,7 @@ class DatabaseNameKey(BaseIndexedDBKey):
 
     The value is the corresponding database ID.
     """
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(
@@ -783,7 +786,7 @@ class ObjectStoreNamesKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the object store names value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
@@ -808,7 +811,7 @@ class IndexNamesKey(BaseIndexedDBKey):
 
   def DecodeValue(self, decoder: utils.LevelDBDecoder) -> int:
     """Decodes the index names value."""
-    return decoder.DecodeVarint()[1]
+    return decoder.DecodeInt()[1]
 
   @classmethod
   def FromDecoder(cls, decoder: utils.LevelDBDecoder, key_prefix: KeyPrefix,
@@ -845,7 +848,7 @@ class DatabaseMetaDataKey(BaseIndexedDBKey):
       return decoder.DecodeString()[1]
     if (self.metadata_type ==
         definitions.DatabaseMetaDataKeyType.MAX_ALLOCATED_OBJECT_STORE_ID):
-      return decoder.DecodeVarint()[1]
+      return decoder.DecodeInt()[1]
     if (self.metadata_type ==
         definitions.DatabaseMetaDataKeyType.IDB_INTEGER_VERSION):
       return decoder.DecodeVarint()[1]
@@ -970,13 +973,13 @@ class ObjectStoreDataValue:
   """The parsed values from an ObjectStoreDataKey.
 
   Attributes:
-    unknown: an unknown integer (possibly a sequence number?).
+    version: the version prefix.
     is_wrapped: True if the value was wrapped.
     blob_size: the blob size, only valid if wrapped.
     blob_offset: the blob offset, only valid if wrapped.
     value: the blink serialized value, only valid if not wrapped.
   """
-  unknown: int
+  version: int
   is_wrapped: bool
   blob_size: Optional[int]
   blob_offset: Optional[int]
@@ -995,28 +998,41 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
   def DecodeValue(
       self, decoder: utils.LevelDBDecoder) -> ObjectStoreDataValue:
     """Decodes the object store data value."""
-    _, unknown_integer = decoder.DecodeVarint()
+    _, version = decoder.DecodeVarint()
 
     _, wrapped_header_bytes = decoder.PeekBytes(3)
     if len(wrapped_header_bytes) != 3:
       raise errors.DecoderError('Insufficient bytes')
 
-    if (wrapped_header_bytes[0] == definitions.BlinkSerializationTag.VERSION and
-        wrapped_header_bytes[1] == 0x11 and
-        wrapped_header_bytes[2] == 0x01):
+    if (wrapped_header_bytes[0] ==
+            definitions.BlinkSerializationTag.VERSION and
+        wrapped_header_bytes[1] ==
+            definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
+        wrapped_header_bytes[2] == definitions.REPLACE_WITH_BLOB):
+      _ = decoder.ReadBytes(3)
       _, blob_size = decoder.DecodeVarint()
       _, blob_offset = decoder.DecodeVarint()
       return ObjectStoreDataValue(
-          unknown=unknown_integer,
+          version=version,
           is_wrapped=True,
           blob_size=blob_size,
           blob_offset=blob_offset,
           value=None)
     _, blink_bytes = decoder.ReadBytes()
+    is_wrapped = False
+    if (
+        wrapped_header_bytes[0] ==
+        definitions.BlinkSerializationTag.VERSION and
+        wrapped_header_bytes[1] ==
+        definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
+        wrapped_header_bytes[2] == definitions.COMPRESSED_WITH_SNAPPY):
+      is_wrapped = True
+      # ignore the wrapped header bytes when decompressing
+      blink_bytes = snappy.decompress(blink_bytes[3:])
     blink_value = blink.V8ScriptValueDecoder.FromBytes(blink_bytes)
     return ObjectStoreDataValue(
-        unknown=unknown_integer,
-        is_wrapped=False,
+        version=version,
+        is_wrapped=is_wrapped,
         blob_size=None,
         blob_offset=None,
         value=blink_value)
