@@ -70,7 +70,8 @@ class KeyValueRecord:
     shared_key = shared_key[:shared_bytes] + key_delta
     key = shared_key[:-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
     sequence_number = int.from_bytes(
-        key[-definitions.SEQUENCE_LENGTH:], byteorder='little', signed=False)
+        shared_key[-definitions.SEQUENCE_LENGTH:],
+        byteorder='little', signed=False)
     key_type = shared_key[-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
     record_type = definitions.InternalRecordType(key_type)
     return cls(

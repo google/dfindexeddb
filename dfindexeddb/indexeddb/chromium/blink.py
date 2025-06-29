@@ -18,6 +18,8 @@ from dataclasses import dataclass
 import io
 from typing import Any, Optional, Union
 
+import snappy
+
 from dfindexeddb import errors
 from dfindexeddb import utils
 from dfindexeddb.indexeddb.chromium import definitions
@@ -1015,4 +1017,14 @@ class V8ScriptValueDecoder:
     Returns:
       The deserialized script value.
     """
+    if len(data) < 3:
+      raise errors.ParserError('Data too short to contain a Blink SSV')
+    if (
+        data[0] ==
+        definitions.BlinkSerializationTag.VERSION and
+        data[1] ==
+        definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
+        data[2] == definitions.COMPRESSED_WITH_SNAPPY):
+      # ignore the wrapped header bytes when decompressing
+      data = snappy.decompress(data[3:])
     return cls(data).Deserialize()

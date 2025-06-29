@@ -46,7 +46,7 @@ class LDBTest(unittest.TestCase):
     self.assertIsInstance(records[0], ldb.KeyValueRecord)
     self.assertEqual(records[0].key, b'\x00\x00\x00\x00')
     self.assertEqual(records[0].value, b'test value\x00\x00\x00\x00')
-    self.assertEqual(records[0].sequence_number, 0)
+    self.assertEqual(records[0].sequence_number, 1)
     self.assertEqual(
         records[0].record_type, definitions.InternalRecordType.VALUE)
 

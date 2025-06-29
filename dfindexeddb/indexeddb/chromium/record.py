@@ -24,8 +24,6 @@ import traceback
 from typing import Any, BinaryIO, Generator, Optional, Tuple, Type, TypeVar, \
     Union
 
-import snappy
-
 from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import definitions
@@ -36,7 +34,7 @@ from dfindexeddb.leveldb import utils
 T = TypeVar('T')
 
 
-@dataclass
+@dataclass(frozen=True)
 class KeyPrefix(utils.FromDecoderMixin):
   """The IndexedDB key prefix.
 
@@ -85,9 +83,9 @@ class KeyPrefix(utils.FromDecoderMixin):
     if index_id_length < 1 or index_id_length > 4:
       raise errors.ParserError('Invalid index ID length')
 
-    _, database_id = decoder.DecodeInt(database_id_length)
-    _, object_store_id = decoder.DecodeInt(object_store_id_length)
-    _, index_id = decoder.DecodeInt(index_id_length)
+    _, database_id = decoder.DecodeInt(database_id_length, signed=False)
+    _, object_store_id = decoder.DecodeInt(object_store_id_length, signed=False)
+    _, index_id = decoder.DecodeInt(index_id_length, signed=False)
 
     return cls(
         offset=base_offset + offset,
@@ -697,7 +695,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
       definitions.GlobalMetadataKeyType
           .ACTIVE_BLOB_JOURNAL: ActiveBlobJournalKey,
       definitions.GlobalMetadataKeyType
-        .DATA_VERSION: DataVersionKey,
+          .DATA_VERSION: DataVersionKey,
       definitions.GlobalMetadataKeyType
           .DATABASE_FREE_LIST: DatabaseFreeListKey,
       definitions.GlobalMetadataKeyType
@@ -1024,13 +1022,11 @@ class ObjectStoreDataValue:
 
   Attributes:
     version: the version prefix.
-    is_wrapped: True if the value was wrapped.
     blob_size: the blob size, only valid if wrapped.
     blob_offset: the blob offset, only valid if wrapped.
     value: the blink serialized value, only valid if not wrapped.
   """
   version: int
-  is_wrapped: bool
   blob_size: Optional[int]
   blob_offset: Optional[int]
   value: Any
@@ -1066,25 +1062,14 @@ class ObjectStoreDataKey(BaseIndexedDBKey):
       _, blob_offset = decoder.DecodeVarint()
       return ObjectStoreDataValue(
           version=version,
-          is_wrapped=True,
           blob_size=blob_size,
           blob_offset=blob_offset,
           value=None)
+
     _, blink_bytes = decoder.ReadBytes()
-    is_wrapped = False
-    if (
-        wrapped_header_bytes[0] ==
-        definitions.BlinkSerializationTag.VERSION and
-        wrapped_header_bytes[1] ==
-        definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
-        wrapped_header_bytes[2] == definitions.COMPRESSED_WITH_SNAPPY):
-      is_wrapped = True
-      # ignore the wrapped header bytes when decompressing
-      blink_bytes = snappy.decompress(blink_bytes[3:])
     blink_value = blink.V8ScriptValueDecoder.FromBytes(blink_bytes)
     return ObjectStoreDataValue(
         version=version,
-        is_wrapped=is_wrapped,
         blob_size=None,
         blob_offset=None,
         value=blink_value)
@@ -1443,6 +1428,8 @@ class IndexedDBRecord:
   type: int
   level: Optional[int]
   recovered: Optional[bool]
+  database_id: int
+  object_store_id: int
 
   @classmethod
   def FromLevelDBRecord(
@@ -1462,7 +1449,9 @@ class IndexedDBRecord:
             db_record.record, 'sequence_number') else None,
         type=db_record.record.record_type,
         level=db_record.level,
-        recovered=db_record.recovered)
+        recovered=db_record.recovered,
+        database_id=idb_key.key_prefix.database_id,
+        object_store_id=idb_key.key_prefix.object_store_id)
 
   @classmethod
   def FromFile(
