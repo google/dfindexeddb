@@ -18,6 +18,7 @@ from enum import IntEnum
 
 class IndexedDBKeyType(IntEnum):
   """IndexedDB Key Types."""
+
   TERMINATOR = 0
   FLOAT = 0x10
   DATE = 0x20
@@ -38,6 +39,7 @@ THREE_BYTE_SHIFT = 6
 
 class StructuredDataType(IntEnum):
   """Structured Data Types."""
+
   FLOAT_MAX = 0xFFF00000
   HEADER = 0xFFF10000
   NULL = 0xFFFF0000
@@ -45,7 +47,7 @@ class StructuredDataType(IntEnum):
   BOOLEAN = 0xFFFF0002
   INT32 = 0xFFFF0003
   STRING = 0xFFFF0004
-  DATE_OBJECT  = 0xFFFF0005
+  DATE_OBJECT = 0xFFFF0005
   REGEXP_OBJECT = 0xFFFF0006
   ARRAY_OBJECT = 0xFFFF0007
   OBJECT_OBJECT = 0xFFFF0008
@@ -53,8 +55,8 @@ class StructuredDataType(IntEnum):
   BOOLEAN_OBJECT = 0xFFFF000A
   STRING_OBJECT = 0xFFFF000B
   NUMBER_OBJECT = 0xFFFF000C
-  BACK_REFERENCE_OBJECT  = 0xFFFF000D
-  DO_NOT_USE_1  = 0xFFFF000E
+  BACK_REFERENCE_OBJECT = 0xFFFF000D
+  DO_NOT_USE_1 = 0xFFFF000E
   DO_NOT_USE_2 = 0xFFFF000F
   TYPED_ARRAY_OBJECT_V2 = 0xFFFF0010
   MAP_OBJECT = 0xFFFF0011
@@ -95,6 +97,7 @@ class StructuredDataType(IntEnum):
 
 class StructuredCloneTags(IntEnum):
   """Structured Clone Tags."""
+
   BLOB = 0xFFFF8001
   FILE_WITHOUT_LASTMODIFIEDDATE = 0xFFFF8002
   FILELIST = 0xFFFF8003
@@ -140,4 +143,4 @@ class StructuredCloneTags(IntEnum):
   ENCODEDAUDIOCHUNK = 0xFFFF8031
 
 
-FRAME_HEADER = b'\xff\x06\x00\x00sNaPpY'
+FRAME_HEADER = b"\xff\x06\x00\x00sNaPpY"

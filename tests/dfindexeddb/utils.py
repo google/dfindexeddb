@@ -17,8 +17,7 @@ import io
 import struct
 import unittest
 
-from dfindexeddb import errors
-from dfindexeddb import utils
+from dfindexeddb import errors, utils
 
 
 class TestStreamDecoder(unittest.TestCase):
@@ -26,72 +25,72 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_init(self):
     """Tests the init method."""
-    data = b'test'
+    data = b"test"
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     self.assertEqual(decoder.stream, stream)
 
   def test_num_remaining_bytes(self):
     """Tests the num_remaining_bytes method."""
-    data = b'test'
+    data = b"test"
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     self.assertEqual(decoder.NumRemainingBytes(), 4)
 
   def test_read_bytes(self):
     """Tests the read_bytes method."""
-    data = b'test decoder'
+    data = b"test decoder"
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
 
-    with self.subTest('all bytes'):
+    with self.subTest("all bytes"):
       offset, result = decoder.ReadBytes()
       self.assertEqual(offset, 0)
       self.assertEqual(result, data)
 
-    with self.subTest('some bytes'):
+    with self.subTest("some bytes"):
       decoder.stream.seek(0)
       offset, result = decoder.ReadBytes(4)
       self.assertEqual(offset, 0)
-      self.assertEqual(result, b'test')
+      self.assertEqual(result, b"test")
 
-    with self.subTest('value error'):
+    with self.subTest("value error"):
       stream.seek(0)
       with self.assertRaises(errors.DecoderError):
         decoder.ReadBytes(20)
 
   def test_peek_bytes(self):
     """Tests the peek_bytes method."""
-    data = b'test'
+    data = b"test"
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.PeekBytes(4)
     self.assertEqual(offset, 0)
-    self.assertEqual(result, b'test')
+    self.assertEqual(result, b"test")
     self.assertEqual(decoder.stream.tell(), 0)
 
   def test_decode_int(self):
     """Tests the decode_int method."""
 
-    with self.subTest('little endian unsigned'):
-      data = struct.pack('<i', 123456789)
+    with self.subTest("little endian unsigned"):
+      data = struct.pack("<i", 123456789)
       stream = io.BytesIO(data)
       decoder = utils.StreamDecoder(stream)
       offset, result = decoder.DecodeInt()
       self.assertEqual(offset, 0)
       self.assertEqual(result, 123456789)
 
-    with self.subTest('big endian unsigned integer'):
-      data = struct.pack('>I', 123456789)
+    with self.subTest("big endian unsigned integer"):
+      data = struct.pack(">I", 123456789)
       stream = io.BytesIO(data)
       decoder = utils.StreamDecoder(stream)
-      offset, result = decoder.DecodeInt(byte_order='big', signed=False)
+      offset, result = decoder.DecodeInt(byte_order="big", signed=False)
       self.assertEqual(offset, 0)
       self.assertEqual(result, 123456789)
 
   def test_decode_uint8(self):
     """Tests the decode_uint8 method."""
-    data = struct.pack('B', 123)
+    data = struct.pack("B", 123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint8()
@@ -100,7 +99,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_uint16(self):
     """Tests the decode_uint16 method."""
-    data = struct.pack('<H', 123)
+    data = struct.pack("<H", 123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint16()
@@ -109,7 +108,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_uint24(self):
     """Tests the decode_uint8 method."""
-    data = struct.pack('<I', 123)[:3]
+    data = struct.pack("<I", 123)[:3]
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint24()
@@ -118,7 +117,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_uint32(self):
     """Tests the decode_uint32 method."""
-    data = struct.pack('<I', 123)
+    data = struct.pack("<I", 123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint32()
@@ -127,7 +126,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_uint48(self):
     """Tests the decode_uint48 method."""
-    data = struct.pack('<Q', 123)[:6]
+    data = struct.pack("<Q", 123)[:6]
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint48()
@@ -136,7 +135,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_uint64(self):
     """Tests the decode_uint64 method."""
-    data = struct.pack('<Q', 123)
+    data = struct.pack("<Q", 123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeUint64()
@@ -145,7 +144,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int8(self):
     """Tests the decode_int8 method."""
-    data = struct.pack('b', -123)
+    data = struct.pack("b", -123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt8()
@@ -154,7 +153,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int16(self):
     """Tests the decode_int16 method."""
-    data = struct.pack('<h', -123)
+    data = struct.pack("<h", -123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt16()
@@ -163,7 +162,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int24(self):
     """Tests the decode_int24 method."""
-    data = struct.pack('<i', -123)[:3]
+    data = struct.pack("<i", -123)[:3]
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt24()
@@ -172,7 +171,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int32(self):
     """Tests the decode_int32 method."""
-    data = struct.pack('<i', -123)
+    data = struct.pack("<i", -123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt32()
@@ -181,7 +180,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int48(self):
     """Tests the decode_int48 method."""
-    data = struct.pack('<q', -123)[:6]
+    data = struct.pack("<q", -123)[:6]
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt48()
@@ -190,7 +189,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_int64(self):
     """Tests the decode_int64 method."""
-    data = struct.pack('<q', -123)
+    data = struct.pack("<q", -123)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeInt64()
@@ -199,7 +198,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_double(self):
     """Tests the decode_double method."""
-    data = struct.pack('<d', 3.14)
+    data = struct.pack("<d", 3.14)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeDouble()
@@ -208,7 +207,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_float(self):
     """Tests the decode_float method."""
-    data = struct.pack('<f', 3.14)
+    data = struct.pack("<f", 3.14)
     stream = io.BytesIO(data)
     decoder = utils.StreamDecoder(stream)
     offset, result = decoder.DecodeFloat()
@@ -217,7 +216,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_varint(self):
     """Tests the decode_varint method."""
-    varint_bytes = b'\x80\x80\x01'
+    varint_bytes = b"\x80\x80\x01"
     expected_result = 16384
     stream = io.BytesIO(varint_bytes)
     decoder = utils.StreamDecoder(stream)
@@ -227,7 +226,7 @@ class TestStreamDecoder(unittest.TestCase):
 
   def test_decode_zigzag_varint(self):
     """Tests the decode_zigzag_varint method."""
-    varint_bytes = b'\x80\x80\x01'
+    varint_bytes = b"\x80\x80\x01"
     expected_result = 8192
     stream = io.BytesIO(varint_bytes)
     decoder = utils.StreamDecoder(stream)
@@ -236,5 +235,5 @@ class TestStreamDecoder(unittest.TestCase):
     self.assertEqual(result, expected_result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

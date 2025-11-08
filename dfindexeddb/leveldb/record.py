@@ -14,18 +14,16 @@
 # limitations under the License.
 """A module for records from LevelDB files."""
 from __future__ import annotations
-from collections import defaultdict
+
 import dataclasses
 import pathlib
 import re
 import sys
+from collections import defaultdict
 from typing import Generator, Optional, Union
 
 from dfindexeddb import errors
-from dfindexeddb.leveldb import definitions
-from dfindexeddb.leveldb import descriptor
-from dfindexeddb.leveldb import ldb
-from dfindexeddb.leveldb import log
+from dfindexeddb.leveldb import definitions, descriptor, ldb, log
 
 
 @dataclasses.dataclass
@@ -42,17 +40,15 @@ class LevelDBRecord:
         a file not part of the active file set (determined by a MANIFEST file).
     recovered: True if the record is a recovered record.
   """
+
   path: str
-  record: Union[
-      ldb.KeyValueRecord,
-      log.ParsedInternalKey]
+  record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]
   level: Optional[int] = None
   recovered: Optional[bool] = None
 
   @classmethod
   def FromFile(
-      cls,
-      file_path: pathlib.Path
+      cls, file_path: pathlib.Path
   ) -> Generator[LevelDBRecord, None, None]:
     """Yields leveldb records from the given path.
 
@@ -62,19 +58,22 @@ class LevelDBRecord:
     Args:
       file_path: the file path.
     """
-    if file_path.name.endswith('.log'):
-      for record in log.FileReader(
-          file_path.as_posix()).GetParsedInternalKeys():
-        yield cls(path=file_path.as_posix(), record=record)
-    elif file_path.name.endswith('.ldb'):
-      for record in ldb.FileReader(file_path.as_posix()).GetKeyValueRecords():
-        yield cls(path=file_path.as_posix(), record=record)
-    elif file_path.name.startswith('MANIFEST'):
-      print(f'Ignoring descriptor file {file_path.as_posix()}', file=sys.stderr)
-    elif file_path.name in ('LOCK', 'CURRENT', 'LOG', 'LOG.old'):
-      print(f'Ignoring {file_path.as_posix()}', file=sys.stderr)
+    if file_path.name.endswith(".log"):
+      for internal_record in log.FileReader(
+          file_path.as_posix()
+      ).GetParsedInternalKeys():
+        yield cls(path=file_path.as_posix(), record=internal_record)
+    elif file_path.name.endswith(".ldb"):
+      for kv_record in ldb.FileReader(
+          file_path.as_posix()
+      ).GetKeyValueRecords():
+        yield cls(path=file_path.as_posix(), record=kv_record)
+    elif file_path.name.startswith("MANIFEST"):
+      print(f"Ignoring descriptor file {file_path.as_posix()}", file=sys.stderr)
+    elif file_path.name in ("LOCK", "CURRENT", "LOG", "LOG.old"):
+      print(f"Ignoring {file_path.as_posix()}", file=sys.stderr)
     else:
-      print(f'Unsupported file type {file_path.as_posix()}', file=sys.stderr)
+      print(f"Unsupported file type {file_path.as_posix()}", file=sys.stderr)
 
 
 class FolderReader:
@@ -94,20 +93,20 @@ class FolderReader:
       ValueError: if foldername is None or not a directory.
     """
     if not foldername or not foldername.is_dir():
-      raise ValueError(f'{foldername} is None or not a directory')
+      raise ValueError(f"{foldername} is None or not a directory")
     self.foldername = foldername
 
   def LogFiles(self) -> Generator[pathlib.Path, None, None]:
     """Returns the log filenames."""
-    yield from self.foldername.glob('*.log')
+    yield from self.foldername.glob("*.log")
 
   def LdbFiles(self) -> Generator[pathlib.Path, None, None]:
     """Returns the ldb filenames."""
-    yield from self.foldername.glob('*.ldb')
+    yield from self.foldername.glob("*.ldb")
 
   def Manifest(self) -> Generator[pathlib.Path, None, None]:
     """Returns the Manifest filenames."""
-    yield from self.foldername.glob('MANIFEST-*')
+    yield from self.foldername.glob("MANIFEST-*")
 
   def GetCurrentManifestPath(self) -> pathlib.Path:
     """Returns the path of the current manifest file.
@@ -116,19 +115,20 @@ class FolderReader:
       ParserError: when the CURRENT file does not exist/contain the expected
           content or when the expected MANIFEST file does not exist.
     """
-    current_path = self.foldername / 'CURRENT'
+    current_path = self.foldername / "CURRENT"
     if not current_path.exists():
-      raise errors.ParserError(f'{current_path!s} does not exist.')
+      raise errors.ParserError(f"{current_path!s} does not exist.")
 
     current_manifest = current_path.read_text().strip()
     manifest_regex = re.compile(definitions.MANIFEST_FILENAME_PATTERN)
     if not manifest_regex.fullmatch(current_manifest):
       raise errors.ParserError(
-          f'{current_path!s} does not contain the expected content')
+          f"{current_path!s} does not contain the expected content"
+      )
 
     manifest_path = self.foldername / current_manifest
     if not manifest_path.exists():
-      raise errors.ParserError(f'{manifest_path!s} does not exist.')
+      raise errors.ParserError(f"{manifest_path!s} does not exist.")
     return manifest_path
 
   def GetLatestVersion(self) -> descriptor.LevelDBVersion:
@@ -139,14 +139,17 @@ class FolderReader:
     """
     current_manifest_path = self.GetCurrentManifestPath()
     latest_version = descriptor.FileReader(
-        str(current_manifest_path)).GetLatestVersion()
+        str(current_manifest_path)
+    ).GetLatestVersion()
     if not latest_version:
       raise errors.ParserError(
-          f'Could not parse a leveldb version from {current_manifest_path!s}')
+          f"Could not parse a leveldb version from {current_manifest_path!s}"
+      )
     return latest_version
 
   def _GetRecordsByFile(
-      self, filename: pathlib.Path) -> Generator[LevelDBRecord, None, None]:
+      self, filename: pathlib.Path
+  ) -> Generator[LevelDBRecord, None, None]:
     """Yields the LevelDBRecords from a file.
 
     Non-log/ldb files are ignored.
@@ -157,20 +160,19 @@ class FolderReader:
     Yields:
       LevelDBRecords
     """
-    if filename.name.endswith('.log'):
+    if filename.name.endswith(".log"):
       yield from self._GetLogRecords(filename)
-    elif filename.name.endswith('.ldb'):
+    elif filename.name.endswith(".ldb"):
       yield from self._GetLdbRecords(filename)
-    elif filename.name.startswith('MANIFEST'):
-      print(f'Ignoring descriptor file {filename.as_posix()}', file=sys.stderr)
-    elif filename.name in ('LOCK', 'CURRENT', 'LOG', 'LOG.old'):
-      print(f'Ignoring {filename.as_posix()}', file=sys.stderr)
+    elif filename.name.startswith("MANIFEST"):
+      print(f"Ignoring descriptor file {filename.as_posix()}", file=sys.stderr)
+    elif filename.name in ("LOCK", "CURRENT", "LOG", "LOG.old"):
+      print(f"Ignoring {filename.as_posix()}", file=sys.stderr)
     else:
-      print(f'Unsupported file type {filename.as_posix()}', file=sys.stderr)
+      print(f"Unsupported file type {filename.as_posix()}", file=sys.stderr)
 
   def _GetLogRecords(
-      self,
-      filename: pathlib.Path
+      self, filename: pathlib.Path
   ) -> Generator[LevelDBRecord, None, None]:
     """Yields the LevelDBRecords from a log file.
 
@@ -184,8 +186,7 @@ class FolderReader:
       yield LevelDBRecord(path=filename.as_posix(), record=record)
 
   def _GetLdbRecords(
-      self,
-      filename: pathlib.Path
+      self, filename: pathlib.Path
   ) -> Generator[LevelDBRecord, None, None]:
     """Yields the LevelDBRecords from a log file.
 
@@ -216,7 +217,7 @@ class FolderReader:
         log_records = list(self._GetLogRecords(filename=current_log_filename))
         processed_files.add(current_log_filename)
     else:
-      print('No current log file.', file=sys.stderr)
+      print("No current log file.", file=sys.stderr)
 
     # read and cache the records from the "young" or 0-level
     young_records = []
@@ -227,8 +228,9 @@ class FolderReader:
         processed_files.add(current_young_filename)
       else:
         print(
-            f'Could not find {current_young_filename} for level 0.',
-            file=sys.stderr)
+            f"Could not find {current_young_filename} for level 0.",
+            file=sys.stderr,
+        )
 
     # sort the log records by the leveldb sequence number in reverse
     # order and update the recovered attribute based on the highest sequence
@@ -237,7 +239,8 @@ class FolderReader:
     for record in sorted(
         log_records,
         key=lambda record: record.record.sequence_number,
-        reverse=True):
+        reverse=True,
+    ):
       if record.record.key not in active_records:
         record.recovered = False
         active_records[record.record.key] = record
@@ -251,7 +254,8 @@ class FolderReader:
     for record in sorted(
         young_records,
         key=lambda record: record.record.sequence_number,
-        reverse=True):
+        reverse=True,
+    ):
       if record.record.key not in active_records:
         record.recovered = False
         active_records[record.record.key] = record
@@ -262,7 +266,8 @@ class FolderReader:
     yield from sorted(
         log_records + young_records,
         key=lambda record: record.record.sequence_number,
-        reverse=False)
+        reverse=False,
+    )
 
     # read records from the active files in each level (except the 0 level)
     # and update the recovered and level attribute.
@@ -278,8 +283,9 @@ class FolderReader:
               yield record
           else:
             print(
-                f'Could not find {current_filename} for level {level}.',
-                file=sys.stderr)
+                f"Could not find {current_filename} for level {level}.",
+                file=sys.stderr,
+            )
 
     # as a final step, parse any other log/ldb files which we will consider
     # any records as recovered since they are not listed in the the active file
@@ -304,22 +310,27 @@ class FolderReader:
     Yields:
       LevelDBRecords.
     """
-    unsorted_records = defaultdict(list)
+    unsorted_records_by_key = defaultdict(list)
 
     for filename in self.foldername.iterdir():
       for leveldb_record in LevelDBRecord.FromFile(filename):
         if leveldb_record:
-          unsorted_records[leveldb_record.record.key].append(leveldb_record)
-    for _, unsorted_records in unsorted_records.items():
+          unsorted_records_by_key[leveldb_record.record.key].append(
+              leveldb_record
+          )
+    for _, unsorted_records in unsorted_records_by_key.items():
       num_unsorted_records = len(unsorted_records)
       if num_unsorted_records == 1:
         unsorted_records[0].recovered = False
         yield unsorted_records[0]
       else:
-        for i, record in enumerate(sorted(
-            unsorted_records, key=lambda x: (
-                x.record.sequence_number, x.record.offset)),
-            start=1):
+        for i, record in enumerate(
+            sorted(
+                unsorted_records,
+                key=lambda x: (x.record.sequence_number, x.record.offset),
+            ),
+            start=1,
+        ):
           if i == num_unsorted_records:
             record.recovered = False
           else:
@@ -327,9 +338,7 @@ class FolderReader:
           yield record
 
   def GetRecords(
-      self,
-      use_manifest: bool = False,
-      use_sequence_number: bool = False
+      self, use_manifest: bool = False, use_sequence_number: bool = False
   ) -> Generator[LevelDBRecord, None, None]:
     """Yield LevelDBRecords.
 

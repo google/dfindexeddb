@@ -15,7 +15,6 @@
 """Definitions for Webkit/Safari."""
 from enum import IntEnum
 
-
 CURRENT_VERSION = 0x0000000F  # 15
 TERMINATOR_TAG = 0xFFFFFFFF
 STRING_POOL_TAG = 0xFFFFFFFE
@@ -29,6 +28,7 @@ SIDB_KEY_VERSION = 0x00
 
 class SIDBKeyType(IntEnum):
   """SIDBKeyType."""
+
   MIN = 0x00
   NUMBER = 0x20
   DATE = 0x40
@@ -39,10 +39,11 @@ class SIDBKeyType(IntEnum):
 
 
 class SerializationTag(IntEnum):
-  """Database Metadata key types.  
-  
+  """Database Metadata key types.
+
   All tags are recorded as a single uint8_t.
   """
+
   ARRAY = 1
   OBJECT = 2
   UNDEFINED = 3
@@ -109,6 +110,7 @@ class SerializationTag(IntEnum):
 
 class ArrayBufferViewSubtag(IntEnum):
   """ArrayBufferView sub tags."""
+
   DATA_VIEW = 0
   INT8_ARRAY = 1
   UINT8_ARRAY = 2

@@ -14,14 +14,13 @@
 # limitations under the License.
 """Parser for LevelDB Descriptor (MANIFEST) files."""
 from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Generator, Optional
+from typing import Dict, Generator, Optional
 
 from dfindexeddb import errors
-from dfindexeddb.leveldb import definitions
-from dfindexeddb.leveldb import log
-from dfindexeddb.leveldb import utils
+from dfindexeddb.leveldb import definitions, log, utils
 
 
 @dataclass
@@ -34,6 +33,7 @@ class InternalKey:
     sequence_number: the sequence number.
     key_type: the key type.
   """
+
   offset: int
   user_key: bytes
   sequence_number: int
@@ -41,9 +41,7 @@ class InternalKey:
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> InternalKey:
     """Decodes an InternalKey from the current position of a LevelDBDecoder.
 
@@ -57,20 +55,22 @@ class InternalKey:
     offset, slice_bytes = decoder.DecodeLengthPrefixedSlice()
 
     if len(slice_bytes) < definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH:
-      raise errors.ParserError('Insufficient bytes to parse InternalKey')
+      raise errors.ParserError("Insufficient bytes to parse InternalKey")
 
-    user_key = slice_bytes[:-definitions.SEQUENCE_LENGTH]
+    user_key = slice_bytes[: -definitions.SEQUENCE_LENGTH]
     sequence_number = int.from_bytes(
-        slice_bytes[-definitions.SEQUENCE_LENGTH:],
-        byteorder='little',
-        signed=False)
+        slice_bytes[-definitions.SEQUENCE_LENGTH :],
+        byteorder="little",
+        signed=False,
+    )
     key_type = slice_bytes[-definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
 
     return cls(
         offset=base_offset + offset,
         user_key=user_key,
         sequence_number=sequence_number,
-        key_type=key_type)
+        key_type=key_type,
+    )
 
 
 @dataclass
@@ -85,6 +85,7 @@ class NewFile(utils.FromDecoderMixin):
     smallest: the smallest internal key.
     largest: the largest internal key.
   """
+
   offset: int
   level: int
   number: int
@@ -94,9 +95,7 @@ class NewFile(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> NewFile:
     """Decodes a NewFile from the current position of a LevelDBDecoder.
 
@@ -119,7 +118,8 @@ class NewFile(utils.FromDecoderMixin):
         number=number,
         file_size=file_size,
         smallest=smallest,
-        largest=largest)
+        largest=largest,
+    )
 
 
 @dataclass
@@ -131,15 +131,14 @@ class CompactPointer(utils.FromDecoderMixin):
     level: the level.
     key: the key bytes.
   """
+
   offset: int
   level: int
   key: bytes
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> CompactPointer:
     """Decodes a CompactPointer from the current position of a LevelDBDecoder.
 
@@ -164,15 +163,14 @@ class DeletedFile(utils.FromDecoderMixin):
     level: the level.
     number: the file number.
   """
+
   offset: int
   level: int
   number: int
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> DeletedFile:
     """Decodes a DeletedFile from the current position of a LevelDBDecoder.
 
@@ -203,6 +201,7 @@ class VersionEdit(utils.FromDecoderMixin):
     deleted_files: the list of DeletedFiles.
     new_files: the list of NewFiles.
   """
+
   offset: int
   comparator: Optional[bytes] = None
   log_number: Optional[int] = None
@@ -215,9 +214,7 @@ class VersionEdit(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> VersionEdit:
     """Decodes a VersionEdit from the current position of a LevelDBDecoder.
 
@@ -239,7 +236,8 @@ class VersionEdit(utils.FromDecoderMixin):
         tag = definitions.VersionEditTags(tag_byte)
       except TypeError as error:
         raise errors.ParserError(
-            f'Invalid VersionEditTag at offset {offset}') from error
+            f"Invalid VersionEditTag at offset {offset}"
+        ) from error
 
       if tag == definitions.VersionEditTags.COMPARATOR:
         _, version_edit.comparator = decoder.DecodeLengthPrefixedSlice()
@@ -253,15 +251,18 @@ class VersionEdit(utils.FromDecoderMixin):
         _, version_edit.last_sequence = decoder.DecodeUint64Varint()
       elif tag == definitions.VersionEditTags.COMPACT_POINTER:
         compact_pointer = CompactPointer.FromDecoder(
-            decoder=decoder, base_offset=base_offset + offset)
+            decoder=decoder, base_offset=base_offset + offset
+        )
         version_edit.compact_pointers.append(compact_pointer)
       elif tag == definitions.VersionEditTags.DELETED_FILE:
         deleted_file = DeletedFile.FromDecoder(
-            decoder=decoder, base_offset=base_offset + offset)
+            decoder=decoder, base_offset=base_offset + offset
+        )
         version_edit.deleted_files.append(deleted_file)
       elif tag == definitions.VersionEditTags.NEW_FILE:
         file_metadata = NewFile.FromDecoder(
-            decoder=decoder, base_offset=base_offset + offset)
+            decoder=decoder, base_offset=base_offset + offset
+        )
         version_edit.new_files.append(file_metadata)
 
       if decoder.NumRemainingBytes() == 0:
@@ -286,11 +287,12 @@ class LevelDBVersion:
   "Deleted files" will typically no longer exist but may be forensically
   recoverable.
   """
-  current_log: str
+
+  current_log: Optional[str]
   version_edit_offset: int
-  last_sequence: int
-  active_files: dict[int, dict[int, NewFile]]
-  deleted_files: dict[int, dict[int, DeletedFile]]
+  last_sequence: Optional[int]
+  active_files: dict[int, dict[str, NewFile]]
+  deleted_files: dict[int, dict[str, DeletedFile]]
 
 
 class FileReader:
@@ -302,6 +304,7 @@ class FileReader:
   * records (PhysicalRecord)
   * version edits (VersionEdit)
   """
+
   def __init__(self, filename: str):
     """Initializes the Descriptor a.k.a. MANIFEST file.
 
@@ -309,7 +312,6 @@ class FileReader:
       filename: the Descriptor filename (e.g. MANIFEST-000001)
     """
     self.filename = filename
-
 
   def GetBlocks(self) -> Generator[log.Block, None, None]:
     """Returns an iterator of Block instances.
@@ -319,7 +321,7 @@ class FileReader:
     Yields:
       Block
     """
-    with open(self.filename, 'rb') as fh:
+    with open(self.filename, "rb") as fh:
       block = log.Block.FromStream(fh)
       while block:
         yield block
@@ -346,24 +348,33 @@ class FileReader:
       VersionEdit
     """
     buffer = bytearray()
-    offset = None
+    offset = 0
     for physical_record in self.GetPhysicalRecords():
-      if (physical_record.record_type ==
-          definitions.LogFilePhysicalRecordType.FULL):
-        buffer = physical_record.contents
+      if (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.FULL
+      ):
         offset = physical_record.contents_offset + physical_record.base_offset
-        version_edit = VersionEdit.FromBytes(buffer, base_offset=offset)
+        version_edit = VersionEdit.FromBytes(
+            physical_record.contents, base_offset=offset
+        )
         yield version_edit
         buffer = bytearray()
-      elif (physical_record.record_type ==
-            definitions.LogFilePhysicalRecordType.FIRST):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.FIRST
+      ):
         offset = physical_record.contents_offset + physical_record.base_offset
         buffer = bytearray(physical_record.contents)
-      elif (physical_record.record_type ==
-            definitions.LogFilePhysicalRecordType.MIDDLE):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.MIDDLE
+      ):
         buffer.extend(bytearray(physical_record.contents))
-      elif (physical_record.record_type ==
-            definitions.LogFilePhysicalRecordType.LAST):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.LAST
+      ):
         buffer.extend(bytearray(physical_record.contents))
         version_edit = VersionEdit.FromBytes(buffer, base_offset=offset)
         yield version_edit
@@ -375,27 +386,30 @@ class FileReader:
     Yields:
       LevelDBVersion
     """
-    active_files = defaultdict(dict)
-    deleted_files = defaultdict(set)
+    active_files: Dict[int, dict[str, NewFile]] = defaultdict(dict)
+    deleted_files: Dict[int, dict[str, DeletedFile]] = defaultdict(dict)
     current_log = None
 
     for version_edit in self.GetVersionEdits():
       if version_edit.log_number:
-        current_log = f'{version_edit.log_number:06d}.log'
+        current_log = f"{version_edit.log_number:06d}.log"
 
       for new_file in version_edit.new_files:
-        active_files[new_file.level][f'{new_file.number:06d}.ldb'] = new_file
+        active_files[new_file.level][f"{new_file.number:06d}.ldb"] = new_file
 
       for deleted_file in version_edit.deleted_files:
-        active_files[deleted_file.level].pop(f'{deleted_file.number:06d}.ldb')
-        deleted_files[deleted_file.level].add(f'{deleted_file.number:06d}.ldb')
+        active_files[deleted_file.level].pop(f"{deleted_file.number:06d}.ldb")
+        deleted_files[deleted_file.level][
+            f"{deleted_file.number:06d}.ldb"
+        ] = deleted_file
 
       yield LevelDBVersion(
           current_log=current_log,
-          active_files=dict(active_files),
-          deleted_files=dict(deleted_files),
+          active_files=active_files,
+          deleted_files=deleted_files,
           version_edit_offset=version_edit.offset,
-          last_sequence=version_edit.last_sequence)
+          last_sequence=version_edit.last_sequence,
+      )
 
   def GetLatestVersion(self) -> Optional[LevelDBVersion]:
     """Returns the latest LevelDBVersion instance."""

@@ -15,9 +15,7 @@
 """Unit tests for Firefox IndexedDB encoded sqlite3 databases."""
 import unittest
 
-from dfindexeddb.indexeddb.firefox import definitions
-from dfindexeddb.indexeddb.firefox import record
-from dfindexeddb.indexeddb.firefox import gecko
+from dfindexeddb.indexeddb.firefox import definitions, gecko, record
 
 
 class FirefoxIndexedDBTest(unittest.TestCase):
@@ -25,16 +23,17 @@ class FirefoxIndexedDBTest(unittest.TestCase):
 
   def setUp(self):
     self.reader = record.FileReader(
-        './test_data/indexeddb/firefox/650921982Itnsdeetx+eBdD.sqlite')
+        "./test_data/indexeddb/firefox/650921982Itnsdeetx+eBdD.sqlite"
+    )
 
   def test_init(self):
     """Tests the init method."""
-    self.assertEqual(self.reader.database_name, 'IndexedDB test')
+    self.assertEqual(self.reader.database_name, "IndexedDB test")
     self.assertEqual(
         self.reader.origin,
-        'file:///Users/Shared/generate_firefox_indexeddb.html')
-    self.assertEqual(
-        self.reader.metadata_version, 1)
+        "file:///Users/Shared/generate_firefox_indexeddb.html",
+    )
+    self.assertEqual(self.reader.metadata_version, 1)
     self.assertEqual(self.reader.last_analyze_time, 0)
 
   def test_object_stores(self):
@@ -43,21 +42,22 @@ class FirefoxIndexedDBTest(unittest.TestCase):
     self.assertEqual(len(object_stores), 2)
 
     self.assertEqual(object_stores[0].id, 1)
-    self.assertEqual(object_stores[0].name, 'test store a')
-    self.assertEqual(object_stores[0].key_path, 'id')
+    self.assertEqual(object_stores[0].name, "test store a")
+    self.assertEqual(object_stores[0].key_path, "id")
     self.assertEqual(object_stores[0].auto_inc, 31)
-    self.assertEqual(object_stores[0].database_name, 'IndexedDB test')
+    self.assertEqual(object_stores[0].database_name, "IndexedDB test")
 
   def test_records_by_object_store_id(self):
     """Tests the RecordsByObjectStoreId method."""
     expected_record = record.FirefoxIndexedDBRecord(
         key=gecko.IDBKey(
-            offset=0, type=definitions.IndexedDBKeyType.FLOAT, value=-3.14),
-        value={'id': -3.14, 'value': {}},
+            offset=0, type=definitions.IndexedDBKeyType.FLOAT, value=-3.14
+        ),
+        value={"id": -3.14, "value": {}},
         file_ids=None,
         object_store_id=1,
-        object_store_name='test store a',
-        database_name='IndexedDB test'
+        object_store_name="test store a",
+        database_name="IndexedDB test",
     )
     records = list(self.reader.RecordsByObjectStoreId(1))
 
@@ -67,12 +67,13 @@ class FirefoxIndexedDBTest(unittest.TestCase):
     """Tests the Records method."""
     expected_record = record.FirefoxIndexedDBRecord(
         key=gecko.IDBKey(
-            offset=0, type=definitions.IndexedDBKeyType.FLOAT, value=-3.14),
-        value={'id': -3.14, 'value': {}},
+            offset=0, type=definitions.IndexedDBKeyType.FLOAT, value=-3.14
+        ),
+        value={"id": -3.14, "value": {}},
         file_ids=None,
         object_store_id=1,
-        object_store_name='test store a',
-        database_name='IndexedDB test'
+        object_store_name="test store a",
+        database_name="IndexedDB test",
     )
     records = list(self.reader.Records())
     self.assertEqual(records[0], expected_record)

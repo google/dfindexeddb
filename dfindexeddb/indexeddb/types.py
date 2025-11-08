@@ -30,6 +30,7 @@ class JSArray:
     values: the array values.
     properties: the array properties.
   """
+
   values: List[Any] = dataclasses.field(default_factory=list)
   properties: Dict[Any, Any] = dataclasses.field(default_factory=dict)
 
@@ -45,6 +46,7 @@ class JSSet:
     values: the set values.
     properties: the set properties.
   """
+
   values: Set[Any] = dataclasses.field(default_factory=set)
   properties: Dict[Any, Any] = dataclasses.field(default_factory=dict)
 
@@ -57,11 +59,12 @@ class Null:
 @dataclasses.dataclass
 class RegExp:
   """A parsed JavaScript RegExp.
-  
+
   Attributes:
     pattern: the pattern.
     flags: the flags.
   """
+
   pattern: str
   flags: str
 

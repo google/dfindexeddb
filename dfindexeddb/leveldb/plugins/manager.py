@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Leveldb plugin manager."""
-from typing import Type
+from typing import Iterable, Type
 
 from dfindexeddb.leveldb.plugins import interface
 
@@ -21,10 +21,10 @@ from dfindexeddb.leveldb.plugins import interface
 class LeveldbPluginManager:
   """The leveldb plugin manager."""
 
-  _class_registry = {}
+  _class_registry: dict[str, Type[interface.LeveldbPlugin]] = {}
 
   @classmethod
-  def GetPlugins(cls):
+  def GetPlugins(cls) -> Iterable[tuple[str, type[interface.LeveldbPlugin]]]:
     """Retrieves the registered leveldb plugins.
 
     Yields:
@@ -35,7 +35,7 @@ class LeveldbPluginManager:
     yield from cls._class_registry.items()
 
   @classmethod
-  def GetPlugin(cls, plugin_name: str) -> interface.LeveldbPlugin:
+  def GetPlugin(cls, plugin_name: str) -> type[interface.LeveldbPlugin]:
     """Retrieves a class object of a specific plugin.
 
     Args:
@@ -50,10 +50,10 @@ class LeveldbPluginManager:
     try:
       return cls._class_registry[plugin_name]
     except KeyError as exc:
-      raise KeyError(f'Plugin not found: {plugin_name}') from exc
+      raise KeyError(f"Plugin not found: {plugin_name}") from exc
 
   @classmethod
-  def RegisterPlugin(cls, plugin_class: Type[interface.LeveldbPlugin]):
+  def RegisterPlugin(cls, plugin_class: Type[interface.LeveldbPlugin]) -> None:
     """Registers a leveldb plugin.
 
     Args:
@@ -64,12 +64,13 @@ class LeveldbPluginManager:
     """
     plugin_name = plugin_class.__name__
     if plugin_name in cls._class_registry:
-      raise KeyError(f'Plugin already registered {plugin_name}')
+      raise KeyError(f"Plugin already registered {plugin_name}")
     cls._class_registry[plugin_name] = plugin_class
 
   @classmethod
-  def ClearPlugins(cls):
+  def ClearPlugins(cls) -> None:
     """Clears all plugin registrations."""
     cls._class_registry = {}
 
-PluginManager = LeveldbPluginManager()
+
+PluginManager = LeveldbPluginManager()  # pylint: disable=invalid-name

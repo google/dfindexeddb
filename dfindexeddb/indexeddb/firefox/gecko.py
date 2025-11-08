@@ -23,8 +23,7 @@ from typing import Any, List, Tuple, Union
 
 import snappy
 
-from dfindexeddb import errors
-from dfindexeddb import utils
+from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.firefox import definitions
 
@@ -38,13 +37,15 @@ class IDBKey(utils.FromDecoderMixin):
     type: the type of the key.
     value: the value of the key.
   """
+
   offset: int
   type: definitions.IndexedDBKeyType
-  value: Union[bytes, datetime.datetime, float, list, str, None]
+  value: Union[bytes, datetime.datetime, float, list[Any], str, None]
 
   @classmethod
   def FromDecoder(
-    cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> IDBKey:
+      cls, decoder: utils.StreamDecoder, base_offset: int = 0
+  ) -> IDBKey:
     """Decodes an IndexedDB key from the current position of the decoder.
 
     Args:
@@ -77,10 +78,7 @@ class KeyDecoder(utils.StreamDecoder):
     return offset, key_type, value
 
   def _DecodeJSValInternal(
-      self,
-      key_type: int,
-      type_offset: int = 0,
-      recursion_depth: int = 0
+      self, key_type: int, type_offset: int = 0, recursion_depth: int = 0
   ) -> Any:
     """Decodes a Javascript Value.
 
@@ -97,21 +95,26 @@ class KeyDecoder(utils.StreamDecoder):
           type has been parsed.
     """
     if recursion_depth == definitions.MAX_RECURSION_DEPTH:
-      raise errors.ParserError('Reached Maximum Recursion Depth')
+      raise errors.ParserError("Reached Maximum Recursion Depth")
 
+    value: Any = None
     if key_type - type_offset >= definitions.IndexedDBKeyType.ARRAY:
       type_offset += definitions.IndexedDBKeyType.ARRAY
-      if (type_offset ==
-          definitions.IndexedDBKeyType.ARRAY * definitions.MAX_ARRAY_COLLAPSE):
+      if (
+          type_offset
+          == definitions.IndexedDBKeyType.ARRAY * definitions.MAX_ARRAY_COLLAPSE
+      ):
         _ = self.ReadBytes(1)
         type_offset = 0
       value = []
-      while (
-          self.NumRemainingBytes() and (key_type - type_offset) != (
-              definitions.IndexedDBKeyType.TERMINATOR)):
+      while self.NumRemainingBytes() and (key_type - type_offset) != (
+          definitions.IndexedDBKeyType.TERMINATOR
+      ):
         value.append(
             self._DecodeJSValInternal(
-                key_type, type_offset, recursion_depth + 1))
+                key_type, type_offset, recursion_depth + 1
+            )
+        )
         type_offset = 0
         if self.NumRemainingBytes():
           _, key_bytes = self.PeekBytes(1)
@@ -122,7 +125,7 @@ class KeyDecoder(utils.StreamDecoder):
 
     elif key_type - type_offset == definitions.IndexedDBKeyType.STRING:
       _, value = self._DecodeAsStringy()
-      value = value.decode('utf-8')  # TODO: test other text encoding types
+      value = value.decode("utf-8")  # TODO: test other text encoding types
     elif key_type - type_offset == definitions.IndexedDBKeyType.DATE:
       _, value = self._DecodeDate()
     elif key_type - type_offset == definitions.IndexedDBKeyType.FLOAT:
@@ -131,7 +134,8 @@ class KeyDecoder(utils.StreamDecoder):
       _, value = self._DecodeAsStringy()
     else:
       raise errors.ParserError(
-          f'Unknown key type parsed: {key_type - type_offset}')
+          f"Unknown key type parsed: {key_type - type_offset}"
+      )
     return value
 
   def _ReadUntilNull(self) -> bytearray:
@@ -140,13 +144,13 @@ class KeyDecoder(utils.StreamDecoder):
     num_remaining_bytes = self.NumRemainingBytes()
     while num_remaining_bytes:
       _, c = self.ReadBytes(1)
-      if c == b'\x00':
+      if c == b"\x00":
         break
       result += c
       num_remaining_bytes -= 1
     return result
 
-  def _DecodeAsStringy(self, element_size: int = 1) -> Tuple[int, bytes]:
+  def _DecodeAsStringy(self, element_size: int = 1) -> Tuple[int, bytearray]:
     """Decodes a string buffer.
 
     Args:
@@ -162,9 +166,11 @@ class KeyDecoder(utils.StreamDecoder):
     offset, type_int = self.DecodeUint8()
     if type_int % definitions.IndexedDBKeyType.ARRAY.value not in (
         definitions.IndexedDBKeyType.STRING.value,
-        definitions.IndexedDBKeyType.BINARY.value):
+        definitions.IndexedDBKeyType.BINARY.value,
+    ):
       raise errors.ParserError(
-          'Invalid type', hex(type_int), hex(type_int % 0x50))
+          "Invalid type", hex(type_int), hex(type_int % 0x50)
+      )
 
     i = 0
     result = self._ReadUntilNull()
@@ -172,11 +178,11 @@ class KeyDecoder(utils.StreamDecoder):
       if not result[i] & 0x80:
         result[i] -= definitions.ONE_BYTE_ADJUST
       elif element_size == 2 or not result[i] & 0x40:
-        c = struct.unpack_from('>H', result, i)[0]
+        c = struct.unpack_from(">H", result, i)[0]
         d = c - 0x8000 - definitions.TWO_BYTE_ADJUST
-        struct.pack_into('>H', result, i, d)
+        struct.pack_into(">H", result, i, d)
       else:
-        raise errors.ParserError('Unsupported byte')  # TODO: add support.
+        raise errors.ParserError("Unsupported byte")  # TODO: add support.
       i += 1
     return offset + 1, result
 
@@ -191,24 +197,28 @@ class KeyDecoder(utils.StreamDecoder):
     """
     _, type_byte = self.DecodeUint8()
     if type_byte % definitions.IndexedDBKeyType.ARRAY not in (
-        definitions.IndexedDBKeyType.FLOAT, definitions.IndexedDBKeyType.DATE):
+        definitions.IndexedDBKeyType.FLOAT,
+        definitions.IndexedDBKeyType.DATE,
+    ):
       raise errors.ParserError(
-          'Invalid type', hex(type_byte), hex(type_byte % 0x50))
+          "Invalid type", hex(type_byte), hex(type_byte % 0x50)
+      )
 
     float_offset, number_bytes = self.ReadBytes(
-        min(8, self.NumRemainingBytes()))
+        min(8, self.NumRemainingBytes())
+    )
 
     # pad to 64-bits
     if len(number_bytes) != 8:
-      number_bytes += b'\x00'*(8 - len(number_bytes))
+      number_bytes += b"\x00" * (8 - len(number_bytes))
 
-    int_value = struct.unpack('>q', number_bytes)[0]
+    int_value = struct.unpack(">q", number_bytes)[0]
 
     if int_value & 0x8000000000000000:
       int_value = int_value & 0x7FFFFFFFFFFFFFFF
     else:
       int_value = -int_value
-    return float_offset, struct.unpack('>d', struct.pack('>q', int_value))[0]
+    return float_offset, struct.unpack(">d", struct.pack(">q", int_value))[0]
 
   def _DecodeBinary(self) -> Tuple[int, bytes]:
     """Decodes a binary value.
@@ -220,18 +230,21 @@ class KeyDecoder(utils.StreamDecoder):
       ParserError: when an invalid type byte is encountered.
     """
     _, type_byte = self.ReadBytes(1)
-    if (type_byte[0] % definitions.IndexedDBKeyType.ARRAY !=
-        definitions.IndexedDBKeyType.BINARY):
+    if (
+        type_byte[0] % definitions.IndexedDBKeyType.ARRAY
+        != definitions.IndexedDBKeyType.BINARY
+    ):
       raise errors.ParserError(
-          f'Invalid type {type_byte[0] % definitions.IndexedDBKeyType.ARRAY}')
+          f"Invalid type {type_byte[0] % definitions.IndexedDBKeyType.ARRAY}"
+      )
     values = bytearray()
     offset = self.stream.tell()
     while self.NumRemainingBytes():
       _, value = self.ReadBytes(1)
-      if value == definitions.IndexedDBKeyType.TERMINATOR:
+      if value[0] == definitions.IndexedDBKeyType.TERMINATOR:
         break
       values.append(value[0])
-    return offset, values
+    return offset, bytes(values)
 
   def _DecodeDate(self) -> Tuple[int, datetime.datetime]:
     """Decodes a date.
@@ -241,7 +254,8 @@ class KeyDecoder(utils.StreamDecoder):
     """
     offset, value = self._DecodeFloat()
     return offset, datetime.datetime.fromtimestamp(
-        value/1000, tz=datetime.timezone.utc)
+        value / 1000, tz=datetime.timezone.utc
+    )
 
 
 class JSStructuredCloneDecoder(utils.FromDecoderMixin):
@@ -265,7 +279,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
   def _PeekTagAndData(self) -> tuple[int, int]:
     """Peeks Tag and Data values."""
     _, pair_bytes = self.decoder.PeekBytes(8)
-    pair = int.from_bytes(pair_bytes, byteorder='little', signed=False)
+    pair = int.from_bytes(pair_bytes, byteorder="little", signed=False)
     tag = pair >> 32
     data = pair & 0x00000000FFFFFFFF
     return tag, data
@@ -292,14 +306,14 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     number_chars = data & 0x7FFFFFFF
     latin1 = data & 0x80000000
     if number_chars > definitions.MAX_LENGTH:
-      raise errors.ParserError('Bad serialized string length')
+      raise errors.ParserError("Bad serialized string length")
 
     if latin1:
-      _, chars = self.decoder.ReadBytes(number_chars)
-      chars = chars.decode('latin-1')
+      _, char_bytes = self.decoder.ReadBytes(number_chars)
+      chars = char_bytes.decode("latin-1")
     else:
-      _, chars = self.decoder.ReadBytes(number_chars*2)
-      chars = chars.decode('utf-16-le')
+      _, char_bytes = self.decoder.ReadBytes(number_chars * 2)
+      chars = char_bytes.decode("utf-16-le")
 
     return chars
 
@@ -316,12 +330,13 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     is_negative = data & 0x80000000
     if length == 0:
       return 0
-    contents = []
+    contents = bytearray()
     for _ in range(length):
       _, element = self.decoder.ReadBytes(8)
       contents.extend(element)
     return int.from_bytes(
-        contents, byteorder='little', signed=bool(is_negative))
+        contents, byteorder="little", signed=bool(is_negative)
+    )
 
   def _DecodeTypedArray(
       self, array_type: int, number_elements: int, is_version1: bool = False
@@ -344,18 +359,16 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       number_elements = 0
 
     if is_version1:
-      value = self._DecodeV1ArrayBuffer(array_type, number_elements)
+      self._DecodeV1ArrayBuffer(array_type, number_elements)
       byte_offset = 0  # pylint: disable=unused-variable
     else:
       value = self._StartRead()
-      byte_offset = self.decoder.DecodeUint64()  # pylint: disable=unused-variable
+      _, byte_offset = self.decoder.DecodeUint64()  # pylint: disable=unused-variable
 
-    self.all_objects[dummy_index] = value
+    self.all_objects[dummy_index] = value  # pylint: disable=possibly-used-before-assignment
     return value
 
-  def _DecodeArrayBuffer(
-      self, buffer_type: int, data: int
-  ) -> bytes:
+  def _DecodeArrayBuffer(self, buffer_type: int, data: int) -> bytes:
     """Decodes an ArrayBuffer.
 
     Args:
@@ -367,8 +380,10 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     """
     if buffer_type == definitions.StructuredDataType.ARRAY_BUFFER_OBJECT:
       _, number_bytes = self.decoder.DecodeUint64()
-    elif (buffer_type ==
-          definitions.StructuredDataType.RESIZABLE_ARRAY_BUFFER_OBJECT):
+    elif (
+        buffer_type
+        == definitions.StructuredDataType.RESIZABLE_ARRAY_BUFFER_OBJECT
+    ):
       _, number_bytes = self.decoder.DecodeUint64()
       _, max_bytes = self.decoder.DecodeUint64()  # pylint: disable=unused-variable
     else:
@@ -377,7 +392,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     _, buffer = self.decoder.ReadBytes(number_bytes)
     return buffer
 
-  def _DecodeV1ArrayBuffer(self, array_type: int, number_elements: int):
+  def _DecodeV1ArrayBuffer(self, array_type: int, number_elements: int) -> None:
     """Decodes a V1 ArrayBuffer.
 
     Not currently implemented.
@@ -385,7 +400,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     Raises:
       NotImplementedError: because it's not yet supported.
     """
-    raise NotImplementedError('V1 Array Buffer not supported')
+    raise NotImplementedError("V1 Array Buffer not supported")
 
   def DecodeValue(self) -> Any:
     """Decodes a Javascript value."""
@@ -394,7 +409,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
 
     tag, _ = self._PeekTagAndData()
     if tag == definitions.StructuredDataType.TRANSFER_MAP_HEADER:
-      raise errors.ParserError('Transfer Map is not supported.')
+      raise errors.ParserError("Transfer Map is not supported.")
 
     value = self._StartRead()
 
@@ -437,10 +452,10 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     """
     tag, _ = self._DecodeTagAndData()
     if tag != definitions.StructuredDataType.HEADER:
-      raise errors.ParserError('Header tag not found.')
+      raise errors.ParserError("Header tag not found.")
     return True
 
-  def _DecodeRegexp(self, flags: int):
+  def _DecodeRegexp(self, flags: int) -> types.RegExp:
     """Decodes a regular expression.
 
     Args:
@@ -451,7 +466,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     """
     tag, string_data = self._DecodeTagAndData()
     if tag != definitions.StructuredDataType.STRING:
-      raise errors.ParserError('String tag not found')
+      raise errors.ParserError("String tag not found")
 
     pattern = self._DecodeString(string_data)
     return types.RegExp(pattern=pattern, flags=str(flags))
@@ -463,6 +478,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       ParserError: when an unsupported StructuredDataType,
           StructuredCloneTag or unknown tag is read.
     """
+    value: Any = None
     tag, data = self._DecodeTagAndData()
     if tag == definitions.StructuredDataType.NULL:
       value = types.Null()
@@ -491,7 +507,8 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     elif tag == definitions.StructuredDataType.DATE_OBJECT:
       _, timestamp = self.decoder.DecodeDouble()
       value = datetime.datetime.fromtimestamp(
-          timestamp/1000, tz=datetime.timezone.utc)
+          timestamp / 1000, tz=datetime.timezone.utc
+      )
       self.all_objects.append(value)
     elif tag == definitions.StructuredDataType.REGEXP_OBJECT:
       value = self._DecodeRegexp(data)
@@ -532,20 +549,23 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       self._object_stack.append(value)
       self.all_objects.append(value)
     elif tag <= definitions.StructuredDataType.FLOAT_MAX:
-      value = struct.unpack('<d', struct.pack('<II', data, tag))[0]
-    elif (definitions.StructuredDataType.TYPED_ARRAY_V1_INT8 <= tag
-        <= definitions.StructuredDataType.TYPED_ARRAY_V1_UINT8_CLAMPED):
+      value = struct.unpack("<d", struct.pack("<II", data, tag))[0]
+    elif (
+        definitions.StructuredDataType.TYPED_ARRAY_V1_INT8
+        <= tag
+        <= definitions.StructuredDataType.TYPED_ARRAY_V1_UINT8_CLAMPED
+    ):
       value = self._DecodeTypedArray(tag, data)
-    elif tag in iter(definitions.StructuredDataType):
+    elif tag in definitions.StructuredDataType.__members__.values():
       raise errors.ParserError(
-          'Unsupported StructuredDataType',
-          definitions.StructuredDataType(tag))
-    elif tag in iter(definitions.StructuredCloneTags):
+          "Unsupported StructuredDataType", definitions.StructuredDataType(tag)
+      )
+    elif tag in definitions.StructuredCloneTags.__members__.values():
       raise errors.ParserError(
-          'Unsupported StructuredCloneTag',
-          definitions.StructuredCloneTags(tag))
+          "Unsupported StructuredCloneTag", definitions.StructuredCloneTags(tag)
+      )
     else:
-      raise errors.ParserError('Unknown tag', hex(tag))
+      raise errors.ParserError("Unknown tag", hex(tag))
 
     # align the stream to an 8 byte boundary
     offset = self.decoder.stream.tell() % 8
@@ -556,7 +576,8 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.StreamDecoder, base_offset: int = 0) -> Any:
+      cls, decoder: utils.StreamDecoder, base_offset: int = 0
+  ) -> Any:
     """Decodes the parsed JavaScript object from the StreamDecoder.
 
     Args:
@@ -584,14 +605,17 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
       while pos < len(raw_data):
         is_uncompressed = raw_data[pos]
         block_size = int.from_bytes(
-            raw_data[pos + 1:pos + 4], byteorder='little', signed=False)
+            raw_data[pos + 1 : pos + 4], byteorder="little", signed=False
+        )
         masked_checksum = int.from_bytes(  # pylint: disable=unused-variable
-            raw_data[pos + 4: pos + 9], byteorder='little', signed=False)
+            raw_data[pos + 4 : pos + 9], byteorder="little", signed=False
+        )
         if is_uncompressed:
-          uncompressed_data += raw_data[pos + 8: pos + 8 + block_size - 4]
+          uncompressed_data += raw_data[pos + 8 : pos + 8 + block_size - 4]
         else:
           uncompressed_data += snappy.decompress(
-              raw_data[pos + 8: pos + 8 + block_size - 4])
+              raw_data[pos + 8 : pos + 8 + block_size - 4]
+          )
         pos += block_size + 4
     else:
       uncompressed_data = snappy.decompress(raw_data)

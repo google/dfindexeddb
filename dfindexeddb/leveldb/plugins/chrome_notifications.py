@@ -17,30 +17,37 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 try:
   # pytype: disable=import-error
   from dfdatetime import webkit_time
-  from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as \
-      notification_pb2
+
+  from dfindexeddb.leveldb.plugins import notification_database_data_pb2 as notification_pb2
+
   # pytype: enable=import-error
   _has_import_dependencies = True
 except ImportError as err:
   _has_import_dependencies = False
-  logging.warning((
-      'Could not import dependencies for '
-      'leveldb.plugins.chrome_notifications: %s'), err)
+  logging.warning(
+      (
+          "Could not import dependencies for "
+          "leveldb.plugins.chrome_notifications: %s"
+      ),
+      err,
+  )
 
 from dfindexeddb.indexeddb.chromium import blink
-from dfindexeddb.leveldb.plugins import interface
-from dfindexeddb.leveldb.plugins import manager
+from dfindexeddb.leveldb.plugins import interface, manager
+
+if TYPE_CHECKING:
+  from dfindexeddb.leveldb import ldb, log
 
 
 @dataclasses.dataclass
 class ChromeNotificationRecord(interface.LeveldbPlugin):
   """Chrome notification record."""
+
   src_file: Optional[str] = None
   offset: Optional[int] = None
   key: Optional[str] = None
@@ -71,8 +78,7 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
 
   @classmethod
   def FromKeyValueRecord(
-      cls,
-      ldb_record
+      cls, ldb_record: ldb.KeyValueRecord | log.ParsedInternalKey
   ) -> ChromeNotificationRecord:
     record = cls()
     record.offset = ldb_record.offset
@@ -84,15 +90,17 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
       return record
 
     # pylint: disable-next=no-member,line-too-long
-    notification_proto = notification_pb2.NotificationDatabaseDataProto()  # pytype: disable=module-attr
+    notification_proto = notification_pb2.NotificationDatabaseDataProto()  # type: ignore[attr-defined]
     notification_proto.ParseFromString(ldb_record.value)
 
     record.origin = notification_proto.origin
     record.service_worker_registration_id = (
-        notification_proto.service_worker_registration_id)
+        notification_proto.service_worker_registration_id
+    )
     record.notification_title = notification_proto.notification_data.title
     record.notification_direction = (
-        notification_proto.notification_data.direction)
+        notification_proto.notification_data.direction
+    )
     record.notification_lang = notification_proto.notification_data.lang
     record.notification_body = notification_proto.notification_data.body
     record.notification_tag = notification_proto.notification_data.tag
@@ -100,7 +108,8 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
     record.notification_silent = notification_proto.notification_data.silent
     record.notification_data = notification_proto.notification_data.data
     record.notification_require_interaction = (
-        notification_proto.notification_data.require_interaction)
+        notification_proto.notification_data.require_interaction
+    )
     record.notification_time = webkit_time.WebKitTime(
         timestamp=notification_proto.notification_data.timestamp
     ).CopyToDateTimeString()
@@ -109,10 +118,12 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
     record.notification_image = notification_proto.notification_data.image
     record.notification_id = notification_proto.notification_id
     record.replaced_existing_notification = (
-        notification_proto.replaced_existing_notification)
+        notification_proto.replaced_existing_notification
+    )
     record.num_clicks = notification_proto.num_clicks
     record.num_action_button_clicks = (
-        notification_proto.num_action_button_clicks)
+        notification_proto.num_action_button_clicks
+    )
     record.creation_time = webkit_time.WebKitTime(
         timestamp=notification_proto.creation_time_millis
     ).CopyToDateTimeString()
@@ -123,7 +134,8 @@ class ChromeNotificationRecord(interface.LeveldbPlugin):
       return record
 
     notification_data = blink.V8ScriptValueDecoder(
-        raw_data=notification_proto.notification_data.data).Deserialize()
+        raw_data=notification_proto.notification_data.data
+    ).Deserialize()
     record.notification_data = notification_data
 
     return record

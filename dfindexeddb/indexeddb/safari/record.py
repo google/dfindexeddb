@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Safari IndexedDB records."""
-from dataclasses import dataclass
 import plistlib
 import sqlite3
 import sys
 import traceback
+from dataclasses import dataclass
 from typing import Any, Generator, Optional
 
 from dfindexeddb import errors
@@ -35,6 +35,7 @@ class ObjectStoreInfo:
     auto_inc: True if the object store uses auto incrementing IDs.
     database_name: the database name from the IDBDatabaseInfo table.
   """
+
   id: int
   name: str
   key_path: str
@@ -54,6 +55,7 @@ class IndexedDBRecord:
     database_name: the IndexedDB database name from the IDBDatabaseInfo table.
     record_id: the record ID from the Record table.
   """
+
   key: Any
   value: Any
   object_store_id: int
@@ -80,24 +82,28 @@ class FileReader:
     """
     self.filename = filename
 
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
-          'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseVersion"')
+          'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseVersion"'
+      )
       result = cursor.fetchone()
       self.database_version = result[0]
 
       cursor = conn.execute(
-          'SELECT value FROM IDBDatabaseInfo WHERE key = "MetadataVersion"')
+          'SELECT value FROM IDBDatabaseInfo WHERE key = "MetadataVersion"'
+      )
       result = cursor.fetchone()
       self.metadata_version = result[0]
 
       cursor = conn.execute(
-          'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseName"')
+          'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseName"'
+      )
       result = cursor.fetchone()
       self.database_name = result[0]
 
       cursor = conn.execute(
-          'SELECT value FROM IDBDatabaseInfo WHERE key = "MaxObjectStoreID"')
+          'SELECT value FROM IDBDatabaseInfo WHERE key = "MaxObjectStoreID"'
+      )
       result = cursor.fetchone()
       self.max_object_store_id = result[0]
 
@@ -107,9 +113,10 @@ class FileReader:
     Yields:
       ObjectStoreInfo instances.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
-          'SELECT id, name, keypath, autoinc FROM ObjectStoreInfo')
+          "SELECT id, name, keypath, autoinc FROM ObjectStoreInfo"
+      )
       results = cursor.fetchall()
       for result in results:
         key_path = plistlib.loads(result[2])
@@ -118,22 +125,25 @@ class FileReader:
             name=result[1],
             key_path=key_path,
             auto_inc=result[3],
-            database_name=self.database_name)
+            database_name=self.database_name,
+        )
 
   def RecordById(self, record_id: int) -> Optional[IndexedDBRecord]:
     """Returns an IndexedDBRecord for the given record_id.
 
     Returns:
-      the IndexedDBRecord or None if the record_id does not exist in the 
+      the IndexedDBRecord or None if the record_id does not exist in the
           database.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM '
-          'Records r '
-          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
-          'WHERE r.recordID = ?', (record_id, ))
+          "SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM "
+          "Records r "
+          "JOIN ObjectStoreInfo o ON r.objectStoreID == o.id "
+          "WHERE r.recordID = ?",
+          (record_id,),
+      )
       row = cursor.fetchone()
       if not row:
         return None
@@ -143,52 +153,56 @@ class FileReader:
           key=key,
           value=value,
           object_store_id=row[2],
-          object_store_name=row[3].decode('utf-8'),
+          object_store_name=row[3].decode("utf-8"),
           database_name=self.database_name,
-          record_id=row[4])
+          record_id=row[4],
+      )
 
   def RecordsByObjectStoreName(
-      self,
-      name: str
+      self, name: str
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore name.
 
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       for row in conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM '
-          'Records r '
-          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
-          'WHERE o.name = ?', (name, )):
+          "SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID FROM "
+          "Records r "
+          "JOIN ObjectStoreInfo o ON r.objectStoreID == o.id "
+          "WHERE o.name = ?",
+          (name,),
+      ):
         key = webkit.IDBKeyData.FromBytes(row[0]).data
         value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
         yield IndexedDBRecord(
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3].decode('utf-8'),
+            object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
-            record_id=row[4])
+            record_id=row[4],
+        )
 
   def RecordsByObjectStoreId(
-      self,
-      object_store_id: int
+      self, object_store_id: int
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore id.
 
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID '
-          'FROM Records r '
-          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id '
-          'WHERE o.id = ?', (object_store_id, ))
+          "SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID "
+          "FROM Records r "
+          "JOIN ObjectStoreInfo o ON r.objectStoreID == o.id "
+          "WHERE o.id = ?",
+          (object_store_id,),
+      )
       for row in cursor:
         key = webkit.IDBKeyData.FromBytes(row[0]).data
         value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
@@ -196,43 +210,46 @@ class FileReader:
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3].decode('utf-8'),
+            object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
-            record_id=row[4])
+            record_id=row[4],
+        )
 
   def Records(self) -> Generator[IndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID '
-          'FROM Records r '
-          'JOIN ObjectStoreInfo o ON r.objectStoreID == o.id')
+          "SELECT r.key, r.value, r.objectStoreID, o.name, r.recordID "
+          "FROM Records r "
+          "JOIN ObjectStoreInfo o ON r.objectStoreID == o.id"
+      )
       for row in cursor:
         try:
           key = webkit.IDBKeyData.FromBytes(row[0]).data
-        except(
+        except (
             errors.ParserError,
             errors.DecoderError,
-            NotImplementedError) as err:
-          print(
-              f'Error parsing IndexedDB key: {err}', file=sys.stderr)
-          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+            NotImplementedError,
+        ) as err:
+          print(f"Error parsing IndexedDB key: {err}", file=sys.stderr)
+          print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
           continue
         try:
           value = webkit.SerializedScriptValueDecoder.FromBytes(row[1])
-        except(
+        except (
             errors.ParserError,
             errors.DecoderError,
-            NotImplementedError) as err:
-          print(
-              f'Error parsing IndexedDB value: {err}', file=sys.stderr)
-          print(f'Traceback: {traceback.format_exc()}', file=sys.stderr)
+            NotImplementedError,
+        ) as err:
+          print(f"Error parsing IndexedDB value: {err}", file=sys.stderr)
+          print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
           continue
         yield IndexedDBRecord(
             key=key,
             value=value,
             object_store_id=row[2],
-            object_store_name=row[3].decode('utf-8'),
+            object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
-            record_id=row[4])
+            record_id=row[4],
+        )

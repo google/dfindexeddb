@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Firefox IndexedDB records."""
-from dataclasses import dataclass
+import pathlib
 import sqlite3
 import sys
 import traceback
+from dataclasses import dataclass
 from typing import Any, Generator, Optional
 
 from dfindexeddb import errors
@@ -34,6 +35,7 @@ class FirefoxObjectStoreInfo:
     auto_inc: the current auto-increment value.
     database_name: the database name from the database table.
   """
+
   id: int
   name: str
   key_path: str
@@ -53,6 +55,7 @@ class FirefoxIndexedDBRecord:
     object_store_name: the object store name from the object_store table.
     database_name: the IndexedDB database name from the database table.
   """
+
   key: Any
   value: Any
   file_ids: Optional[str]
@@ -80,10 +83,11 @@ class FileReader:
     """
     self.filename = filename
 
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
-          'SELECT name, origin, version, last_vacuum_time, last_analyze_time '
-          'FROM database')
+          "SELECT name, origin, version, last_vacuum_time, last_analyze_time "
+          "FROM database"
+      )
       result = cursor.fetchone()
       self.database_name = result[0]
       self.origin = result[1]
@@ -96,7 +100,7 @@ class FileReader:
     try:
       return gecko.IDBKey.FromBytes(key)
     except errors.ParserError as e:
-      print('failed to parse', key, file=sys.stderr)
+      print("failed to parse", key, file=sys.stderr)
       traceback.print_exception(type(e), e, e.__traceback__)
       return key
 
@@ -105,7 +109,7 @@ class FileReader:
     try:
       return gecko.JSStructuredCloneDecoder.FromBytes(value)
     except errors.ParserError as err:
-      print('failed to parse', value, file=sys.stderr)
+      print("failed to parse", value, file=sys.stderr)
       traceback.print_exception(type(err), err, err.__traceback__)
       return value
 
@@ -115,9 +119,10 @@ class FileReader:
     Yields:
       FirefoxObjectStoreInfo instances.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
-          'SELECT id, auto_increment, name, key_path FROM object_store')
+          "SELECT id, auto_increment, name, key_path FROM object_store"
+      )
       results = cursor.fetchall()
       for result in results:
         yield FirefoxObjectStoreInfo(
@@ -125,24 +130,26 @@ class FileReader:
             name=result[2],
             key_path=result[3],
             auto_inc=result[1],
-            database_name=self.database_name)
+            database_name=self.database_name,
+        )
 
   def RecordsByObjectStoreId(
-      self,
-      object_store_id: int
+      self, object_store_id: int
   ) -> Generator[FirefoxIndexedDBRecord, None, None]:
     """Returns FirefoxIndexedDBRecords by a given object store id.
 
     Args:
       object_store_id: the object store id.
     """
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name '
-          'FROM object_data od '
-          'JOIN object_store os ON od.object_store_id == os.id '
-          'WHERE os.id = ? ORDER BY od.key', (object_store_id, ))
+          "SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name "
+          "FROM object_data od "
+          "JOIN object_store os ON od.object_store_id == os.id "
+          "WHERE os.id = ? ORDER BY od.key",
+          (object_store_id,),
+      )
       for row in cursor:
         key = self._ParseKey(row[0])
         if row[3]:
@@ -154,17 +161,19 @@ class FileReader:
             value=value,
             object_store_id=row[2],
             file_ids=row[3],
-            object_store_name=row[4].decode('utf-8'),
-            database_name=self.database_name)
+            object_store_name=row[4].decode("utf-8"),
+            database_name=self.database_name,
+        )
 
   def Records(self) -> Generator[FirefoxIndexedDBRecord, None, None]:
     """Returns FirefoxIndexedDBRecords from the database."""
-    with sqlite3.connect(f'file:{self.filename}?mode=ro', uri=True) as conn:
+    with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
-          'SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name '
-          'FROM object_data od '
-          'JOIN object_store os ON od.object_store_id == os.id')
+          "SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name "
+          "FROM object_data od "
+          "JOIN object_store os ON od.object_store_id == os.id"
+      )
       for row in cursor:
         key = self._ParseKey(row[0])
         if row[3]:
@@ -176,5 +185,38 @@ class FileReader:
             value=value,
             object_store_id=row[2],
             file_ids=row[3],
-            object_store_name=row[4].decode('utf-8'),
-            database_name=self.database_name)
+            object_store_name=row[4].decode("utf-8"),
+            database_name=self.database_name,
+        )
+
+
+class FolderReader:
+  """A reader for a FireFox IndexedDB folder.
+
+  The path takes a general form of ./<origin>/idb/<filename>.[files|sqlite]
+
+  """
+
+  def __init__(self, folder_name: pathlib.Path):
+    """Initializes the FireFox IndexedDB FolderReader.
+
+    Args:
+      folder_name: the IndexedDB folder name (the origin folder).
+
+    Raises:
+      ValueError: if the folder does not exist or is not a directory.
+    """
+    self.folder_name = folder_name
+    if not self.folder_name.exists():
+      raise ValueError(f"{folder_name} does not exist.")
+    if not self.folder_name.is_dir():
+      raise ValueError(f"{folder_name} is not a directory.")
+
+    self.file_names: list[pathlib.Path] = []
+    for file_name in self.folder_name.rglob("idb/*.sqlite"):
+      self.file_names.append(file_name)
+
+  def Records(self) -> Generator[FirefoxIndexedDBRecord, None, None]:
+    """Returns FirefoxIndexedDBRecords from the IndexedDB folder."""
+    for file_name in self.file_names:
+      yield from FileReader(str(file_name)).Records()

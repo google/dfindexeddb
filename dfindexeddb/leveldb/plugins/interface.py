@@ -15,16 +15,14 @@
 """Interface for leveldb plugins."""
 from typing import Any, Union
 
-from dfindexeddb.leveldb import record
-from dfindexeddb.leveldb import ldb
-from dfindexeddb.leveldb import log
+from dfindexeddb.leveldb import ldb, log, record
+
 
 class LeveldbPlugin:
   """The base leveldb plugin class."""
 
   @classmethod
-  def FromLevelDBRecord(cls,
-      ldb_record: record.LevelDBRecord) -> Any:
+  def FromLevelDBRecord(cls, ldb_record: record.LevelDBRecord) -> Any:
     """Parses a leveldb record."""
     parsed_record = cls.FromKeyValueRecord(ldb_record.record)
     ldb_record.record = parsed_record
@@ -32,5 +30,6 @@ class LeveldbPlugin:
 
   @classmethod
   def FromKeyValueRecord(
-      cls, ldb_record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]) -> Any:
+      cls, ldb_record: Union[ldb.KeyValueRecord, log.ParsedInternalKey]
+  ) -> Any:
     """Parses a leveldb key value record."""

@@ -14,13 +14,13 @@
 # limitations under the License.
 """Utilities for dfindexeddb."""
 from __future__ import annotations
+
 import copy
 import dataclasses
 import io
 import os
 import struct
-from typing import BinaryIO, Tuple, Type, TypeVar
-
+from typing import Any, BinaryIO, Literal, Tuple, Type, TypeVar
 
 from dfindexeddb import errors
 
@@ -28,8 +28,8 @@ from dfindexeddb import errors
 class StreamDecoder:
   """A helper class to decode primitive data types from BinaryIO streams.
 
-   Attributes:
-    stream (BinaryIO): the binary stream.
+  Attributes:
+   stream (BinaryIO): the binary stream.
   """
 
   def __init__(self, stream: BinaryIO):
@@ -51,7 +51,7 @@ class StreamDecoder:
     self.stream.seek(current_offset, os.SEEK_SET)
     num_rem_bytes = end_offset - current_offset
     if num_rem_bytes < 0:
-      raise errors.DecoderError('Negative number of remaining bytes.')
+      raise errors.DecoderError("Negative number of remaining bytes.")
     return num_rem_bytes
 
   def ReadBytes(self, count: int = -1) -> Tuple[int, bytes]:
@@ -71,10 +71,11 @@ class StreamDecoder:
     offset = self.stream.tell()
     buffer = self.stream.read(count)
     if count == -1 and not buffer:
-      raise errors.DecoderError(f'No bytes available at offset {offset}')
+      raise errors.DecoderError(f"No bytes available at offset {offset}")
     if count != -1 and len(buffer) != count:
       raise errors.DecoderError(
-          f'Read {len(buffer)} bytes, but wanted {count} at offset {offset}')
+          f"Read {len(buffer)} bytes, but wanted {count} at offset {offset}"
+      )
     return offset, buffer
 
   def PeekBytes(self, count: int) -> Tuple[int, bytes]:
@@ -94,8 +95,8 @@ class StreamDecoder:
   def DecodeInt(
       self,
       byte_count: int = -1,
-      byte_order: str = 'little',
-      signed: bool = True
+      byte_order: Literal["big", "little"] = "little",
+      signed: bool = True,
   ) -> Tuple[int, int]:
     """Decodes an integer from the binary stream.
 
@@ -162,27 +163,27 @@ class StreamDecoder:
     """Returns a Tuple of the offset and a double-precision float."""
     offset, blob = self.ReadBytes(8)
     if little_endian:
-      value = struct.unpack('<d', blob)[0]
+      value = struct.unpack("<d", blob)[0]
     else:
-      value = struct.unpack('>d', blob)[0]
+      value = struct.unpack(">d", blob)[0]
     return offset, value
 
   def DecodeFloat(self, little_endian: bool = True) -> Tuple[int, float]:
     """Returns a Tuple of the offset and a single-precision float."""
     offset, blob = self.ReadBytes(4)
     if little_endian:
-      value = struct.unpack('<f', blob)[0]
+      value = struct.unpack("<f", blob)[0]
     else:
-      value = struct.unpack('>f', blob)[0]
+      value = struct.unpack(">f", blob)[0]
     return offset, value
 
   def DecodeVarint(self, max_bytes: int = 10) -> Tuple[int, int]:
     """Returns a Tuple of the offset and the decoded base128 varint."""
     offset = self.stream.tell()
     varint = 0
-    for i in range(0, max_bytes*7, 7):
+    for i in range(0, max_bytes * 7, 7):
       _, varint_part = self.ReadBytes(1)
-      varint |= (varint_part[0] & 0x7f) << i
+      varint |= (varint_part[0] & 0x7F) << i
       if not varint_part[0] >> 7:
         break
     return offset, varint
@@ -209,7 +210,7 @@ class StreamDecoder:
     return self.DecodeZigzagVarint(max_bytes=10)
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class FromDecoderMixin:
@@ -217,7 +218,8 @@ class FromDecoderMixin:
 
   @classmethod
   def FromDecoder(
-      cls: Type[T], decoder: StreamDecoder, base_offset: int = 0) -> T:
+      cls: Type[T], decoder: StreamDecoder, base_offset: int = 0
+  ) -> T:
     """Decodes a class type from the current position of a StreamDecoder.
 
     Args:
@@ -233,8 +235,7 @@ class FromDecoderMixin:
     raise NotImplementedError
 
   @classmethod
-  def FromStream(
-      cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:
+  def FromStream(cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:
     """Decodes a class type from the current position of a binary stream.
 
     Args:
@@ -245,11 +246,12 @@ class FromDecoderMixin:
       The class instance.
     """
     decoder = StreamDecoder(stream)
-    return cls.FromDecoder(decoder=decoder, base_offset=base_offset)
+    return cls.FromDecoder(  # type: ignore[attr-defined,no-any-return]
+        decoder=decoder, base_offset=base_offset
+    )
 
   @classmethod
-  def FromBytes(
-      cls: Type[T], raw_data: bytes, base_offset: int = 0) -> T:
+  def FromBytes(cls: Type[T], raw_data: bytes, base_offset: int = 0) -> T:
     """Parses a class type from raw bytes.
 
     Args:
@@ -260,36 +262,39 @@ class FromDecoderMixin:
       The class instance.
     """
     stream = io.BytesIO(raw_data)
-    return cls.FromStream(stream=stream, base_offset=base_offset)
+    return cls.FromStream(  # type: ignore[attr-defined,no-any-return]
+        stream=stream, base_offset=base_offset
+    )
 
 
-def asdict(obj, *, dict_factory=dict):  # pylint: disable=invalid-name
+def asdict(obj, *, dict_factory=dict) -> Any:  # type: ignore[no-untyped-def]  # pylint: disable=invalid-name
   """Custom implementation of the asdict dataclasses method to include the
   class name under the __type__ attribute name.
   """
   if not dataclasses.is_dataclass(obj):
-    raise TypeError('asdict() should be called on dataclass instances')
+    raise TypeError("asdict() should be called on dataclass instances")
   return _asdict_inner(obj, dict_factory)
 
 
-def _asdict_inner(obj, dict_factory):
+def _asdict_inner(obj, dict_factory):  # type: ignore[no-untyped-def]
   """Custom implementation of the _asdict_inner dataclasses method."""
   if dataclasses.is_dataclass(obj):
-    result = [('__type__', obj.__class__.__name__)]
+    result = [("__type__", obj.__class__.__name__)]
     for f in dataclasses.fields(obj):
       value = _asdict_inner(getattr(obj, f.name), dict_factory)
       result.append((f.name, value))
     return dict_factory(result)
 
-  if isinstance(obj, tuple) and hasattr(obj, '_fields'):
+  if isinstance(obj, tuple) and hasattr(obj, "_fields"):
     return type(obj)(*[_asdict_inner(v, dict_factory) for v in obj])
 
   if isinstance(obj, (list, tuple)):
     return type(obj)(_asdict_inner(v, dict_factory) for v in obj)
 
   if isinstance(obj, dict):
-    return type(obj)((_asdict_inner(k, dict_factory),
-                      _asdict_inner(v, dict_factory))
-                      for k, v in obj.items())
+    return type(obj)(
+        (_asdict_inner(k, dict_factory), _asdict_inner(v, dict_factory))
+        for k, v in obj.items()
+    )
 
   return copy.deepcopy(obj)

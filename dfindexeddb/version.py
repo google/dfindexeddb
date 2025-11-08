@@ -18,6 +18,6 @@
 __version__ = "20251018"
 
 
-def GetVersion():
+def GetVersion() -> str:
   """Returns the version information."""
   return __version__
