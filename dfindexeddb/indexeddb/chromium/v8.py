@@ -252,7 +252,7 @@ class ValueDeserializer:
     elif tag == definitions.V8SerializationTag.WASM_MEMORY_TRANSFER:
       self._ReadWasmMemory()
     elif tag == definitions.V8SerializationTag.HOST_OBJECT:
-      self.ReadHostObject()
+      parsed_object = self.ReadHostObject()
     elif (
         tag == definitions.V8SerializationTag.SHARED_OBJECT
         and self.version >= 15
