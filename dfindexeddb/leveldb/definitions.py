@@ -19,23 +19,25 @@ import enum
 BLOCK_RESTART_ENTRY_LENGTH = 4
 BLOCK_TRAILER_SIZE = 5
 TABLE_FOOTER_SIZE = 48
-TABLE_MAGIC = b'\x57\xfb\x80\x8b\x24\x75\x47\xdb'
+TABLE_MAGIC = b"\x57\xfb\x80\x8b\x24\x75\x47\xdb"
 
 PACKED_SEQUENCE_AND_TYPE_LENGTH = 8
 SEQUENCE_LENGTH = 7
 TYPE_LENGTH = 1
 
-MANIFEST_FILENAME_PATTERN = r'MANIFEST-[0-9]{6}'
+MANIFEST_FILENAME_PATTERN = r"MANIFEST-[0-9]{6}"
 
 
 class BlockCompressionType(enum.IntEnum):
   """Block compression types."""
+
   SNAPPY = 1
   ZSTD = 2
 
 
 class VersionEditTags(enum.IntEnum):
   """VersionEdit tags."""
+
   COMPARATOR = 1
   LOG_NUMBER = 2
   NEXT_FILE_NUMBER = 3
@@ -49,6 +51,7 @@ class VersionEditTags(enum.IntEnum):
 
 class LogFilePhysicalRecordType(enum.IntEnum):
   """Log file physical record types."""
+
   FULL = 1
   FIRST = 2
   MIDDLE = 3
@@ -57,5 +60,6 @@ class LogFilePhysicalRecordType(enum.IntEnum):
 
 class InternalRecordType(enum.IntEnum):
   """Internal record types."""
+
   DELETED = 0
   VALUE = 1

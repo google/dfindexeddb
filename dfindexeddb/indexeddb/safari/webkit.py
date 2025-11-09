@@ -15,14 +15,13 @@
 """Parsers for WebKit encoded JavaScript values."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
 import io
 import plistlib
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union
 
-from dfindexeddb import errors
-from dfindexeddb import utils
+from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions
 
@@ -37,6 +36,7 @@ class ArrayBufferView:
     offset: the offset of the view.
     length: the length of the view.
   """
+
   array_buffer_view_subtag: definitions.ArrayBufferViewSubtag
   buffer: bytes
   offset: int
@@ -51,6 +51,7 @@ class ResizableArrayBuffer:
     buffer: the buffer.
     max_length: the maximum length of the buffer (for resizing).
   """
+
   buffer: bytes
   max_length: int
 
@@ -66,6 +67,7 @@ class FileData:
     name: the file name.
     last_modified: the last modified timestamp.
   """
+
   path: str
   url: str
   type: str
@@ -80,6 +82,7 @@ class FileList:
   Attributes:
     files: the list of files.
   """
+
   files: List[FileData]
 
 
@@ -92,15 +95,14 @@ class IDBKeyData(utils.FromDecoderMixin):
     key_type: the IDB Key Type.
     data: the key data.
   """
+
   offset: int
   key_type: definitions.SIDBKeyType
-  data: Union[float, datetime, str, bytes, list]
+  data: Union[float, datetime, str, bytes, list[Any], None]
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.StreamDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.StreamDecoder, base_offset: int = 0
   ) -> IDBKeyData:
     """Decodes an IDBKeyData from the current position of decoder.
 
@@ -116,18 +118,22 @@ class IDBKeyData(utils.FromDecoderMixin):
       ParserError: when the key version is not found or an unknown key type is
           encountered or an old-style PropertyList key type is found.
     """
-    def _DecodeKeyBuffer(key_type):
+
+    def _DecodeKeyBuffer(
+        key_type: definitions.SIDBKeyType,
+    ) -> Union[float, datetime, str, bytes, list[Any], None]:
+      data: Union[float, datetime, str, bytes, list[Any], None] = None
       if key_type == definitions.SIDBKeyType.MIN:
         data = None
       if key_type == definitions.SIDBKeyType.NUMBER:
         _, data = decoder.DecodeDouble()
       elif key_type == definitions.SIDBKeyType.DATE:
         _, timestamp = decoder.DecodeDouble()
-        data = datetime.utcfromtimestamp(timestamp/1000)
+        data = datetime.utcfromtimestamp(timestamp / 1000)
       elif key_type == definitions.SIDBKeyType.STRING:
         _, length = decoder.DecodeUint32()
-        _, raw_data = decoder.ReadBytes(length*2)
-        data = raw_data.decode('utf-16-le')
+        _, raw_data = decoder.ReadBytes(length * 2)
+        data = raw_data.decode("utf-16-le")
       elif key_type == definitions.SIDBKeyType.BINARY:
         _, length = decoder.DecodeUint32()
         _, data = decoder.ReadBytes(length)
@@ -135,33 +141,30 @@ class IDBKeyData(utils.FromDecoderMixin):
         _, length = decoder.DecodeUint64()
         data = []
         for _ in range(length):
-          _, key_type = decoder.DecodeUint8()
-          element = _DecodeKeyBuffer(key_type)
+          _, next_key_type = decoder.DecodeUint8()
+          element = _DecodeKeyBuffer(definitions.SIDBKeyType(next_key_type))
           data.append(element)
       else:
-        raise errors.ParserError('Unknown definitions.SIDBKeyType found.')
+        raise errors.ParserError("Unknown definitions.SIDBKeyType found.")
       return data
 
     offset, version_header = decoder.DecodeUint8()
     if version_header != definitions.SIDB_KEY_VERSION:
-      raise errors.ParserError('SIDBKeyVersion not found.')
+      raise errors.ParserError("SIDBKeyVersion not found.")
 
     _, raw_key_type = decoder.DecodeUint8()
-    key_type = definitions.SIDBKeyType(raw_key_type)
 
     # "Old-style key is characterized by this magic character that
     # begins serialized PropertyLists
-    if key_type == b'b':
-      raise errors.ParserError('Old-style PropertyList key type found.')
+    if raw_key_type == ord(b"b"):
+      raise errors.ParserError("Old-style PropertyList key type found.")
+    key_type = definitions.SIDBKeyType(raw_key_type)
     data = _DecodeKeyBuffer(key_type)
 
-    return cls(
-        offset=offset+base_offset,
-        key_type=key_type,
-        data=data)
+    return cls(offset=offset + base_offset, key_type=key_type, data=data)
 
 
-class SerializedScriptValueDecoder():
+class SerializedScriptValueDecoder:
   """Decodes a Serialized Script Value from a stream of bytes.
 
   Attributes:
@@ -170,16 +173,17 @@ class SerializedScriptValueDecoder():
     constant_pool: the constant pool.
     object_pool: the object pool.
   """
+
   def __init__(self, stream: io.BytesIO):
     self.decoder = utils.StreamDecoder(stream)
-    self.version = None
-    self.constant_pool = []
-    self.object_pool = []
+    self.version: int = 0
+    self.constant_pool: list[str] = []
+    self.object_pool: list[Any] = []
 
   def PeekTag(self) -> int:
     """Peeks a tag from the current position."""
     _, peeked_bytes = self.decoder.PeekBytes(4)
-    return int.from_bytes(peeked_bytes, byteorder='little')
+    return int.from_bytes(peeked_bytes, byteorder="little")
 
   def PeekSerializationTag(self) -> definitions.SerializationTag:
     """Peeks a SerializationTag from the current position.
@@ -192,7 +196,7 @@ class SerializedScriptValueDecoder():
       return definitions.SerializationTag(terminal_byte[0])
     except ValueError as error:
       raise errors.ParserError(
-          f'Invalid SerializationTag {terminal_byte} at offset {offset}'
+          f"Invalid SerializationTag {terminal_byte!r} at offset {offset}"
       ) from error
 
   def DecodeSerializationTag(self) -> Tuple[int, definitions.SerializationTag]:
@@ -209,7 +213,8 @@ class SerializedScriptValueDecoder():
       return offset, definitions.SerializationTag(terminal_byte)
     except ValueError as error:
       raise errors.ParserError(
-          f'Invalid terminal {terminal_byte} at offset {offset}') from error
+          f"Invalid terminal {terminal_byte} at offset {offset}"
+      ) from error
 
   def DecodeArray(self) -> types.JSArray:
     """Decodes an Array value.
@@ -230,7 +235,7 @@ class SerializedScriptValueDecoder():
 
     offset, terminator_tag = self.decoder.DecodeUint32()
     if terminator_tag != definitions.TERMINATOR_TAG:
-      raise errors.ParserError(f'Terminator tag not found at offset {offset}.')
+      raise errors.ParserError(f"Terminator tag not found at offset {offset}.")
 
     offset, tag = self.decoder.DecodeUint32()
     if tag == definitions.NON_INDEX_PROPERTIES_TAG:
@@ -240,13 +245,13 @@ class SerializedScriptValueDecoder():
         _, tag = self.decoder.DecodeUint32()
         array.properties[name] = value
     elif tag != definitions.TERMINATOR_TAG:
-      raise errors.ParserError(f'Terminator tag not found at offset {offset}.')
+      raise errors.ParserError(f"Terminator tag not found at offset {offset}.")
     return array
 
   def DecodeObject(self) -> Dict[str, Any]:
     """Decodes an Object value."""
     tag = self.PeekTag()
-    js_object = {}
+    js_object: dict[str, Any] = {}
     self.object_pool.append(js_object)
     while tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
@@ -271,37 +276,37 @@ class SerializedScriptValueDecoder():
     """
     peeked_tag = self.PeekTag()
     if peeked_tag == definitions.TERMINATOR_TAG:
-      raise errors.ParserError('Unexpected TerminatorTag found')
+      raise errors.ParserError("Unexpected TerminatorTag found")
 
     if peeked_tag == definitions.STRING_POOL_TAG:
       _ = self.decoder.DecodeUint32()
-      if len(self.constant_pool) <= 0xff:
+      if len(self.constant_pool) <= 0xFF:
         _, cp_index = self.decoder.DecodeUint8()
-      elif len(self.constant_pool) <= 0xffff:
+      elif len(self.constant_pool) <= 0xFFFF:
         _, cp_index = self.decoder.DecodeUint16()
-      elif len(self.constant_pool) <= 0xffffffff:
+      elif len(self.constant_pool) <= 0xFFFFFFFF:
         _, cp_index = self.decoder.DecodeUint32()
       else:
-        raise errors.ParserError('Unexpected constant pool size value.')
+        raise errors.ParserError("Unexpected constant pool size value.")
       return self.constant_pool[cp_index]
 
     _, length_with_8bit_flag = self.decoder.DecodeUint32()
     if length_with_8bit_flag == definitions.TERMINATOR_TAG:
-      raise errors.ParserError('Disallowed string length found.')
+      raise errors.ParserError("Disallowed string length found.")
 
     length = length_with_8bit_flag & 0x7FFFFFFF
     is_8bit = length_with_8bit_flag & definitions.STRING_DATA_IS_8BIT_FLAG
 
     if is_8bit:
       _, characters = self.decoder.ReadBytes(length)
-      value = characters.decode('latin-1')
+      value = characters.decode("latin-1")
     else:
-      _, characters = self.decoder.ReadBytes(2*length)
+      _, characters = self.decoder.ReadBytes(2 * length)
       try:
-        value = characters.decode('utf-16-le')
+        value = characters.decode("utf-16-le")
       except UnicodeDecodeError as exc:
         raise errors.ParserError(
-            f'Unable to decode {len(characters)} characters as utf-16-le'
+            f"Unable to decode {len(characters)} characters as utf-16-le"
         ) from exc
     self.constant_pool.append(value)
     return value
@@ -309,7 +314,7 @@ class SerializedScriptValueDecoder():
   def DecodeDate(self) -> datetime:
     """Decodes a Date value."""
     _, timestamp = self.decoder.DecodeDouble()
-    value = datetime.utcfromtimestamp(timestamp/1000)
+    value = datetime.utcfromtimestamp(timestamp / 1000)
     return value
 
   def DecodeFileData(self) -> FileData:
@@ -325,7 +330,8 @@ class SerializedScriptValueDecoder():
         url=url,
         type=file_type,
         name=name,
-        last_modified=last_modified)
+        last_modified=last_modified,
+    )
 
   def DecodeFileList(self) -> FileList:
     """Decodes a FileList value."""
@@ -349,11 +355,11 @@ class SerializedScriptValueDecoder():
 
     # TODO: make this a dataclass?
     return {
-      'width': width,
-      'height': height,
-      'length': length,
-      'data': data,
-      'color_space': color_space
+        "width": width,
+        "height": height,
+        "length": length,
+        "data": data,
+        "color_space": color_space,
     }
 
   def DecodeBlob(self) -> Dict[str, Any]:
@@ -368,10 +374,10 @@ class SerializedScriptValueDecoder():
 
     # TODO: make this a dataclass?
     return {
-      'url': url,
-      'blob_type': blob_type,
-      'size': size,
-      'memory_cost': memory_cost
+        "url": url,
+        "blob_type": blob_type,
+        "size": size,
+        "memory_cost": memory_cost,
     }
 
   def DecodeRegExp(self) -> types.RegExp:
@@ -380,10 +386,12 @@ class SerializedScriptValueDecoder():
     flags = self.DecodeStringData()
     return types.RegExp(pattern=pattern, flags=flags)
 
-  def DecodeMapData(self) -> dict:
+  def DecodeMapData(self) -> dict[str, Any]:
     """Decodes a Map value."""
     tag = self.PeekSerializationTag()
-    js_map = {}   # TODO: make this into a JSMap (like JSArray/JSSet)
+    js_map: dict[str, Any] = (
+        {}
+    )  # TODO: make this into a JSMap (like JSArray/JSSet)
     self.object_pool.append(js_map)
 
     while tag != definitions.SerializationTag.NON_MAP_PROPERTIES:
@@ -402,7 +410,7 @@ class SerializedScriptValueDecoder():
       js_map[name] = value
       pool_tag = self.PeekTag()
 
-    _, tag = self.decoder.DecodeUint32()
+    _, _ = self.decoder.DecodeUint32()
     return js_map
 
   def DecodeSetData(self) -> types.JSSet:
@@ -424,13 +432,13 @@ class SerializedScriptValueDecoder():
       name = self.DecodeStringData()
       value = self.DecodeValue()
       js_set.properties[name] = value
-      pool_tag = self.decoder.PeekBytes(4)
+      pool_tag = self.PeekTag()
 
     # consume the TerminatorTag
-    _, tag = self.decoder.DecodeUint32()
+    _, _ = self.decoder.DecodeUint32()
     return js_set
 
-  def DecodeCryptoKey(self) -> bytes:
+  def DecodeCryptoKey(self) -> Any:
     """Decodes a CryptoKey value."""
     _, wrapped_key_length = self.decoder.DecodeUint32()
     _, wrapped_key = self.decoder.ReadBytes(wrapped_key_length)
@@ -441,11 +449,11 @@ class SerializedScriptValueDecoder():
     """Decodes a BigIntData value."""
     _, sign = self.decoder.DecodeUint8()
     _, number_of_elements = self.decoder.DecodeUint32()
-    contents = []
+    contents = bytearray()
     for _ in range(number_of_elements):
       _, element = self.decoder.ReadBytes(8)
       contents.extend(element)
-    value = int.from_bytes(contents, byteorder='little', signed=bool(sign))
+    value = int.from_bytes(contents, byteorder="little", signed=bool(sign))
     return value
 
   def DecodeArrayBuffer(self) -> bytes:
@@ -494,24 +502,28 @@ class SerializedScriptValueDecoder():
     """
     _, array_buffer_view_subtag = self.decoder.DecodeUint8()
     array_buffer_view_subtag = definitions.ArrayBufferViewSubtag(
-        array_buffer_view_subtag)
+        array_buffer_view_subtag
+    )
     _, byte_offset = self.decoder.DecodeUint64()
     _, byte_length = self.decoder.DecodeUint64()
     _, next_serialization_tag = self.DecodeSerializationTag()
 
     if next_serialization_tag == definitions.SerializationTag.ARRAY_BUFFER:
       value = self.DecodeArrayBuffer()
-    elif (next_serialization_tag ==
-          definitions.SerializationTag.OBJECT_REFERENCE):
+    elif (
+        next_serialization_tag == definitions.SerializationTag.OBJECT_REFERENCE
+    ):
       value = self.DecodeObjectReference()
     else:
       raise errors.ParserError(
-          f'Unexpected serialization tag {next_serialization_tag}.')
+          f"Unexpected serialization tag {next_serialization_tag}."
+      )
     return ArrayBufferView(
         array_buffer_view_subtag=array_buffer_view_subtag,
         buffer=value,
         offset=byte_offset,
-        length=byte_length)
+        length=byte_length,
+    )
 
   def DecodeSerializedValue(self) -> Any:
     """Decodes a serialized value.
@@ -525,7 +537,8 @@ class SerializedScriptValueDecoder():
     _, current_version = self.decoder.DecodeUint32()
     if current_version != definitions.CURRENT_VERSION:
       raise errors.ParserError(
-          f'{current_version} is not the expected CurrentVersion')
+          f"{current_version} is not the expected CurrentVersion"
+      )
     _, value = self.DecodeValue()
     return value
 
@@ -538,6 +551,7 @@ class SerializedScriptValueDecoder():
     Raises:
       ParserError when an unhandled SerializationTag is found.
     """
+    value: Any = None
     offset, tag = self.DecodeSerializationTag()
     if tag == definitions.SerializationTag.ARRAY:
       value = self.DecodeArray()
@@ -572,7 +586,7 @@ class SerializedScriptValueDecoder():
     elif tag == definitions.SerializationTag.STRING:
       value = self.DecodeStringData()
     elif tag == definitions.SerializationTag.EMPTY_STRING:
-      value = ''
+      value = ""
     elif tag == definitions.SerializationTag.REG_EXP:
       value = self.DecodeRegExp()
     elif tag == definitions.SerializationTag.OBJECT_REFERENCE:
@@ -594,7 +608,7 @@ class SerializedScriptValueDecoder():
       value = self.DecodeStringData()
       self.object_pool.append(value)
     elif tag == definitions.SerializationTag.EMPTY_STRING_OBJECT:
-      value = ''
+      value = ""
       self.object_pool.append(value)
     elif tag == definitions.SerializationTag.NUMBER_OBJECT:
       _, value = self.decoder.DecodeDouble()
@@ -613,7 +627,7 @@ class SerializedScriptValueDecoder():
       value = self.DecodeBigIntData()
       self.object_pool.append(value)
     else:
-      raise errors.ParserError(f'Unhandled Serialization Tag {tag.name} found.')
+      raise errors.ParserError(f"Unhandled Serialization Tag {tag.name} found.")
     return offset, value
 
   @classmethod

@@ -14,17 +14,15 @@
 # limitations under the License.
 """Parsers for blink javascript serialized objects."""
 from __future__ import annotations
-from dataclasses import dataclass
+
 import io
+from dataclasses import dataclass
 from typing import Any, Optional, Union
 
 import snappy
 
-from dfindexeddb import errors
-from dfindexeddb import utils
-from dfindexeddb.indexeddb.chromium import definitions
-from dfindexeddb.indexeddb.chromium import v8
-
+from dfindexeddb import errors, utils
+from dfindexeddb.indexeddb.chromium import definitions, v8
 
 _MS_PER_SECOND = 1000
 
@@ -36,12 +34,14 @@ class AudioData:
   Attributes:
     audio_frame_index: the Audio Frame index.
   """
+
   audio_frame_index: int
 
 
 @dataclass
 class BaseIndex:
   """A base index class."""
+
   index: int
 
 
@@ -59,6 +59,7 @@ class Blob:
     type: the type of the Blob.
     size: the size of the Blob.
   """
+
   uuid: str
   type: str
   size: int
@@ -80,9 +81,11 @@ class CryptoKey:
     usages: the CryptoKey usage.
     key_data: the raw key data.
   """
+
   algorithm_parameters: dict[str, Any]
   key_type: Union[
-      definitions.WebCryptoKeyType, definitions.AsymmetricCryptoKeyType]
+      definitions.WebCryptoKeyType, definitions.AsymmetricCryptoKeyType
+  ]
   extractable: bool
   usages: definitions.CryptoKeyUsage
   key_data: bytes
@@ -97,6 +100,7 @@ class DOMException:
     message: the message.
     stack_unused: the stack unused.
   """
+
   name: str
   message: str
   stack_unused: str
@@ -111,6 +115,7 @@ class DOMFileSystem:
     name: the name.
     root_url: the root URL.
   """
+
   raw_type: int
   name: str
   root_url: str
@@ -123,6 +128,7 @@ class DOMMatrix2D:
   Attributes:
     values: the values.
   """
+
   values: list[float]
 
 
@@ -138,6 +144,7 @@ class DOMMatrix:
   Attributes:
     values: the values.
   """
+
   values: list[float]
 
 
@@ -156,6 +163,7 @@ class DOMPoint:
     z: the Z coordinate.
     w: the W coordinate.
   """
+
   x: float
   y: float
   z: float
@@ -177,6 +185,7 @@ class DOMQuad:
     p3: the third point.
     p4: the fourth point.
   """
+
   p1: DOMPoint
   p2: DOMPoint
   p3: DOMPoint
@@ -193,6 +202,7 @@ class DOMRect:
     width: the width.
     height: the height.
   """
+
   x: float
   y: float
   width: float
@@ -229,6 +239,7 @@ class File:
     last_modified_ms: the file last modified in milliseconds.
     is_user_visible: True if the file is user visible.
   """
+
   path: str
   name: Optional[str]
   relative_path: Optional[str]
@@ -252,6 +263,7 @@ class FileList:
   Attributes:
     files: the list of files.
   """
+
   files: list[File]
 
 
@@ -262,6 +274,7 @@ class FileListIndex:
   Attributes:
     file_indexes: the list of file indexes.
   """
+
   file_indexes: list[FileIndex]
 
 
@@ -273,6 +286,7 @@ class FileSystemHandle:
     name: the file system handle name.
     token_index: the file system token index.
   """
+
   name: str
   token_index: int
 
@@ -325,6 +339,7 @@ class TransformStreamTransfer(BaseIndex):
 @dataclass
 class OffscreenCanvasTransfer:
   """A Javascript Offscreen Canvas Transfer."""
+
   width: int
   height: int
   canvas_id: int
@@ -341,6 +356,7 @@ class UnguessableToken:
     high: the high part.
     low: the low part.
   """
+
   high: int
   low: int
 
@@ -359,17 +375,20 @@ class V8ScriptValueDecoder:
         value.
     version (int): the blink version.
   """
+
   _MIN_VERSION_FOR_SEPARATE_ENVELOPE = 16
 
   # As defined in trailer_reader.h
   _MIN_WIRE_FORMAT_VERSION = 21
 
   def __init__(self, raw_data: bytes):
-    self.deserializer = None
     self.raw_data = raw_data
+    self.deserializer: v8.ValueDeserializer = v8.ValueDeserializer(
+        io.BytesIO(self.raw_data), delegate=self
+    )
     self.version = 0
-    self.trailer_offset = None
-    self.trailer_size = None
+    self.trailer_offset: int | None = None
+    self.trailer_size: int | None = None
 
   def _ReadVersionEnvelope(self) -> int:
     """Reads the Blink version envelope.
@@ -394,14 +413,17 @@ class V8ScriptValueDecoder:
 
     if self.version >= self._MIN_WIRE_FORMAT_VERSION:
       _, trailer_offset_tag = decoder.DecodeUint8()
-      if (trailer_offset_tag !=
-          definitions.BlinkSerializationTag.TRAILER_OFFSET):
-        raise errors.ParserError('Trailer offset not found')
+      if trailer_offset_tag != definitions.BlinkSerializationTag.TRAILER_OFFSET:
+        raise errors.ParserError("Trailer offset not found")
       _, self.trailer_offset = decoder.DecodeInt(
-          byte_count=8, byte_order='big', signed=False)
+          byte_count=8, byte_order="big", signed=False
+      )
       _, self.trailer_size = decoder.DecodeInt(
-          byte_count=4, byte_order='big', signed=False)
-      trailer_offset_data_size = 1 + 8 + 4 # 1 + sizeof(uint64) + sizeof(uint32)
+          byte_count=4, byte_order="big", signed=False
+      )
+      trailer_offset_data_size = (
+          1 + 8 + 4
+      )  # 1 + sizeof(uint64) + sizeof(uint32)
       consumed_bytes += trailer_offset_data_size
       if consumed_bytes >= len(self.raw_data):
         return 0
@@ -419,8 +441,8 @@ class V8ScriptValueDecoder:
     _, length_bytes = self.deserializer.decoder.DecodeUint32Varint()
 
     algorithm_parameters = {
-        'id': crypto_key_algorithm_id,
-        'length_bits': length_bytes*8
+        "id": crypto_key_algorithm_id,
+        "length_bits": length_bytes * 8,
     }
 
     return definitions.WebCryptoKeyType.SECRET, algorithm_parameters
@@ -436,14 +458,14 @@ class V8ScriptValueDecoder:
     crypto_key_algorithm = definitions.CryptoKeyAlgorithm(raw_hash)
 
     algorithm_parameters = {
-        'id': crypto_key_algorithm,
-        'length_bits': length_bytes*8
+        "id": crypto_key_algorithm,
+        "length_bits": length_bytes * 8,
     }
 
     return definitions.WebCryptoKeyType.SECRET, algorithm_parameters
 
   def _ReadRSAHashedKey(
-      self
+      self,
   ) -> tuple[definitions.AsymmetricCryptoKeyType, dict[str, Any]]:
     """Reads an RSA Hashed CryptoKey.
 
@@ -459,23 +481,24 @@ class V8ScriptValueDecoder:
     _, modulus_length_bits = self.deserializer.decoder.DecodeUint32Varint()
     _, public_exponent_size = self.deserializer.decoder.DecodeUint32Varint()
     _, public_exponent_bytes = self.deserializer.decoder.ReadBytes(
-        count=public_exponent_size)
+        count=public_exponent_size
+    )
 
     _, raw_hash = self.deserializer.decoder.DecodeUint32Varint()
     hash_algorithm = definitions.CryptoKeyAlgorithm(raw_hash)
 
     algorithm_parameters = {
-        'id': crypto_key_algorithm,
-        'modulus_length_bits': modulus_length_bits,
-        'public_exponent_size': public_exponent_size,
-        'public_exponent_bytes': public_exponent_bytes,
-        'hash': hash_algorithm
+        "id": crypto_key_algorithm,
+        "modulus_length_bits": modulus_length_bits,
+        "public_exponent_size": public_exponent_size,
+        "public_exponent_bytes": public_exponent_bytes,
+        "hash": hash_algorithm,
     }
 
     return key_type, algorithm_parameters
 
   def _ReadECKey(
-      self
+      self,
   ) -> tuple[definitions.AsymmetricCryptoKeyType, dict[str, Any]]:
     """Reads an EC Key parameters from the current decoder position.
 
@@ -492,14 +515,14 @@ class V8ScriptValueDecoder:
     named_curve_type = definitions.NamedCurve(raw_named_curve)
 
     algorithm_parameters = {
-        'crypto_key_algorithm': crypto_key_algorithm,
-        'named_curve_type': named_curve_type
+        "crypto_key_algorithm": crypto_key_algorithm,
+        "named_curve_type": named_curve_type,
     }
 
     return key_type, algorithm_parameters
 
   def _ReadED25519Key(
-      self
+      self,
   ) -> tuple[definitions.AsymmetricCryptoKeyType, dict[str, Any]]:
     """Reads a ED25519 CryptoKey from the current decoder position.
 
@@ -510,17 +533,14 @@ class V8ScriptValueDecoder:
     crypto_key_algorithm = definitions.CryptoKeyAlgorithm(raw_id)
 
     _, raw_key_type = self.deserializer.decoder.DecodeUint32Varint()
-    key_type = definitions.AsymmetricCryptoKeyType(
-        raw_key_type)
+    key_type = definitions.AsymmetricCryptoKeyType(raw_key_type)
 
-    algorithm_parameters = {
-        'crypto_key_algorithm': crypto_key_algorithm
-    }
+    algorithm_parameters = {"crypto_key_algorithm": crypto_key_algorithm}
 
     return key_type, algorithm_parameters
 
   def ReadNoParamsKey(
-      self
+      self,
   ) -> tuple[definitions.WebCryptoKeyType, dict[str, Any]]:
     """Reads a No Params CryptoKey from the current decoder position.
 
@@ -530,9 +550,7 @@ class V8ScriptValueDecoder:
     _, raw_id = self.deserializer.decoder.DecodeUint32Varint()
     crypto_key_algorithm = definitions.CryptoKeyAlgorithm(raw_id)
 
-    algorithm_parameters = {
-        'crypto_key_algorithm': crypto_key_algorithm
-    }
+    algorithm_parameters = {"crypto_key_algorithm": crypto_key_algorithm}
 
     return definitions.WebCryptoKeyType.SECRET, algorithm_parameters
 
@@ -573,12 +591,15 @@ class V8ScriptValueDecoder:
     path = self.deserializer.ReadUTF8String()
     name = self.deserializer.ReadUTF8String() if self.version >= 4 else None
     relative_path = (
-        self.deserializer.ReadUTF8String() if self.version >= 4 else None)
+        self.deserializer.ReadUTF8String() if self.version >= 4 else None
+    )
     uuid = self.deserializer.ReadUTF8String()
     file_type = self.deserializer.ReadUTF8String()
     has_snapshot = (
         self.deserializer.decoder.DecodeUint32Varint()[1]
-        if self.version >= 4 else 0)
+        if self.version >= 4
+        else 0
+    )
 
     if has_snapshot:
       _, size = self.deserializer.decoder.DecodeUint64Varint()
@@ -591,7 +612,9 @@ class V8ScriptValueDecoder:
 
     is_user_visible = (
         self.deserializer.decoder.DecodeUint32Varint()[1]
-        if self.version >= 7 else 1)
+        if self.version >= 7
+        else 1
+    )
 
     return File(
         path=path,
@@ -602,7 +625,8 @@ class V8ScriptValueDecoder:
         has_snapshot=has_snapshot,
         size=size,
         last_modified_ms=last_modified_ms,
-        is_user_visible=is_user_visible)
+        is_user_visible=is_user_visible,
+    )
 
   def _ReadFileIndex(self) -> Optional[FileIndex]:
     """Reads a FileIndex from the current position.
@@ -645,18 +669,18 @@ class V8ScriptValueDecoder:
       file_indexes.append(decoded_file_index)
     return FileListIndex(file_indexes=file_indexes)
 
-  def _ReadImageBitmap(self):
+  def _ReadImageBitmap(self) -> None:
     """Reads an ImageBitmap."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadImageBitmap')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadImageBitmap")
 
   def _ReadImageBitmapTransfer(self) -> ImageBitmapTransfer:
     """Reads an ImageBitmapTransfer."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return ImageBitmapTransfer(index=index)
 
-  def _ReadImageData(self):
+  def _ReadImageData(self) -> None:
     """Reads an ImageData from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadImageData')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadImageData")
 
   def _ReadDOMPoint(self) -> DOMPoint:
     """Reads a DOMPoint from the current position."""
@@ -728,7 +752,7 @@ class V8ScriptValueDecoder:
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return MojoHandle(index=index)
 
-  def _ReadOffscreenCanvasTransfer(self):
+  def _ReadOffscreenCanvasTransfer(self) -> OffscreenCanvasTransfer:
     """Reads a Offscreen Canvas Transfer from the current position."""
     _, width = self.deserializer.decoder.DecodeUint32Varint()
     _, height = self.deserializer.decoder.DecodeUint32Varint()
@@ -743,7 +767,8 @@ class V8ScriptValueDecoder:
         canvas_id=canvas_id,
         client_id=client_id,
         sink_id=sink_id,
-        filter_quality=filter_quality)
+        filter_quality=filter_quality,
+    )
 
   def _ReadReadableStreamTransfer(self) -> ReadableStreamTransfer:
     """Reads a Readable Stream Transfer from the current position."""
@@ -788,6 +813,10 @@ class V8ScriptValueDecoder:
     """
     _, raw_key_byte = self.deserializer.decoder.DecodeUint8()
     key_byte = definitions.CryptoKeySubTag(raw_key_byte)
+    algorithm_parameters: dict[str, Any] = {}
+    key_type: Union[
+        definitions.WebCryptoKeyType, definitions.AsymmetricCryptoKeyType, None
+    ] = None
     if key_byte == definitions.CryptoKeySubTag.AES_KEY:
       key_type, algorithm_parameters = self._ReadAESKey()
     elif key_byte == definitions.CryptoKeySubTag.HMAC_KEY:
@@ -801,7 +830,7 @@ class V8ScriptValueDecoder:
     elif key_byte == definitions.CryptoKeySubTag.NO_PARAMS_KEY:
       key_type, algorithm_parameters = self.ReadNoParamsKey()
     else:
-      raise errors.ParserError('Unexpected CryptoKeySubTag')
+      raise errors.ParserError("Unexpected CryptoKeySubTag")
 
     _, raw_usages = self.deserializer.decoder.DecodeUint32Varint()
     usages = definitions.CryptoKeyUsage(raw_usages)
@@ -816,7 +845,7 @@ class V8ScriptValueDecoder:
         algorithm_parameters=algorithm_parameters,
         extractable=extractable,
         usages=usages,
-        key_data=key_data
+        key_data=key_data,
     )
 
   def _ReadAudioData(self) -> AudioData:
@@ -852,26 +881,26 @@ class V8ScriptValueDecoder:
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return EncodedVideoChunk(index=index)
 
-  def _ReadMediaStreamTrack(self):
+  def _ReadMediaStreamTrack(self) -> None:
     """Reads the media stream track from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadMediaStreamTrack')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadMediaStreamTrack")
 
-  def _ReadCropTarget(self):
+  def _ReadCropTarget(self) -> None:
     """Reads the crop target from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadCropTarget')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadCropTarget")
 
-  def _ReadRestrictionTarget(self):
+  def _ReadRestrictionTarget(self) -> None:
     """Reads the restriction target from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadRestrictionTarget')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadRestrictionTarget")
 
   def _ReadMediaSourceHandle(self) -> MediaSourceHandle:
     """Reads the media source handle from the current position."""
     _, index = self.deserializer.decoder.DecodeUint32Varint()
     return MediaSourceHandle(index=index)
 
-  def _ReadFencedFrameConfig(self):
+  def _ReadFencedFrameConfig(self) -> None:
     """Reads the fenced frame target from the current position."""
-    raise NotImplementedError('V8ScriptValueDecoder._ReadFencedFrameConfig')
+    raise NotImplementedError("V8ScriptValueDecoder._ReadFencedFrameConfig")
 
   def ReadTag(self) -> definitions.BlinkSerializationTag:
     """Reads a blink serialization tag from the current position.
@@ -888,7 +917,8 @@ class V8ScriptValueDecoder:
     except ValueError as err:
       offset = self.deserializer.decoder.stream.tell()
       raise errors.ParserError(
-          f'Invalid blink tag encountered at offset {offset}') from err
+          f"Invalid blink tag encountered at offset {offset}"
+      ) from err
 
   def ReadHostObject(self) -> Any:
     """Reads a host object from the current position.
@@ -897,7 +927,7 @@ class V8ScriptValueDecoder:
       The Host Object.
     """
     tag = self.ReadTag()
-    dom_object = None
+    dom_object: Any = None
 
     # V8ScriptValueDeserializer
     if tag == definitions.BlinkSerializationTag.BLOB:
@@ -913,14 +943,14 @@ class V8ScriptValueDecoder:
     elif tag == definitions.BlinkSerializationTag.FILE_LIST_INDEX:
       dom_object = self._ReadFileListIndex()
     elif tag == definitions.BlinkSerializationTag.IMAGE_BITMAP:
-      dom_object = self._ReadImageBitmap()
+      self._ReadImageBitmap()
     elif tag == definitions.BlinkSerializationTag.IMAGE_BITMAP_TRANSFER:
       dom_object = self._ReadImageBitmapTransfer()
     elif tag == definitions.BlinkSerializationTag.IMAGE_DATA:
-      dom_object = self._ReadImageData()
+      self._ReadImageData()
     elif tag == definitions.BlinkSerializationTag.DOM_POINT:
       dom_object = self._ReadDOMPoint()
-    elif tag ==  definitions.BlinkSerializationTag.DOM_POINT_READ_ONLY:
+    elif tag == definitions.BlinkSerializationTag.DOM_POINT_READ_ONLY:
       dom_object = self._ReadDOMPointReadOnly()
     elif tag == definitions.BlinkSerializationTag.DOM_RECT:
       dom_object = self._ReadDOMRect()
@@ -971,15 +1001,15 @@ class V8ScriptValueDecoder:
     elif tag == definitions.BlinkSerializationTag.ENCODED_VIDEO_CHUNK:
       dom_object = self._ReadEncodedVideoChunk()
     elif tag == definitions.BlinkSerializationTag.MEDIA_STREAM_TRACK:
-      dom_object = self._ReadMediaStreamTrack()
+      self._ReadMediaStreamTrack()
     elif tag == definitions.BlinkSerializationTag.CROP_TARGET:
-      dom_object = self._ReadCropTarget()
+      self._ReadCropTarget()
     elif tag == definitions.BlinkSerializationTag.RESTRICTION_TARGET:
-      dom_object = self._ReadRestrictionTarget()
+      self._ReadRestrictionTarget()
     elif tag == definitions.BlinkSerializationTag.MEDIA_SOURCE_HANDLE:
       dom_object = self._ReadMediaSourceHandle()
     elif tag == definitions.BlinkSerializationTag.FENCED_FRAME_CONFIG:
-      dom_object = self._ReadFencedFrameConfig()
+      self._ReadFencedFrameConfig()
     return dom_object
 
   def Deserialize(self) -> Any:
@@ -998,16 +1028,17 @@ class V8ScriptValueDecoder:
     if self.trailer_size:
       self.deserializer = v8.ValueDeserializer(
           io.BytesIO(
-              self.raw_data[version_envelope_size:self.trailer_offset]),
-          delegate=self)
+              self.raw_data[version_envelope_size : self.trailer_offset]
+          ),
+          delegate=self,
+      )
     else:
       self.deserializer = v8.ValueDeserializer(
-          io.BytesIO(
-              self.raw_data[version_envelope_size:]),
-          delegate=self)
+          io.BytesIO(self.raw_data[version_envelope_size:]), delegate=self
+      )
     is_supported = self.deserializer.ReadHeader()
     if not is_supported:
-      raise errors.ParserError('Unsupported header')
+      raise errors.ParserError("Unsupported header")
     return self.deserializer.ReadValue()
 
   @classmethod
@@ -1018,13 +1049,12 @@ class V8ScriptValueDecoder:
       The deserialized script value.
     """
     if len(data) < 3:
-      raise errors.ParserError('Data too short to contain a Blink SSV')
+      raise errors.ParserError("Data too short to contain a Blink SSV")
     if (
-        data[0] ==
-        definitions.BlinkSerializationTag.VERSION and
-        data[1] ==
-        definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION and
-        data[2] == definitions.COMPRESSED_WITH_SNAPPY):
+        data[0] == definitions.BlinkSerializationTag.VERSION
+        and data[1] == definitions.REQUIRES_PROCESSING_SSV_PSEUDO_VERSION
+        and data[2] == definitions.COMPRESSED_WITH_SNAPPY
+    ):
       # ignore the wrapped header bytes when decompressing
       data = snappy.decompress(data[3:])
     return cls(data).Deserialize()

@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dfindexeddb"
-version = "20241105"
-requires-python = ">=3.8"
+version = "20251109"
+requires-python = ">=3.9"
 description = "dfindexeddb is an experimental Python tool for performing digital forensic analysis of IndexedDB and leveldb files."
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{name = "Syd Pleno", email = "sydp@google.com"}]
 maintainers = [
   {name = "dfIndexeddb Developers", email = "dfindexeddb-dev@googlegroups.com"},

@@ -1,11 +1,11 @@
-name: pylint
+name: Mypy
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  pylint:
+  mypy:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,7 +21,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install python-snappy
         pip install zstd
-        pip install pylint
-    - name: Analysing the code with pylint
+        pip install mypy
+    - name: Analysing the code with mypy
       run: |
-        pylint --rc-file=.pylintrc dfindexeddb tests
+        mypy dfindexeddb

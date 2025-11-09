@@ -15,21 +15,33 @@
 """Parsers for v8 javascript serialized objects."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
 import io
 import os
-from typing import Any, BinaryIO, Dict, Optional, Set, Tuple, Union
+from dataclasses import dataclass
+from datetime import datetime
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Dict,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
-from dfindexeddb import errors
-from dfindexeddb import utils
+from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import definitions
+
+if TYPE_CHECKING:
+  from dfindexeddb.indexeddb.chromium import blink
 
 
 @dataclass
 class ArrayBufferView:
   """A parsed Javascript ArrayBufferView."""
+
   buffer: bytes
   tag: definitions.V8ArrayBufferViewTag
   offset: int
@@ -52,7 +64,7 @@ class ValueDeserializer:
 
   LATEST_VERSION = 15
 
-  def __init__(self, stream: BinaryIO, delegate):
+  def __init__(self, stream: BinaryIO, delegate: blink.V8ScriptValueDecoder):
     """Initializes a ValueDeserializer.
 
     Args:
@@ -63,8 +75,8 @@ class ValueDeserializer:
     self.decoder = utils.StreamDecoder(stream)
     self.delegate = delegate
     self.next_id = 0
-    self.objects = {}
-    self.version = None
+    self.objects: dict[int, Any] = {}
+    self.version = 0
 
   def GetWireFormatVersion(self) -> int:
     """Returns the underlying wire format version.
@@ -82,22 +94,23 @@ class ValueDeserializer:
       return False
     return True
 
-  def ReadObjectWrapper(self):
+  def ReadObjectWrapper(self) -> Any:
     """Deserializes a V8 object from the current decoder position."""
     original_position = self.decoder.stream.tell()
     result = self._ReadObject()
     if result is None and self.version == 13:
       self.decoder.stream.seek(original_position, os.SEEK_SET)
       result = self._ReadObject()
-      raise NotImplementedError('ValueDeserializer.ReadObjectWrapper v13')
+      raise NotImplementedError("ValueDeserializer.ReadObjectWrapper v13")
     return result
 
-  def ReadObjectUsingEntireBufferForLegacyFormat(self):
+  def ReadObjectUsingEntireBufferForLegacyFormat(self) -> Any:
     """Reads an object, consuming the entire buffer."""
     raise NotImplementedError(
-        'ValueDeserializer.ReadObjectUsingEntireBufferForLegacyFormat')
+        "ValueDeserializer.ReadObjectUsingEntireBufferForLegacyFormat"
+    )
 
-  def ReadValue(self):
+  def ReadValue(self) -> Any:
     """Reads the Javascript value."""
     if self.GetWireFormatVersion() > 0:
       return self.ReadObjectWrapper()
@@ -117,8 +130,9 @@ class ValueDeserializer:
       return definitions.V8SerializationTag(tag_value[0])
     except ValueError as error:
       raise errors.ParserError(
-          f'Invalid v8 tag value {tag_value} at offset'
-          f' {self.decoder.stream.tell()}') from error
+          f"Invalid v8 tag value {tag_value!r} at offset"
+          f" {self.decoder.stream.tell()}"
+      ) from error
 
   def _ReadTag(self) -> definitions.V8SerializationTag:
     """Returns the next non-padding serialization tag.
@@ -131,11 +145,13 @@ class ValueDeserializer:
       try:
         tag = definitions.V8SerializationTag(tag_value[0])
       except ValueError as error:
-        raise errors.ParserError(f'Invalid v8 tag value {tag_value}') from error
+        raise errors.ParserError(
+            f"Invalid v8 tag value {tag_value!r}"
+        ) from error
       if tag != definitions.V8SerializationTag.PADDING:
         return tag
 
-  def _ConsumeTag(self, peeked_tag: definitions.V8SerializationTag):
+  def _ConsumeTag(self, peeked_tag: definitions.V8SerializationTag) -> None:
     """Consumes the next serialization tag.
 
     Args:
@@ -146,9 +162,9 @@ class ValueDeserializer:
     """
     tag = self._ReadTag()
     if tag != peeked_tag:
-      raise errors.ParserError(f'Unexpected tag {tag} found.')
+      raise errors.ParserError(f"Unexpected tag {tag} found.")
 
-  def _ReadObject(self):
+  def _ReadObject(self) -> Any:
     """Reads a Javascript object from the current position."""
     _, result = self._ReadObjectInternal()
     tag = self._PeekTag()
@@ -165,6 +181,8 @@ class ValueDeserializer:
       a tuple of the serialization tag and the parsed object.
     """
     tag = self._ReadTag()
+    parsed_object: Any = None
+
     if tag == definitions.V8SerializationTag.VERIFY_OBJECT_COUNT:
       _ = self.decoder.DecodeUint32Varint()
       parsed_object = self._ReadObject()
@@ -206,7 +224,8 @@ class ValueDeserializer:
         definitions.V8SerializationTag.FALSE_OBJECT,
         definitions.V8SerializationTag.NUMBER_OBJECT,
         definitions.V8SerializationTag.BIGINT_OBJECT,
-        definitions.V8SerializationTag.STRING_OBJECT):
+        definitions.V8SerializationTag.STRING_OBJECT,
+    ):
       parsed_object = self._ReadJSPrimitiveWrapper(tag)
     elif tag == definitions.V8SerializationTag.REGEXP:
       parsed_object = self._ReadJSRegExp()
@@ -216,25 +235,29 @@ class ValueDeserializer:
       parsed_object = self._ReadJSSet()
     elif tag == definitions.V8SerializationTag.ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=False, is_resizable=False)
+          is_shared=False, is_resizable=False
+      )
     elif tag == definitions.V8SerializationTag.RESIZABLE_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=False, is_resizable=True)
+          is_shared=False, is_resizable=True
+      )
     elif tag == definitions.V8SerializationTag.SHARED_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=True, is_resizable=False)
+          is_shared=True, is_resizable=False
+      )
     elif tag == definitions.V8SerializationTag.ERROR:
-      parsed_object = self._ReadJSError()
+      self._ReadJSError()
     elif tag == definitions.V8SerializationTag.WASM_MODULE_TRANSFER:
-      parsed_object = self._ReadWasmModuleTransfer()
+      self._ReadWasmModuleTransfer()
     elif tag == definitions.V8SerializationTag.WASM_MEMORY_TRANSFER:
-      parsed_object = self._ReadWasmMemory()
+      self._ReadWasmMemory()
     elif tag == definitions.V8SerializationTag.HOST_OBJECT:
       parsed_object = self.ReadHostObject()
     elif (
-        tag == definitions.V8SerializationTag.SHARED_OBJECT and
-            self.version >= 15):
-      parsed_object = self.ReadSharedObject()
+        tag == definitions.V8SerializationTag.SHARED_OBJECT
+        and self.version >= 15
+    ):
+      self.ReadSharedObject()
     elif self.version < 13:
       self.decoder.stream.seek(-1, os.SEEK_CUR)
       parsed_object = self.ReadHostObject()
@@ -253,7 +276,7 @@ class ValueDeserializer:
 
     str_obj = self._ReadObject()
     if not isinstance(str_obj, str):
-      raise errors.ParserError('Not a string')
+      raise errors.ParserError("Not a string")
     return str_obj
 
   def ReadBigInt(self) -> int:
@@ -268,7 +291,7 @@ class ValueDeserializer:
     """Reads a UTF-8 string from the current position."""
     count = self.decoder.DecodeUint32Varint()[1]
     buffer = self.decoder.ReadBytes(count=count)[1]
-    return buffer.decode('utf-8')
+    return buffer.decode("utf-8")
 
   def ReadOneByteString(self) -> str:
     """Reads a one-byte string from the current position.
@@ -277,13 +300,13 @@ class ValueDeserializer:
     """
     length = self.decoder.DecodeUint32Varint()[1]
     buffer = self.decoder.ReadBytes(count=length)[1]
-    return buffer.decode('latin-1')
+    return buffer.decode("latin-1")
 
   def ReadTwoByteString(self) -> str:
     """Reads a UTF-16-LE string from the current position."""
     length = self.decoder.DecodeUint32Varint()[1]
     buffer = self.decoder.ReadBytes(count=length)[1]
-    return buffer.decode('utf-16-le')
+    return buffer.decode("utf-16-le")
 
   def ReadExpectedString(self) -> Optional[str]:
     """Reads a string from the current position, None if there is no tag or
@@ -303,14 +326,14 @@ class ValueDeserializer:
     _, raw_bytes = self.decoder.ReadBytes(count=byte_length)
 
     if tag == definitions.V8SerializationTag.ONE_BYTE_STRING:
-      return raw_bytes.decode('latin-1')
+      return raw_bytes.decode("latin-1")
     if tag == definitions.V8SerializationTag.TWO_BYTE_STRING:
-      return raw_bytes.decode('utf-16-le')
+      return raw_bytes.decode("utf-16-le")
     if tag == definitions.V8SerializationTag.UTF8_STRING:
-      return raw_bytes.decode('utf-8')
-    raise errors.ParserError(f'Unexpected serialization tag {tag}.')
+      return raw_bytes.decode("utf-8")
+    raise errors.ParserError(f"Unexpected serialization tag {tag}.")
 
-  def _ReadJSObject(self) -> Dict:
+  def _ReadJSObject(self) -> Dict[int, Any]:
     """Reads a JSObject from the current position.
 
     Raises:
@@ -318,21 +341,22 @@ class ValueDeserializer:
         read.
     """
     next_id = self._GetNextId()
-    js_object = {}
+    js_object: Dict[int, Any] = {}
 
     num_properties = self._ReadJSObjectProperties(
-        js_object, definitions.V8SerializationTag.END_JS_OBJECT)
+        js_object, definitions.V8SerializationTag.END_JS_OBJECT
+    )
     _, expected_number_properties = self.decoder.DecodeUint32Varint()
     if expected_number_properties != num_properties:
-      raise errors.ParserError('Unexpected number of properties')
+      raise errors.ParserError("Unexpected number of properties")
 
     self.objects[next_id] = js_object
     return js_object
 
   def _ReadJSObjectProperties(
       self,
-      js_object: Union[Dict, types.JSArray],
-      end_tag: definitions.V8SerializationTag
+      js_object: Union[Dict[int, Any], types.JSArray],
+      end_tag: definitions.V8SerializationTag,
   ) -> int:
     """Reads key-value properties and sets them to the given js_object.
 
@@ -375,14 +399,15 @@ class ValueDeserializer:
       js_array.values.append(types.Undefined())
 
     num_properties = self._ReadJSObjectProperties(
-        js_array.properties, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY)
+        js_array.properties, definitions.V8SerializationTag.END_SPARSE_JS_ARRAY
+    )
     _, expected_num_properties = self.decoder.DecodeUint32Varint()
     _, expected_length = self.decoder.DecodeUint32Varint()
 
     if num_properties != expected_num_properties:
-      raise errors.ParserError('Unexpected property length')
+      raise errors.ParserError("Unexpected property length")
     if length != expected_length:
-      raise errors.ParserError('Unexpected array length')
+      raise errors.ParserError("Unexpected array length")
     self.objects[next_id] = js_array
     return js_array
 
@@ -408,13 +433,14 @@ class ValueDeserializer:
       js_array.values.append(array_object)
 
     num_properties = self._ReadJSObjectProperties(
-        js_array.properties, definitions.V8SerializationTag.END_DENSE_JS_ARRAY)
+        js_array.properties, definitions.V8SerializationTag.END_DENSE_JS_ARRAY
+    )
     _, expected_num_properties = self.decoder.DecodeUint32Varint()
     _, expected_length = self.decoder.DecodeUint32Varint()
     if num_properties != expected_num_properties:
-      raise errors.ParserError('Unexpected property length')
+      raise errors.ParserError("Unexpected property length")
     if length != expected_length:
-      raise errors.ParserError('Unexpected array length')
+      raise errors.ParserError("Unexpected array length")
     self.objects[next_id] = js_array
     return js_array
 
@@ -423,13 +449,12 @@ class ValueDeserializer:
     next_id = self._GetNextId()
 
     _, value = self.decoder.DecodeDouble()
-    result = datetime.utcfromtimestamp(value/1000.0)
+    result = datetime.utcfromtimestamp(value / 1000.0)
     self.objects[next_id] = result
     return result
 
   def _ReadJSPrimitiveWrapper(
-      self,
-      tag: definitions.V8SerializationTag
+      self, tag: definitions.V8SerializationTag
   ) -> Union[bool, float, int, str]:
     """Reads a Javascript wrapped primitive.
 
@@ -446,7 +471,7 @@ class ValueDeserializer:
     next_id = self._GetNextId()
 
     if tag == definitions.V8SerializationTag.TRUE_OBJECT:
-      value = True
+      value: Union[bool, float, int, str] = True
     elif tag == definitions.V8SerializationTag.FALSE_OBJECT:
       value = False
     elif tag == definitions.V8SerializationTag.NUMBER_OBJECT:
@@ -456,7 +481,7 @@ class ValueDeserializer:
     elif tag == definitions.V8SerializationTag.STRING_OBJECT:
       value = self.ReadString()
     else:
-      raise errors.ParserError(f'Invalid tag {tag}')
+      raise errors.ParserError(f"Invalid tag {tag}")
 
     self.objects[next_id] = value
     return value
@@ -489,7 +514,7 @@ class ValueDeserializer:
 
     _, expected_length = self.decoder.DecodeUint32Varint()
     if len(js_map) * 2 != expected_length:
-      raise errors.ParserError('unexpected length')
+      raise errors.ParserError("unexpected length")
 
     self.objects[next_id] = js_map
     return js_map
@@ -512,16 +537,12 @@ class ValueDeserializer:
 
     _, expected_length = self.decoder.DecodeUint32Varint()
     if len(js_set) != expected_length:
-      raise ValueError('unexpected length')
+      raise ValueError("unexpected length")
 
     self.objects[next_id] = js_set
     return js_set
 
-  def _ReadJSArrayBuffer(
-      self,
-      is_shared: bool,
-      is_resizable: bool
-  ) -> bytes:
+  def _ReadJSArrayBuffer(self, is_shared: bool, is_resizable: bool) -> bytes:
     """Reads a Javascript ArrayBuffer from the current position.
 
     Args:
@@ -529,10 +550,10 @@ class ValueDeserializer:
       is_resizable: True if the buffer is resizable, False otherwise.
     """
     next_id = self._GetNextId()
-    array_buffer = b''
+    array_buffer = b""
 
     if is_shared:
-      raise NotImplementedError('Shared ArrayBuffer not supported yet')
+      raise NotImplementedError("Shared ArrayBuffer not supported yet")
 
     _, byte_length = self.decoder.DecodeUint32Varint()
     max_byte_length = byte_length
@@ -547,7 +568,7 @@ class ValueDeserializer:
     self.objects[next_id] = array_buffer
     return array_buffer
 
-  def _ReadJSArrayBufferView(self, buffer):
+  def _ReadJSArrayBufferView(self, buffer: bytes) -> ArrayBufferView:
     """Reads a JSArrayBufferView from the current position."""
     _, tag = self.decoder.ReadBytes(1)
     _, byte_offset = self.decoder.DecodeUint32Varint()
@@ -563,26 +584,27 @@ class ValueDeserializer:
         tag=definitions.V8ArrayBufferViewTag(tag[0]),
         offset=byte_offset,
         length=byte_length,
-        flags=flags)
+        flags=flags,
+    )
 
-  def _ReadJSError(self):
+  def _ReadJSError(self) -> None:
     """Reads a Javascript error from the current position."""
-    raise NotImplementedError('ValueDeserializer.ReadJSError')
+    raise NotImplementedError("ValueDeserializer.ReadJSError")
 
-  def _ReadWasmModuleTransfer(self):
+  def _ReadWasmModuleTransfer(self) -> None:
     """Reads a Wasm module transfer object from the current position."""
-    raise NotImplementedError('ValueDeserializer.ReadWasmModuleTransfer')
+    raise NotImplementedError("ValueDeserializer.ReadWasmModuleTransfer")
 
-  def _ReadWasmMemory(self):
+  def _ReadWasmMemory(self) -> None:
     """Reads a Wasm memory object from the current position."""
-    raise NotImplementedError('ValueDeserializer.ReadWasmMemory')
+    raise NotImplementedError("ValueDeserializer.ReadWasmMemory")
 
-  def ReadSharedObject(self) -> Any:
+  def ReadSharedObject(self) -> None:
     """Reads a shared object from the current position."""
-    #_, shared_object_id = self.decoder.DecodeUint32Varint()
-    raise NotImplementedError('ValueDeserializer.ReadSharedObject')
+    # _, shared_object_id = self.decoder.DecodeUint32Varint()
+    raise NotImplementedError("ValueDeserializer.ReadSharedObject")
 
-  def ReadHostObject(self):
+  def ReadHostObject(self) -> Any:
     """Reads a Host object using the delegate object.
 
     Raises:
@@ -590,7 +612,7 @@ class ValueDeserializer:
     """
     next_id = self._GetNextId()
     if not self.delegate:
-      raise errors.ParserError('No delegate to read host object.')
+      raise errors.ParserError("No delegate to read host object.")
     host_object = self.delegate.ReadHostObject()
     self.objects[next_id] = host_object
     return host_object
@@ -612,5 +634,5 @@ class ValueDeserializer:
     stream = io.BytesIO(data)
     deserializer = cls(stream, delegate)
     if not deserializer.ReadHeader():
-      raise errors.ParserError('Invalid V8 header')
+      raise errors.ParserError("Invalid V8 header")
     return deserializer.ReadObjectWrapper()

@@ -15,13 +15,12 @@
 """Parser for LevelDB Log (.log) files."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import io
+from dataclasses import dataclass
 from typing import BinaryIO, Generator, Iterable, Optional
 
 from dfindexeddb import errors
-from dfindexeddb.leveldb import definitions
-from dfindexeddb.leveldb import utils
+from dfindexeddb.leveldb import definitions, utils
 
 
 @dataclass
@@ -36,6 +35,7 @@ class ParsedInternalKey:
     key: the record key.
     value: the record value.
   """
+
   offset: int
   record_type: definitions.InternalRecordType
   sequence_number: int
@@ -70,15 +70,16 @@ class ParsedInternalKey:
     if record_type == definitions.InternalRecordType.VALUE:
       _, value = decoder.DecodeBlobWithLength()
     elif record_type == definitions.InternalRecordType.DELETED:
-      value =  b''
+      value = b""
     else:
-      raise ValueError(f'Invalid record type {record_type}')
+      raise ValueError(f"Invalid record type {record_type}")
     return cls(
         offset=base_offset + offset,
         record_type=record_type,
         key=key,
         value=value,
-        sequence_number=sequence_number)
+        sequence_number=sequence_number,
+    )
 
 
 @dataclass
@@ -91,6 +92,7 @@ class WriteBatch(utils.FromDecoderMixin):
     count: the number of ParsedInternalKey in the batch.
     records: the ParsedInternalKey parsed from the batch.
   """
+
   offset: int
   sequence_number: int
   count: int
@@ -98,9 +100,7 @@ class WriteBatch(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-    cls,
-    decoder: utils.LevelDBDecoder,
-    base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> WriteBatch:
     """Parses a WriteBatch from a binary stream.
 
@@ -118,15 +118,17 @@ class WriteBatch(utils.FromDecoderMixin):
     records = []
     for relative_sequence_number in range(count):
       record = ParsedInternalKey.FromDecoder(
-          decoder, base_offset + offset,
-          relative_sequence_number + sequence_number
+          decoder,
+          base_offset + offset,
+          relative_sequence_number + sequence_number,
       )
       records.append(record)
     return cls(
         offset=base_offset + offset,
         sequence_number=sequence_number,
         count=count,
-        records=records)
+        records=records,
+    )
 
 
 @dataclass
@@ -142,6 +144,7 @@ class PhysicalRecord(utils.FromDecoderMixin):
     contents: the record contents.
     contents_offset: the offset of where the record contents are stored.
   """
+
   base_offset: int
   offset: int
   checksum: int
@@ -154,9 +157,7 @@ class PhysicalRecord(utils.FromDecoderMixin):
 
   @classmethod
   def FromDecoder(
-      cls,
-      decoder: utils.LevelDBDecoder,
-      base_offset: int = 0
+      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
   ) -> Optional[PhysicalRecord]:
     """Decodes a PhysicalRecord from the current position of a LevelDBDecoder.
 
@@ -177,8 +178,9 @@ class PhysicalRecord(utils.FromDecoderMixin):
       record_type = definitions.LogFilePhysicalRecordType(record_type_byte)
     except ValueError as error:
       raise errors.ParserError(
-          f'Error parsing record type of Physical Record at offset '
-          f'{offset + base_offset}') from error
+          f"Error parsing record type of Physical Record at offset "
+          f"{offset + base_offset}"
+      ) from error
     contents_offset, contents = decoder.ReadBytes(length)
     return cls(
         base_offset=base_offset,
@@ -187,7 +189,8 @@ class PhysicalRecord(utils.FromDecoderMixin):
         length=length,
         record_type=record_type,
         contents=contents,
-        contents_offset=contents_offset)
+        contents_offset=contents_offset,
+    )
 
 
 @dataclass
@@ -198,6 +201,7 @@ class Block:
     offset: the block offset.
     data: the block data.
   """
+
   offset: int
   data: bytes
 
@@ -266,7 +270,7 @@ class FileReader:
     Yields:
       a Block
     """
-    with open(self.filename, 'rb') as fh:
+    with open(self.filename, "rb") as fh:
       block = Block.FromStream(fh)
       while block:
         yield block
@@ -293,23 +297,30 @@ class FileReader:
       WriteBatch
     """
     buffer = bytearray()
-    offset = None
+    offset = 0
     for physical_record in self.GetPhysicalRecords():
-      if (physical_record.record_type ==
-         definitions.LogFilePhysicalRecordType.FULL):
-        buffer = physical_record.contents
+      if (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.FULL
+      ):
         offset = physical_record.contents_offset + physical_record.base_offset
-        yield WriteBatch.FromBytes(buffer, base_offset=offset)
+        yield WriteBatch.FromBytes(physical_record.contents, base_offset=offset)
         buffer = bytearray()
-      elif (physical_record.record_type
-            == definitions.LogFilePhysicalRecordType.FIRST):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.FIRST
+      ):
         offset = physical_record.contents_offset + physical_record.base_offset
         buffer = bytearray(physical_record.contents)
-      elif (physical_record.record_type ==
-            definitions.LogFilePhysicalRecordType.MIDDLE):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.MIDDLE
+      ):
         buffer.extend(bytearray(physical_record.contents))
-      elif (physical_record.record_type ==
-            definitions.LogFilePhysicalRecordType.LAST):
+      elif (
+          physical_record.record_type
+          == definitions.LogFilePhysicalRecordType.LAST
+      ):
         buffer.extend(bytearray(physical_record.contents))
         yield WriteBatch.FromBytes(buffer, base_offset=offset)
         buffer = bytearray()

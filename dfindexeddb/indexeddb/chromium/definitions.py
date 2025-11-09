@@ -15,7 +15,6 @@
 """Definitions for IndexedDB."""
 from enum import Enum, IntEnum, IntFlag
 
-
 REQUIRES_PROCESSING_SSV_PSEUDO_VERSION = 0x11
 REPLACE_WITH_BLOB = 0x01
 COMPRESSED_WITH_SNAPPY = 0x02
@@ -23,6 +22,7 @@ COMPRESSED_WITH_SNAPPY = 0x02
 
 class DatabaseMetaDataKeyType(IntEnum):
   """Database Metadata key types."""
+
   ORIGIN_NAME = 0
   DATABASE_NAME = 1
   IDB_STRING_VERSION_DATA = 2
@@ -39,6 +39,7 @@ class DatabaseMetaDataKeyType(IntEnum):
 
 class GlobalMetadataKeyType(IntEnum):
   """Global Metadata key types."""
+
   SCHEMA_VERSION = 0
   MAX_DATABASE_ID = 1
   DATA_VERSION = 2
@@ -53,6 +54,7 @@ class GlobalMetadataKeyType(IntEnum):
 
 class IDBKeyPathType(IntEnum):
   """IndexedDB key path types."""
+
   NULL = 0
   STRING = 1
   ARRAY = 2
@@ -60,6 +62,7 @@ class IDBKeyPathType(IntEnum):
 
 class IDBKeyType(IntEnum):
   """IndexedDB key types."""
+
   NULL = 0
   STRING = 1
   DATE = 2
@@ -71,6 +74,7 @@ class IDBKeyType(IntEnum):
 
 class IndexMetaDataKeyType(IntEnum):
   """IndexedDB metadata key types."""
+
   INDEX_NAME = 0
   UNIQUE_FLAG = 1
   KEY_PATH = 2
@@ -79,6 +83,7 @@ class IndexMetaDataKeyType(IntEnum):
 
 class KeyPrefixType(Enum):
   """IndexedDB key prefix types."""
+
   GLOBAL_METADATA = 0
   DATABASE_METADATA = 1
   OBJECT_STORE_DATA = 2
@@ -90,6 +95,7 @@ class KeyPrefixType(Enum):
 
 class ObjectStoreMetaDataKeyType(IntEnum):
   """IndexedDB object store metadata key types."""
+
   OBJECT_STORE_NAME = 0
   KEY_PATH = 1
   AUTO_INCREMENT_FLAG = 2
@@ -102,6 +108,7 @@ class ObjectStoreMetaDataKeyType(IntEnum):
 
 class ExternalObjectType(IntEnum):
   """IndexedDB external object types."""
+
   BLOB = 0
   FILE = 1
   FILE_SYSTEM_ACCESS_HANDLE = 2
@@ -109,50 +116,51 @@ class ExternalObjectType(IntEnum):
 
 class BlinkSerializationTag(IntEnum):
   """Blink Javascript serialization tags."""
-  MESSAGE_PORT = ord('M')
-  MOJO_HANDLE = ord('h')
-  BLOB = ord('b')
-  BLOB_INDEX = ord('i')
-  FILE = ord('f')
-  FILE_INDEX = ord('e')
-  DOM_FILE_SYSTEM = ord('d')
-  FILE_SYSTEM_FILE_HANDLE = ord('n')
-  FILE_SYSTEM_DIRECTORY_HANDLE = ord('N')
-  FILE_LIST = ord('l')
-  FILE_LIST_INDEX = ord('L')
-  IMAGE_DATA = ord('#')
-  IMAGE_BITMAP = ord('g')
-  IMAGE_BITMAP_TRANSFER = ord('G')
-  OFFSCREEN_CANVAS_TRANSFER = ord('H')
-  READABLE_STREAM_TRANSFER = ord('r')
-  TRANSFORM_STREAM_TRANSFER = ord('m')
-  WRITABLE_STREAM_TRANSFER = ord('w')
-  MEDIA_STREAM_TRACK = ord('s')
-  DOM_POINT = ord('Q')
-  DOM_POINT_READ_ONLY = ord('W')
-  DOM_RECT = ord('E')
-  DOM_RECT_READ_ONLY = ord('R')
-  DOM_QUAD = ord('T')
-  DOM_MATRIX = ord('Y')
-  DOM_MATRIX_READ_ONLY = ord('U')
-  DOM_MATRIX2D = ord('I')
-  DOM_MATRIX2D_READ_ONLY = ord('O')
-  CRYPTO_KEY = ord('K')
-  RTC_CERTIFICATE = ord('k')
-  RTC_ENCODED_AUDIO_FRAME = ord('A')
-  RTC_ENCODED_VIDEO_FRAME = ord('V')
-  AUDIO_DATA = ord('a')
-  VIDEO_FRAME = ord('v')
-  ENCODED_AUDIO_CHUNK = ord('y')
-  ENCODED_VIDEO_CHUNK = ord('z')
-  CROP_TARGET = ord('c')
-  RESTRICTION_TARGET = ord('D')
-  MEDIA_SOURCE_HANDLE = ord('S')
-  DEPRECATED_DETECTED_BARCODE = ord('B')
-  DEPRECATED_DETECTED_FACE = ord('F')
-  DEPRECATED_DETECTED_TEXT = ord('t')
-  FENCED_FRAME_CONFIG = ord('C')
-  DOM_EXCEPTION = ord('x')
+
+  MESSAGE_PORT = ord("M")
+  MOJO_HANDLE = ord("h")
+  BLOB = ord("b")
+  BLOB_INDEX = ord("i")
+  FILE = ord("f")
+  FILE_INDEX = ord("e")
+  DOM_FILE_SYSTEM = ord("d")
+  FILE_SYSTEM_FILE_HANDLE = ord("n")
+  FILE_SYSTEM_DIRECTORY_HANDLE = ord("N")
+  FILE_LIST = ord("l")
+  FILE_LIST_INDEX = ord("L")
+  IMAGE_DATA = ord("#")
+  IMAGE_BITMAP = ord("g")
+  IMAGE_BITMAP_TRANSFER = ord("G")
+  OFFSCREEN_CANVAS_TRANSFER = ord("H")
+  READABLE_STREAM_TRANSFER = ord("r")
+  TRANSFORM_STREAM_TRANSFER = ord("m")
+  WRITABLE_STREAM_TRANSFER = ord("w")
+  MEDIA_STREAM_TRACK = ord("s")
+  DOM_POINT = ord("Q")
+  DOM_POINT_READ_ONLY = ord("W")
+  DOM_RECT = ord("E")
+  DOM_RECT_READ_ONLY = ord("R")
+  DOM_QUAD = ord("T")
+  DOM_MATRIX = ord("Y")
+  DOM_MATRIX_READ_ONLY = ord("U")
+  DOM_MATRIX2D = ord("I")
+  DOM_MATRIX2D_READ_ONLY = ord("O")
+  CRYPTO_KEY = ord("K")
+  RTC_CERTIFICATE = ord("k")
+  RTC_ENCODED_AUDIO_FRAME = ord("A")
+  RTC_ENCODED_VIDEO_FRAME = ord("V")
+  AUDIO_DATA = ord("a")
+  VIDEO_FRAME = ord("v")
+  ENCODED_AUDIO_CHUNK = ord("y")
+  ENCODED_VIDEO_CHUNK = ord("z")
+  CROP_TARGET = ord("c")
+  RESTRICTION_TARGET = ord("D")
+  MEDIA_SOURCE_HANDLE = ord("S")
+  DEPRECATED_DETECTED_BARCODE = ord("B")
+  DEPRECATED_DETECTED_FACE = ord("F")
+  DEPRECATED_DETECTED_TEXT = ord("t")
+  FENCED_FRAME_CONFIG = ord("C")
+  DOM_EXCEPTION = ord("x")
   TRAILER_OFFSET = 0xFE
   VERSION = 0xFF
   TRAILER_REQUIRES_INTERFACES = 0xA0
@@ -160,6 +168,7 @@ class BlinkSerializationTag(IntEnum):
 
 class CryptoKeyAlgorithm(IntEnum):
   """CryptoKey Algorithm types."""
+
   AES_CBC = 1
   HMAC = 2
   RSA_SSA_PKCS1_V1_5 = 3
@@ -181,6 +190,7 @@ class CryptoKeyAlgorithm(IntEnum):
 
 class NamedCurve(IntEnum):
   """Named Curve types."""
+
   P256 = 1
   P384 = 2
   P521 = 3
@@ -188,6 +198,7 @@ class NamedCurve(IntEnum):
 
 class CryptoKeyUsage(IntFlag):
   """CryptoKey Usage flags."""
+
   EXTRACTABLE = 1 << 0
   ENCRYPT = 1 << 1
   DECRYPT = 1 << 2
@@ -201,6 +212,7 @@ class CryptoKeyUsage(IntFlag):
 
 class CryptoKeySubTag(IntEnum):
   """CryptoKey subtag types."""
+
   AES_KEY = 1
   HMAC_KEY = 2
   RSA_HASHED_KEY = 4
@@ -211,110 +223,116 @@ class CryptoKeySubTag(IntEnum):
 
 class AsymmetricCryptoKeyType(IntEnum):
   """Asymmetric CryptoKey types."""
+
   PUBLIC_KEY = 1
   PRIVATE_KEY = 2
 
 
 class WebCryptoKeyType(Enum):
   """WebCryptoKey types."""
-  SECRET = 'Secret'
-  PUBLIC = 'Public'
-  PRIVATE = 'Private'
+
+  SECRET = "Secret"
+  PUBLIC = "Public"
+  PRIVATE = "Private"
 
 
 class V8SerializationTag(IntEnum):
   """V8 Javascript serialization tags."""
+
   VERSION = 0xFF
-  PADDING = ord('\0')
-  VERIFY_OBJECT_COUNT = ord('?')
-  THE_HOLE = ord('-')
-  UNDEFINED = ord('_')
-  NULL = ord('0')
-  TRUE = ord('T')
-  FALSE = ord('F')
-  INT32 = ord('I')
-  UINT32 = ord('U')
-  DOUBLE = ord('N')
-  BIGINT = ord('Z')
-  UTF8_STRING = ord('S')
+  PADDING = ord("\0")
+  VERIFY_OBJECT_COUNT = ord("?")
+  THE_HOLE = ord("-")
+  UNDEFINED = ord("_")
+  NULL = ord("0")
+  TRUE = ord("T")
+  FALSE = ord("F")
+  INT32 = ord("I")
+  UINT32 = ord("U")
+  DOUBLE = ord("N")
+  BIGINT = ord("Z")
+  UTF8_STRING = ord("S")
   ONE_BYTE_STRING = ord('"')
-  TWO_BYTE_STRING = ord('c')
-  OBJECT_REFERENCE = ord('^')
-  BEGIN_JS_OBJECT = ord('o')
-  END_JS_OBJECT = ord('{')
-  BEGIN_SPARSE_JS_ARRAY = ord('a')
-  END_SPARSE_JS_ARRAY = ord('@')
-  BEGIN_DENSE_JS_ARRAY = ord('A')
-  END_DENSE_JS_ARRAY = ord('$')
-  DATE = ord('D')
-  TRUE_OBJECT = ord('y')
-  FALSE_OBJECT = ord('x')
-  NUMBER_OBJECT = ord('n')
-  BIGINT_OBJECT = ord('z')
-  STRING_OBJECT = ord('s')
-  REGEXP = ord('R')
-  BEGIN_JS_MAP = ord(';')
-  END_JS_MAP = ord(':')
-  BEGIN_JS_SET = ord('\'')
-  END_JS_SET = ord(',')
-  ARRAY_BUFFER = ord('B')
-  RESIZABLE_ARRAY_BUFFER = ord('~')
-  ARRAY_BUFFER_TRANSFER = ord('t')
-  ARRAY_BUFFER_VIEW = ord('V')
-  SHARED_ARRAY_BUFFER = ord('u')
-  SHARED_OBJECT = ord('p')
-  WASM_MODULE_TRANSFER = ord('w')
-  HOST_OBJECT = ord('\\')
-  WASM_MEMORY_TRANSFER = ord('m')
-  ERROR = ord('r')
-  LEGACY_RESERVED_MESSAGE_PORT = ord('M')
-  LEGACY_RESERVED_BLOB = ord('b')
-  LEGACY_RESERVED_BLOB_INDEX = ord('i')
-  LEGACY_RESERVED_FILE = ord('f')
-  LEGACY_RESERVED_FILE_INDEX = ord('e')
-  LEGACY_RESERVED_DOM_FILE_SYSTEM = ord('d')
-  LEGACY_RESERVED_FILE_LIST = ord('l')
-  LEGACY_RESERVED_FILE_LIST_INDEX = ord('L')
-  LEGACY_RESERVED_IMAGE_DATA = ord('#')
-  LEGACY_RESERVED_IMAGE_BITMAP = ord('g')
-  LEGACY_RESERVED_IMAGE_BITMAP_TRANSFER = ord('G')
-  LEGACY_RESERVED_OFF_SCREEN_CANVAS = ord('H')
-  LEGACY_RESERVED_CRYPTO_KEY = ord('K')
-  LEGACY_RESERVED_RTC_CERTIFICATE = ord('k')
+  TWO_BYTE_STRING = ord("c")
+  OBJECT_REFERENCE = ord("^")
+  BEGIN_JS_OBJECT = ord("o")
+  END_JS_OBJECT = ord("{")
+  BEGIN_SPARSE_JS_ARRAY = ord("a")
+  END_SPARSE_JS_ARRAY = ord("@")
+  BEGIN_DENSE_JS_ARRAY = ord("A")
+  END_DENSE_JS_ARRAY = ord("$")
+  DATE = ord("D")
+  TRUE_OBJECT = ord("y")
+  FALSE_OBJECT = ord("x")
+  NUMBER_OBJECT = ord("n")
+  BIGINT_OBJECT = ord("z")
+  STRING_OBJECT = ord("s")
+  REGEXP = ord("R")
+  BEGIN_JS_MAP = ord(";")
+  END_JS_MAP = ord(":")
+  BEGIN_JS_SET = ord("'")
+  END_JS_SET = ord(",")
+  ARRAY_BUFFER = ord("B")
+  RESIZABLE_ARRAY_BUFFER = ord("~")
+  ARRAY_BUFFER_TRANSFER = ord("t")
+  ARRAY_BUFFER_VIEW = ord("V")
+  SHARED_ARRAY_BUFFER = ord("u")
+  SHARED_OBJECT = ord("p")
+  WASM_MODULE_TRANSFER = ord("w")
+  HOST_OBJECT = ord("\\")
+  WASM_MEMORY_TRANSFER = ord("m")
+  ERROR = ord("r")
+  LEGACY_RESERVED_MESSAGE_PORT = ord("M")
+  LEGACY_RESERVED_BLOB = ord("b")
+  LEGACY_RESERVED_BLOB_INDEX = ord("i")
+  LEGACY_RESERVED_FILE = ord("f")
+  LEGACY_RESERVED_FILE_INDEX = ord("e")
+  LEGACY_RESERVED_DOM_FILE_SYSTEM = ord("d")
+  LEGACY_RESERVED_FILE_LIST = ord("l")
+  LEGACY_RESERVED_FILE_LIST_INDEX = ord("L")
+  LEGACY_RESERVED_IMAGE_DATA = ord("#")
+  LEGACY_RESERVED_IMAGE_BITMAP = ord("g")
+  LEGACY_RESERVED_IMAGE_BITMAP_TRANSFER = ord("G")
+  LEGACY_RESERVED_OFF_SCREEN_CANVAS = ord("H")
+  LEGACY_RESERVED_CRYPTO_KEY = ord("K")
+  LEGACY_RESERVED_RTC_CERTIFICATE = ord("k")
 
 
 class V8ArrayBufferViewTag(IntEnum):
   """V8 ArrayBufferView tags."""
-  INT8_ARRAY = ord('b')
-  UINT8_ARRAY = ord('B')
-  UINT8_CLAMPED_ARRAY = ord('C')
-  INT16_ARRAY = ord('w')
-  UINT16_ARRAY = ord('W')
-  INT32_ARRAY = ord('d')
-  UINT32_ARRAY = ord('D')
-  FLOAT32_ARRAY = ord('f')
-  FLOAT64_ARRAY = ord('F')
-  BIGINT64_ARRAY = ord('q')
-  BIGUINT64_ARRAY = ord('Q')
-  DATAVIEW = ord('?')
+
+  INT8_ARRAY = ord("b")
+  UINT8_ARRAY = ord("B")
+  UINT8_CLAMPED_ARRAY = ord("C")
+  INT16_ARRAY = ord("w")
+  UINT16_ARRAY = ord("W")
+  INT32_ARRAY = ord("d")
+  UINT32_ARRAY = ord("D")
+  FLOAT32_ARRAY = ord("f")
+  FLOAT64_ARRAY = ord("F")
+  BIGINT64_ARRAY = ord("q")
+  BIGUINT64_ARRAY = ord("Q")
+  DATAVIEW = ord("?")
 
 
 class V8ErrorTag(IntEnum):
   """V8 Error tags."""
-  EVAL_ERROR_PROTOTYPE = ord('E')
-  RANGE_ERROR_PROTOTYPE = ord('R')
-  REFERENCE_ERROR_PROTOTYPE = ord('F')
-  SYNTAX_ERROR_PROTOTYPE = ord('S')
-  TYPE_ERROR_PROTOTYPE = ord('T')
-  URI_ERROR_PROTOTYPE = ord('U')
-  MESSAGE = ord('m')
-  CAUSE = ord('c')
-  STACK = ord('s')
-  END = ord('.')
+
+  EVAL_ERROR_PROTOTYPE = ord("E")
+  RANGE_ERROR_PROTOTYPE = ord("R")
+  REFERENCE_ERROR_PROTOTYPE = ord("F")
+  SYNTAX_ERROR_PROTOTYPE = ord("S")
+  TYPE_ERROR_PROTOTYPE = ord("T")
+  URI_ERROR_PROTOTYPE = ord("U")
+  MESSAGE = ord("m")
+  CAUSE = ord("c")
+  STACK = ord("s")
+  END = ord(".")
 
 
 class ImageSerializationTag(IntEnum):
   """Image Serialization tags."""
+
   END = 0
   PREDEFINED_COLOR_SPACE = 1
   CANVAS_PIXEL_FORMAT = 2
@@ -329,6 +347,7 @@ class ImageSerializationTag(IntEnum):
 
 class SerializedPredefinedColorSpace(IntEnum):
   """Serialized Predefined Color Space enumeration."""
+
   LEGACY_OBSOLETE = 0
   SRGB = 1
   REC2020 = 2
@@ -341,6 +360,7 @@ class SerializedPredefinedColorSpace(IntEnum):
 
 class SerializedPixelFormat(IntEnum):
   """Serialized Pixel Format enumeration."""
+
   NATIVE8_LEGACY_OBSOLETE = 0
   F16 = 1
   RGBA8 = 2
@@ -351,6 +371,7 @@ class SerializedPixelFormat(IntEnum):
 
 class SerializedImageDataStorageFormat(IntEnum):
   """The Serialized Image Data Storage Format."""
+
   UINT8CLAMPED = 0
   UINT16 = 1
   FLOAT32 = 2
@@ -359,6 +380,7 @@ class SerializedImageDataStorageFormat(IntEnum):
 
 class SerializedOpacityMode(IntEnum):
   """The Serialized Opacity Mode."""
+
   KNONOPAQUE = 0
   KOPAQUE = 1
   KLAST = KOPAQUE
@@ -366,6 +388,7 @@ class SerializedOpacityMode(IntEnum):
 
 class SerializedImageOrientation(IntEnum):
   """The Serialized Image Orientation."""
+
   TOP_LEFT = 0
   TOP_RIGHT = 1
   BOTTOM_RIGHT = 2
