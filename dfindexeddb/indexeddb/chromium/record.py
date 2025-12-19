@@ -74,10 +74,9 @@ class KeyPrefix(utils.FromDecoderMixin):
     """
     offset, raw_prefix = decoder.ReadBytes(1)
 
-    database_id_length = (raw_prefix[0] & 0xE0 >> 5) + 1
-    object_store_id_length = (raw_prefix[0] & 0x1C >> 2) + 1
+    database_id_length = ((raw_prefix[0] & 0xE0) >> 5) + 1
+    object_store_id_length = ((raw_prefix[0] & 0x1C) >> 2) + 1
     index_id_length = (raw_prefix[0] & 0x03) + 1
-
     if database_id_length < 1 or database_id_length > 8:
       raise errors.ParserError("Invalid database ID length")
 
@@ -86,11 +85,10 @@ class KeyPrefix(utils.FromDecoderMixin):
 
     if index_id_length < 1 or index_id_length > 4:
       raise errors.ParserError("Invalid index ID length")
-
+    
     _, database_id = decoder.DecodeInt(database_id_length, signed=False)
     _, object_store_id = decoder.DecodeInt(object_store_id_length, signed=False)
     _, index_id = decoder.DecodeInt(index_id_length, signed=False)
-
     return cls(
         offset=base_offset + offset,
         database_id=database_id,
