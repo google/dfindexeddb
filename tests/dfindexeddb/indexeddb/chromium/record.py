@@ -31,6 +31,33 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
+  def test_parse_key_prefix_multi_byte_database_id(self):
+    """Tests the KeyPrefix class with multi-byte database id."""
+    expected_key_prefix = record.KeyPrefix(
+        offset=0, database_id=257, object_store_id=2, index_id=3
+    )
+    key_bytes = bytes.fromhex("2001010203")
+    parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
+    self.assertEqual(parsed_key_prefix, expected_key_prefix)
+
+  def test_parse_key_prefix_multi_byte_object_store_id(self):
+    """Tests the KeyPrefix class with multi-byte object store id."""
+    expected_key_prefix = record.KeyPrefix(
+        offset=0, database_id=0, object_store_id=257, index_id=3
+    )
+    key_bytes = bytes.fromhex("0400010103")
+    parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
+    self.assertEqual(parsed_key_prefix, expected_key_prefix)
+
+  def test_parse_key_prefix_multi_byte_index_id(self):
+    """Tests the KeyPrefix class with multi-byte index id."""
+    expected_key_prefix = record.KeyPrefix(
+        offset=0, database_id=1, object_store_id=2, index_id=257
+    )
+    key_bytes = bytes.fromhex("0101020101")
+    parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
+    self.assertEqual(parsed_key_prefix, expected_key_prefix)
+
   def test_parse_idbkey(self):
     """Tests the IDBKey class."""
     expected_idbkey = record.IDBKey(
