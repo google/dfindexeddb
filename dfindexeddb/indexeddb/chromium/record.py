@@ -85,7 +85,7 @@ class KeyPrefix(utils.FromDecoderMixin):
 
     if index_id_length < 1 or index_id_length > 4:
       raise errors.ParserError("Invalid index ID length")
-    
+
     _, database_id = decoder.DecodeInt(database_id_length, signed=False)
     _, object_store_id = decoder.DecodeInt(object_store_id_length, signed=False)
     _, index_id = decoder.DecodeInt(index_id_length, signed=False)
