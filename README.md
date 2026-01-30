@@ -71,15 +71,17 @@ installation:
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] {db,ldb,log} ...
+usage: dfindexeddb [-h] {blink,gecko,db,ldb,log} ...
 
-A cli tool for parsing indexeddb files
+A cli tool for parsing IndexedDB files
 
 positional arguments:
-  {db,ldb,log}
-    db          Parse a directory as indexeddb.
-    ldb         Parse a ldb file as indexeddb.
-    log         Parse a log file as indexeddb.
+  {blink,gecko,db,ldb,log}
+    blink               Parse a file as a blink-encoded value.
+    gecko               Parse a file as a gecko-encoded value.
+    db                  Parse a directory/file as IndexedDB.
+    ldb                 Parse a ldb file as IndexedDB.
+    log                 Parse a log file as IndexedDB.
 
 options:
   -h, --help    show this help message and exit
@@ -101,23 +103,23 @@ results as JSON-L, use the following command:
 dfindexeddb db -s SOURCE --format safari -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB folder for Chrome/Chromium, using the
-manifest file to determine recovered records and output as JSON, use the
-following command:
+To parse IndexedDB records from a LevelDB folder or sqlite3 file for 
+Chrome/Chromium and output as JSON, use the following command:
 
 ```
-dfindexeddb db -s SOURCE --format chrome --use_manifest
+dfindexeddb db -s SOURCE --format chrome
 ```
 
-To parse IndexedDB records from a LevelDB ldb (.ldb) file and output the
-results as JSON-L, use the following command:
+To parse IndexedDB records from a Chrome/Chromium LevelDB ldb (.ldb) file and 
+output the results as JSON-L, use the following command:
 
 ```
 dfindexeddb ldb -s SOURCE -o jsonl
 ```
 
-To parse IndexedDB records from a LevelDB log (.log) file and output the
-results as the Python printable representation, use the following command:
+To parse IndexedDB records from a Chrome/Chromium LevelDB log (.log) file and 
+output the results as the Python printable representation, use the following 
+command:
 
 ```
 dfindexeddb log -s SOURCE -o repr
