@@ -111,7 +111,7 @@ def DbCommand(args: argparse.Namespace) -> None:
       for chromium_db_record in records:
         _Output(chromium_db_record, output=args.output)
     else:
-      for chromium_db_record in chromium_record.FolderReader(
+      for chromium_leveldb_record in chromium_record.FolderReader(
           args.source
       ).GetRecords(
           use_manifest=args.use_manifest,
@@ -119,37 +119,37 @@ def DbCommand(args: argparse.Namespace) -> None:
       ):
         if (
             args.object_store_id is not None
-            and chromium_db_record.object_store_id != args.object_store_id
+            and chromium_leveldb_record.object_store_id != args.object_store_id
         ):
           continue
-        _Output(chromium_db_record, output=args.output)
+        _Output(chromium_leveldb_record, output=args.output)
   elif args.format == "firefox":
     if args.object_store_id is not None:
-      records = firefox_record.FileReader(
+      firefox_db_records = firefox_record.FileReader(
           str(args.source)
       ).RecordsByObjectStoreId(
           args.object_store_id, include_raw_data=args.include_raw_data
       )
     else:
-      records = firefox_record.FileReader(str(args.source)).Records(
+      firefox_db_records = firefox_record.FileReader(str(args.source)).Records(
           include_raw_data=args.include_raw_data
       )
 
-    for firefox_db_record in records:
+    for firefox_db_record in firefox_db_records:
       _Output(firefox_db_record, output=args.output)
   elif args.format == "safari":
     if args.object_store_id is not None:
-      records = safari_record.FileReader(
+      safari_db_records = safari_record.FileReader(
           str(args.source)
       ).RecordsByObjectStoreId(
           args.object_store_id, include_raw_data=args.include_raw_data
       )
     else:
-      records = safari_record.FileReader(str(args.source)).Records(
+      safari_db_records = safari_record.FileReader(str(args.source)).Records(
           include_raw_data=args.include_raw_data
       )
 
-    for safari_db_record in records:
+    for safari_db_record in safari_db_records:
       _Output(safari_db_record, output=args.output)
 
 

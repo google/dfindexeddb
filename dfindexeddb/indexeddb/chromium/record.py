@@ -269,6 +269,7 @@ class SortableIDBKey(utils.FromDecoderMixin):
       if depth == cls._MAXIMUM_DEPTH:
         raise RecursionError("Maximum recursion depth encountered")
 
+      value: Any = None
       offset, ordered_type = decoder.DecodeUint8()
       if ordered_type == definitions.OrderedIDBKeyType.NUMBER:
         _, value = decoder.DecodeSortableDouble()
