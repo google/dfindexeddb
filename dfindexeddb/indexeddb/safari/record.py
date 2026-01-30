@@ -62,6 +62,8 @@ class IndexedDBRecord:
   object_store_name: str
   database_name: str
   record_id: int
+  raw_key: Optional[bytes] = None
+  raw_value: Optional[bytes] = None
 
 
 class FileReader:
@@ -128,7 +130,9 @@ class FileReader:
             database_name=self.database_name,
         )
 
-  def RecordById(self, record_id: int) -> Optional[IndexedDBRecord]:
+  def RecordById(
+      self, record_id: int, include_raw_data: bool = False
+  ) -> Optional[IndexedDBRecord]:
     """Returns an IndexedDBRecord for the given record_id.
 
     Returns:
@@ -156,10 +160,12 @@ class FileReader:
           object_store_name=row[3].decode("utf-8"),
           database_name=self.database_name,
           record_id=row[4],
+          raw_key=row[0] if include_raw_data else None,
+          raw_value=row[1] if include_raw_data else None,
       )
 
   def RecordsByObjectStoreName(
-      self, name: str
+      self, name: str, include_raw_data: bool = False
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore name.
 
@@ -184,10 +190,12 @@ class FileReader:
             object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
             record_id=row[4],
+            raw_key=row[0] if include_raw_data else None,
+            raw_value=row[1] if include_raw_data else None,
         )
 
   def RecordsByObjectStoreId(
-      self, object_store_id: int
+      self, object_store_id: int, include_raw_data: bool = False
   ) -> Generator[IndexedDBRecord, None, None]:
     """Returns IndexedDBRecords for the given ObjectStore id.
 
@@ -213,9 +221,13 @@ class FileReader:
             object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
             record_id=row[4],
+            raw_key=row[0] if include_raw_data else None,
+            raw_value=row[1] if include_raw_data else None,
         )
 
-  def Records(self) -> Generator[IndexedDBRecord, None, None]:
+  def Records(
+      self, include_raw_data: bool = False
+  ) -> Generator[IndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
     with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
@@ -252,4 +264,6 @@ class FileReader:
             object_store_name=row[3].decode("utf-8"),
             database_name=self.database_name,
             record_id=row[4],
+            raw_key=row[0] if include_raw_data else None,
+            raw_value=row[1] if include_raw_data else None,
         )

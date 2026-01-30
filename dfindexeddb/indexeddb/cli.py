@@ -24,6 +24,7 @@ from typing import Any
 from dfindexeddb import utils, version
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import blink
+from dfindexeddb.indexeddb.chromium import sqlite
 from dfindexeddb.indexeddb.chromium import record as chromium_record
 from dfindexeddb.indexeddb.firefox import gecko
 from dfindexeddb.indexeddb.firefox import record as firefox_record
@@ -96,18 +97,59 @@ def GeckoCommand(args: argparse.Namespace) -> None:
 def DbCommand(args: argparse.Namespace) -> None:
   """The CLI for processing a directory as IndexedDB."""
   if args.format in ("chrome", "chromium"):
-    for chromium_db_record in chromium_record.FolderReader(
-        args.source
-    ).GetRecords(
-        use_manifest=args.use_manifest,
-        use_sequence_number=args.use_sequence_number,
-    ):
-      _Output(chromium_db_record, output=args.output)
+    if args.source.is_file():
+      if args.object_store_id is not None:
+        records = sqlite.DatabaseReader(
+            str(args.source)
+        ).RecordsByObjectStoreId(
+            args.object_store_id, include_raw_data=args.include_raw_data
+        )
+      else:
+        records = sqlite.DatabaseReader(str(args.source)).Records(
+            include_raw_data=args.include_raw_data
+        )
+      for chromium_db_record in records:
+        _Output(chromium_db_record, output=args.output)
+    else:
+      for chromium_db_record in chromium_record.FolderReader(
+          args.source
+      ).GetRecords(
+          use_manifest=args.use_manifest,
+          use_sequence_number=args.use_sequence_number,
+      ):
+        if (
+            args.object_store_id is not None
+            and chromium_db_record.object_store_id != args.object_store_id
+        ):
+          continue
+        _Output(chromium_db_record, output=args.output)
   elif args.format == "firefox":
-    for firefox_db_record in firefox_record.FileReader(args.source).Records():
+    if args.object_store_id is not None:
+      records = firefox_record.FileReader(
+          str(args.source)
+      ).RecordsByObjectStoreId(
+          args.object_store_id, include_raw_data=args.include_raw_data
+      )
+    else:
+      records = firefox_record.FileReader(str(args.source)).Records(
+          include_raw_data=args.include_raw_data
+      )
+
+    for firefox_db_record in records:
       _Output(firefox_db_record, output=args.output)
   elif args.format == "safari":
-    for safari_db_record in safari_record.FileReader(args.source).Records():
+    if args.object_store_id is not None:
+      records = safari_record.FileReader(
+          str(args.source)
+      ).RecordsByObjectStoreId(
+          args.object_store_id, include_raw_data=args.include_raw_data
+      )
+    else:
+      records = safari_record.FileReader(str(args.source)).Records(
+          include_raw_data=args.include_raw_data
+      )
+
+    for safari_db_record in records:
       _Output(safari_db_record, output=args.output)
 
 
@@ -203,6 +245,16 @@ def App() -> None:
       required=True,
       choices=["chromium", "chrome", "firefox", "safari"],
       help="The type of IndexedDB to parse.",
+  )
+  parser_db.add_argument(
+      "--object_store_id",
+      type=int,
+      help="The object store ID to filter by.",
+  )
+  parser_db.add_argument(
+      "--include_raw_data",
+      action="store_true",
+      help="Include raw key and value in the output.",
   )
   parser_db.add_argument(
       "-o",

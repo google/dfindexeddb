@@ -234,6 +234,54 @@ class TestStreamDecoder(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, expected_result)
 
+  def test_decode_sortable_double(self):
+    """Tests the DecodeSortableDouble method."""
+    with self.subTest("positive"):
+      bits = struct.unpack(">Q", struct.pack(">d", 1.0))[0]
+      bits ^= 1 << 63
+      data = bits.to_bytes(8, byteorder="big")
+      decoder = utils.StreamDecoder(io.BytesIO(data))
+      offset, result = decoder.DecodeSortableDouble()
+    self.assertEqual(offset, 0)
+    self.assertEqual(result, 1.0)
+
+    with self.subTest("negative"):
+      bits = struct.unpack(">Q", struct.pack(">d", -1.0))[0]
+      bits ^= 0xFFFFFFFFFFFFFFFF
+      data = bits.to_bytes(8, byteorder="big")
+      decoder = utils.StreamDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableDouble()
+      self.assertEqual(result, -1.0)
+
+  def test_decode_sortable_string(self):
+    """Tests the DecodeSortableString method."""
+    data = b"\x42\x43\x44\x00"  # "ABC"
+    decoder = utils.StreamDecoder(io.BytesIO(data))
+    offset, result = decoder.DecodeSortableString()
+    self.assertEqual(offset, 0)
+    self.assertEqual(result, "ABC")
+
+  def test_decode_sortable_binary(self):
+    """Tests the DecodeSortableBinary method."""
+    with self.subTest("empty"):
+      data = b"\x00"
+      decoder = utils.StreamDecoder(io.BytesIO(data))
+      offset, result = decoder.DecodeSortableBinary()
+      self.assertEqual(offset, 0)
+      self.assertEqual(result, b"")
+
+    with self.subTest("one chunk ABCDEFGH"):
+      data = b"\x09ABCDEFGH\x08"
+      decoder = utils.StreamDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableBinary()
+      self.assertEqual(result, b"ABCDEFGH")
+
+    with self.subTest("partial chunk ABC"):
+      data = b"\x09ABC\x00\x00\x00\x00\x00\x03"
+      decoder = utils.StreamDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableBinary()
+      self.assertEqual(result, b"ABC")
+
 
 if __name__ == "__main__":
   unittest.main()

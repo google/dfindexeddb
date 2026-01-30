@@ -76,6 +76,102 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.IDBKeyPath.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
+  def test_decode_sortable_binary(self):
+    """Tests the SortableIDBKey class with binary data."""
+    with self.subTest("empty"):
+      key_bytes = bytes.fromhex("4000")  # type 0x40 + sentinel 0x00
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.BINARY)
+      self.assertEqual(parsed_idbkey.value, b"")
+
+    with self.subTest("1 byte"):
+      key_bytes = bytes.fromhex(
+          "4009aa0000000000000001"
+      )  # type 0x40 + marker 0x09 + 0xAA + 7 padding bytes + sentinel 0x01
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.value, b"\xAA")
+
+    with self.subTest("8 bytes"):
+      key_bytes = bytes.fromhex(
+          "4009010203040506070808"
+      )  # type 0x40 + marker 0x09 + 8 data bytes + sentinel 0x08
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.value, b"\x01\x02\x03\x04\x05\x06\x07\x08")
+
+    with self.subTest("9 bytes"):
+      key_bytes = bytes.fromhex(
+          "4009010203040506070809090000000000000001"
+      )  # type 0x40 + chunk1 + chunk2 + sentinel 0x01
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(
+          parsed_idbkey.value, b"\x01\x02\x03\x04\x05\x06\x07\x08\x09"
+      )
+
+  def test_decode_sortable_number(self):
+    """Tests the SortableIDBKey class with number data."""
+    with self.subTest("1.0"):
+      key_bytes = bytes.fromhex(
+          "10bff0000000000000"
+      )  # type 0x10 + 1.0 (= 0x3FF0000000000000.
+      # Sign bit 0 -> modified: 0xBFF0000000000000)
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.NUMBER)
+      self.assertEqual(parsed_idbkey.value, 1.0)
+
+    with self.subTest("-1.0"):
+      key_bytes = bytes.fromhex(
+          "10400fffffffffffff"
+      )  # type 0x10 + -1.0 (= 0xBFF0000000000000.
+      # Sign bit 1 -> modified: ~0xBFF0000000000000 = 0x400FFFFFFFFFFFFF)
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.value, -1.0)
+
+  def test_decode_sortable_string(self):
+    """Tests the SortableIDBKey class with string data."""
+    with self.subTest("'a'"):
+      key_bytes = bytes.fromhex(
+          "306200"
+      )  # type 0x30 + 'a'+1 (0x62) + sentinel 0x00
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.STRING)
+      self.assertEqual(parsed_idbkey.value, "a")
+
+    with self.subTest("'ab'"):
+      key_bytes = bytes.fromhex(
+          "30626300"
+      )  # type 0x30 + 'a'+1 + 'b'+1 + sentinel 0x00
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.value, "ab")
+
+  def test_decode_sortable_date(self):
+    """Tests the SortableIDBKey class with date data."""
+    with self.subTest("Unix Epoch"):
+      key_bytes = bytes.fromhex(
+          "208000000000000000"
+      )  # type 0x20 + 0.0 (1970-01-01 with sign bit set)
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.DATE)
+      self.assertEqual(
+          parsed_idbkey.value, datetime.datetime(1970, 1, 1, tzinfo=None)
+      )
+
+  def test_decode_sortable_array(self):
+    """Tests the SortableIDBKey class with array data."""
+    with self.subTest("[1.0]"):
+      key_bytes = bytes.fromhex(
+          "5010bff000000000000000"
+      )  # type 0x50 + Number(1.0) + sentinel 0x00
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.ARRAY)
+      self.assertEqual(parsed_idbkey.value, [1.0])
+
+    with self.subTest("[1.0, 'a']"):
+      key_bytes = bytes.fromhex(
+          "5010bff000000000000030620000"
+      )  # type 0x50 + Number(1.0) + String("a") + sentinel 0x00
+      parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
+      self.assertEqual(parsed_idbkey.value, [1.0, "a"])
+
   def test_parse_blob_journal(self):
     """Tests the BlobJournal class"""
     expected_key = record.BlobJournal(offset=4, entries=[])
