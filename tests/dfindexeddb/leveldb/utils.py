@@ -14,6 +14,7 @@
 # limitations under the License.
 """Unit tests for utility classes."""
 import io
+import struct
 import unittest
 
 from dfindexeddb.leveldb import utils
@@ -57,6 +58,54 @@ class LevelDBDecoderTest(unittest.TestCase):
     offset, result = decoder.DecodeStringWithLength()
     self.assertEqual(offset, 0)
     self.assertEqual(result, "a")
+
+  def test_decode_sortable_double(self):
+    """Tests the DecodeSortableDouble method."""
+    with self.subTest("positive"):
+      bits = struct.unpack(">Q", struct.pack(">d", 1.0))[0]
+      bits ^= 1 << 63
+      data = bits.to_bytes(8, byteorder="big")
+      decoder = utils.LevelDBDecoder(io.BytesIO(data))
+      offset, result = decoder.DecodeSortableDouble()
+      self.assertEqual(offset, 0)
+      self.assertEqual(result, 1.0)
+
+    with self.subTest("negative"):
+      bits = struct.unpack(">Q", struct.pack(">d", -1.0))[0]
+      bits ^= 0xFFFFFFFFFFFFFFFF
+      data = bits.to_bytes(8, byteorder="big")
+      decoder = utils.LevelDBDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableDouble()
+      self.assertEqual(result, -1.0)
+
+  def test_decode_sortable_string(self):
+    """Tests the DecodeSortableString method."""
+    data = b"\x42\x43\x44\x00"  # "ABC"
+    decoder = utils.LevelDBDecoder(io.BytesIO(data))
+    offset, result = decoder.DecodeSortableString()
+    self.assertEqual(offset, 0)
+    self.assertEqual(result, "ABC")
+
+  def test_decode_sortable_binary(self):
+    """Tests the DecodeSortableBinary method."""
+    with self.subTest("empty"):
+      data = b"\x00"
+      decoder = utils.LevelDBDecoder(io.BytesIO(data))
+      offset, result = decoder.DecodeSortableBinary()
+      self.assertEqual(offset, 0)
+      self.assertEqual(result, b"")
+
+    with self.subTest("one chunk ABCDEFGH"):
+      data = b"\x09ABCDEFGH\x08"
+      decoder = utils.LevelDBDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableBinary()
+      self.assertEqual(result, b"ABCDEFGH")
+
+    with self.subTest("partial chunk ABC"):
+      data = b"\x09ABC\x00\x00\x00\x00\x00\x03"
+      decoder = utils.LevelDBDecoder(io.BytesIO(data))
+      _, result = decoder.DecodeSortableBinary()
+      self.assertEqual(result, b"ABC")
 
 
 if __name__ == "__main__":
