@@ -32,6 +32,8 @@ include:
     $ pip install dfindexeddb
 ```
 
+### Optional plugins
+
 To also install the dependencies for leveldb/indexeddb plugins, run
 ```
     $ pip install 'dfindexeddb[plugins]'
@@ -55,6 +57,8 @@ To also install the dependencies for leveldb/indexeddb plugins, run
     $ source .venv/bin/activate
     $ pip install .
 ```
+
+### Optional plugins
 
 To also install the dependencies for leveldb/indexeddb plugins, run
 ```
@@ -89,48 +93,14 @@ options:
 
 #### Examples:
 
-To parse IndexedDB records from an sqlite file for Firefox and output the
-results as JSON, use the following command:
-
-```
-dfindexeddb db -s SOURCE --format firefox -o json
-```
-
-To parse IndexedDB records from an sqlite file for Safari and output the
-results as JSON-L, use the following command:
-
-```
-dfindexeddb db -s SOURCE --format safari -o jsonl
-```
-
-To parse IndexedDB records from a LevelDB folder or sqlite3 file for 
-Chrome/Chromium and output as JSON, use the following command:
-
-```
-dfindexeddb db -s SOURCE --format chrome
-```
-
-To parse IndexedDB records from a Chrome/Chromium LevelDB ldb (.ldb) file and 
-output the results as JSON-L, use the following command:
-
-```
-dfindexeddb ldb -s SOURCE -o jsonl
-```
-
-To parse IndexedDB records from a Chrome/Chromium LevelDB log (.log) file and 
-output the results as the Python printable representation, use the following 
-command:
-
-```
-dfindexeddb log -s SOURCE -o repr
-```
-
-To parse a file as a Chrome/Chromium IndexedDB blink value and output the
-results as JSON:
-
-```
-dfindexeddb blink -s SOURCE
-```
+| Platform / Source | Format | Command |
+| :--- | :--- | :--- |
+| **Firefox** (sqlite) | JSON | `dfindexeddb db -s SOURCE --format firefox -o json` |
+| **Safari** (sqlite) | JSON-L | `dfindexeddb db -s SOURCE --format safari -o jsonl` |
+| **Chrome** (LevelDB/sqlite) | JSON | `dfindexeddb db -s SOURCE --format chrome` |
+| **Chrome** (.ldb) | JSON-L | `dfindexeddb ldb -s SOURCE -o jsonl` |
+| **Chrome** (.log) | Python repr | `dfindexeddb log -s SOURCE -o repr` |
+| **Chrome** (Blink) | JSON | `dfindexeddb blink -s SOURCE` |
 
 ### LevelDB
 
@@ -153,44 +123,18 @@ options:
 
 #### Examples
 
-To parse records from a LevelDB folder, use the following command:
+| Source | Type | Command |
+| :--- | :--- | :--- |
+| **LevelDB Folder** | Records | `dfleveldb db -s SOURCE` |
+| **Log file** (.log) | Physical Records | `dfleveldb log -s SOURCE -t physical_records` |
+| **Log file** (.log) | Blocks | `dfleveldb log -s SOURCE -t blocks` |
+| **Log file** (.log) | Write Batches | `dfleveldb log -s SOURCE -t write_batches` |
+| **Log file** (.log) | Internal Key Records | `dfleveldb log -s SOURCE -t parsed_internal_key` |
+| **Table file** (.ldb) | Records | `dfleveldb ldb -s SOURCE -t record` |
+| **Table file** (.ldb) | Blocks | `dfleveldb ldb -s SOURCE -t blocks` |
+| **Descriptor** (MANIFEST) | Version Edits | `dfleveldb descriptor -s SOURCE -t versionedit` |
 
-```
-dfleveldb db -s SOURCE
-```
-
-To parse records from a LevelDB folder, and use the sequence number to
-determine recovered records and output as JSON, use the
-following command:
-
-```
-dfleveldb db -s SOURCE --use_sequence_number
-```
-
-To parse blocks / physical records/ write batches / internal key records from a
-LevelDB log (.log) file, use the following command, specifying the type (block,
-physical_records, etc) via the `-t` option.  By default, internal key records are parsed:
-
-```
-$ dfleveldb log  -s SOURCE [-t {blocks,physical_records,write_batches,parsed_internal_key}]
-```
-
-To parse blocks / records from a LevelDB table (.ldb) file, use the following
-command, specifying the type (blocks, records) via the `-t` option.  By
-default, records are parsed:
-
-```
-$ dfleveldb ldb -s SOURCE [-t {blocks,records}]
-```
-
-To parse version edit records from a Descriptor (MANIFEST) file, use the
-following command:
-
-```
-$ dfleveldb descriptor -s SOURCE [-o {json,jsonl,repr}] [-t {blocks,physical_records,versionedit} | -v]
-```
-
-#### Plugins
+#### Optional Plugins
 
 To apply a plugin parser for a leveldb file/folder, add the
 `--plugin [Plugin Name]` argument.  Currently, there is support for the

@@ -50,8 +50,8 @@ limitations under the License.
           test_date: new Date(2023, 01, 13, 10, 20, 30, 456),
           test_set: new Set([1, 2, 3]),
           test_map: new Map([
-              ['a', 1], 
-              ['b', 2], 
+              ['a', 1],
+              ['b', 2],
               ['c', 3]
           ]),
           test_regexp: new RegExp('\\w+'),
@@ -64,7 +64,7 @@ limitations under the License.
               age: 21,
           }
         });
-      
+
         store_a.put({
             id: 2,
             test_date: new Date(2023, 01, 13, 10, 20, 30, 457),
@@ -87,10 +87,10 @@ limitations under the License.
                           }
                       }
                   }
-              }  
+              }
             }
         })
-  
+
         let buffer = new ArrayBuffer(100*1024)
         let buffer_view = new Uint8Array(buffer)
         buffer_view.fill(42, 0, 1024)
@@ -99,7 +99,7 @@ limitations under the License.
           id: 3,
           test_date: new Date(2023, 01, 13, 10, 20, 30, 458),
           buffer: buffer,
-          buffer_view: buffer_view 
+          buffer_view: buffer_view
         })
 
         let view = new Uint8Array(1000*1024)
@@ -108,9 +108,9 @@ limitations under the License.
         store_a.put({
           id: 4,
           test_date: new Date(2023, 01, 13, 10, 20, 30, 459),
-          view: view 
+          view: view
         })
-        
+
       tx.oncomplete = function() {
           db.close();
       };

@@ -54,6 +54,8 @@ class FirefoxIndexedDBRecord:
     object_store_id: the object store id.
     object_store_name: the object store name from the object_store table.
     database_name: the IndexedDB database name from the database table.
+    raw_key: the raw key.
+    raw_value: the raw value.
   """
 
   key: Any

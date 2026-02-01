@@ -97,7 +97,7 @@ class DatabaseReader:
       parse_key: bool = True,
       parse_value: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
-    """Yields records from a sqlite3 cursor.
+    """Yields ChromiumIndexedDBRecord records from a sqlite3 cursor.
 
     Args:
       cursor: the sqlite3 cursor.
@@ -120,6 +120,7 @@ class DatabaseReader:
             value = blink.V8ScriptValueDecoder.FromBytes(
                 zstd.decompress(raw_value)
             )
+        # TODO: Add support for blob data.
 
       yield ChromiumIndexedDBRecord(
           row_id=row[0],
@@ -138,13 +139,16 @@ class DatabaseReader:
       parse_key: bool = True,
       parse_value: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
-    """Yields records for a given object store ID.
+    """Yields ChromiumIndexedDBRecord records for a given object store ID.
 
     Args:
       object_store_id: the object store ID.
       include_raw_data: whether to include the raw data.
       parse_key: whether to parse the key.
       parse_value: whether to parse the value.
+
+    Yields:
+      ChromiumIndexedDBRecord records.
     """
     with sqlite3.connect(self._filename) as conn:
       cursor = conn.cursor()
@@ -164,13 +168,16 @@ class DatabaseReader:
       parse_key: bool = True,
       parse_value: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
-    """Yields records for a given object store name.
+    """Yields ChromiumIndexedDBRecord records for a given object store name.
 
     Args:
       object_store_name: the object store name.
       include_raw_data: whether to include the raw data.
       parse_key: whether to parse the key.
       parse_value: whether to parse the value.
+
+    Yields:
+      ChromiumIndexedDBRecord records.
     """
     with sqlite3.connect(self._filename) as conn:
       cursor = conn.cursor()
@@ -189,7 +196,7 @@ class DatabaseReader:
       parse_key: bool = True,
       parse_value: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
-    """Yields records.
+    """Yields ChromiumIndexedDBRecord records from all object stores.
 
     Args:
       include_raw_data: whether to include the raw data.
@@ -197,7 +204,7 @@ class DatabaseReader:
       parse_value: whether to parse the value.
 
     Yields:
-      records.
+      ChromiumIndexedDBRecord records.
     """
     with sqlite3.connect(self._filename) as conn:
       cursor = conn.cursor()

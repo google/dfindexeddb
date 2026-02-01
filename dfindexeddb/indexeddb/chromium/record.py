@@ -1407,9 +1407,9 @@ class IndexedDbKey(BaseIndexedDBKey):
     key_class = cls.METADATA_TYPE_TO_CLASS.get(key_type)
     if not key_class:
       raise errors.ParserError("Unknown KeyPrefixType")
-    return key_class.FromDecoder(
+    return key_class.FromDecoder(  # type: ignore[attr-defined,no-any-return]
         decoder=decoder,
-        key_prefix=key_prefix,  # type: ignore[return-value]
+        key_prefix=key_prefix,
         base_offset=base_offset,
     )
 

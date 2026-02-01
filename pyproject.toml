@@ -50,3 +50,12 @@ Repository = "https://github.com/google/dfindexeddb"
 [tool.pyink]
 line_length = 80
 pyink_indentation = 2
+include = '\.pyi?$'
+force-exclude = '.*_pb2\.py'
+
+[tool.mypy]
+disable_error_code = ["override"]
+ignore_missing_imports = true
+strict = true
+exclude = ['_pb2\.py', 'tests']
+disallow_untyped_calls = false

@@ -54,6 +54,8 @@ class IndexedDBRecord:
     object_store_name: the object store name from the ObjectStoreInfo table.
     database_name: the IndexedDB database name from the IDBDatabaseInfo table.
     record_id: the record ID from the Record table.
+    raw_key: the raw key.
+    raw_value: the raw value.
   """
 
   key: Any

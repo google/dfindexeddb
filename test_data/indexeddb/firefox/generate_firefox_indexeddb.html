@@ -55,7 +55,7 @@ limitations under the License.
       store_a.put({id: 28, value:new Map()})
       store_a.put({id: 29, value:new RegExp()})
       store_a.put({id: 30, value:{}})
-      
+
       store_a.put({
           id: 1,
           test_undef: undefined,
@@ -72,8 +72,8 @@ limitations under the License.
           test_date: new Date(2023, 1, 13, 10, 20, 30, 456),
           test_set: new Set([1, 2, 3]),
           test_map: new Map([
-              ['a', 1], 
-              ['b', 2], 
+              ['a', 1],
+              ['b', 2],
               ['c', 3]
           ]),
           test_regexp: new RegExp('\\w+'),
@@ -86,7 +86,7 @@ limitations under the License.
               age: 21,
           }
         });
-      
+
       store_a.put({
           id: 2,
           test_date: new Date(2023, 1, 13, 10, 20, 30, 457),
@@ -109,10 +109,10 @@ limitations under the License.
                         }
                     }
                 }
-            }  
+            }
           }
       })
-  
+
       let buffer = new ArrayBuffer(100*1024)
       let buffer_view = new Uint8Array(buffer)
       buffer_view.fill(42, 0, 1024)
@@ -121,7 +121,7 @@ limitations under the License.
         id: 3,
         test_date: new Date(2023, 1, 13, 10, 20, 30, 458),
         buffer: buffer,
-        buffer_view: buffer_view 
+        buffer_view: buffer_view
       })
 
       let view = new Uint8Array(1000*1024)
@@ -130,13 +130,13 @@ limitations under the License.
       store_a.put({
         id: 4,
         test_date: new Date(2023, 1, 13, 10, 20, 30, 459),
-        view: view 
+        view: view
       })
-      
-            
-      // A key can be one of the following types: string, date, float, 
-      // a binary blob, and array. For arrays, the key can range from 
-      // an empty value to infinity. And you can include an array 
+
+
+      // A key can be one of the following types: string, date, float,
+      // a binary blob, and array. For arrays, the key can range from
+      // an empty value to infinity. And you can include an array
       // within an array.
       // https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology#key_and_value
       store_a.put({id: new Date(2023, 1, 13, 10, 20, 30, 456), value:{}})
@@ -145,7 +145,7 @@ limitations under the License.
       store_a.put({id: new Uint8Array(3), value:{}})
       store_a.put({id: [1, 2, 3], value:{}})
       store_a.put({id: [[1, 2, 3], [1, 2, [1, 2, 3]], [[1, 2, 3], [1, 2, 3], 3]], value:{}})
-      
+
       tx.oncomplete = function() {
           db.close();
     };
