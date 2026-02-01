@@ -1394,14 +1394,7 @@ class IndexedDbKey(BaseIndexedDBKey):
       decoder: utils.LevelDBDecoder,
       key_prefix: KeyPrefix,
       base_offset: int = 0,
-  ) -> Union[
-      BlobEntryKey,
-      DatabaseMetaDataKey,
-      ExistsEntryKey,
-      GlobalMetaDataKey,
-      IndexDataKey,
-      ObjectStoreDataKey,
-  ]:
+  ) -> BaseIndexedDBKey:
     """Decodes the IndexedDB key."""
     key_type = key_prefix.GetKeyPrefixType()
     key_class = cls.METADATA_TYPE_TO_CLASS.get(key_type)
