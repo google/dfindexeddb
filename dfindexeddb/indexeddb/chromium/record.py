@@ -36,7 +36,7 @@ from dfindexeddb import errors
 from dfindexeddb.indexeddb.chromium import blink, definitions
 from dfindexeddb.leveldb import record, utils
 
-T = TypeVar("T")
+T = TypeVar("T", bound="BaseIndexedDBKey")
 
 
 @dataclass(frozen=True)
@@ -470,6 +470,9 @@ class BaseIndexedDBKey:
     Args:
       decoder: the stream decoder
 
+    Returns:
+      The decoded value.
+
     Raises:
       NotImplementedError.
     """
@@ -479,7 +482,7 @@ class BaseIndexedDBKey:
     """Parses the value from raw bytes.
 
     Args:
-      value_data: the raw value bytes.
+      value_data: the raw value data.
 
     Returns:
       The parsed value.
@@ -495,13 +498,15 @@ class BaseIndexedDBKey:
       decoder: utils.LevelDBDecoder,
       key_prefix: KeyPrefix,
       base_offset: int = 0,
-  ) -> T:  # pylint: disable=unused-variable
-    """Decodes the remaining key data from the current decoder position.
+  ) -> T:
+    """Parses the key from the current position of the LevelDBDecoder.
+
+    To be implemented by subclasses.
 
     Args:
       decoder: the stream decoder.
-      key_prefix: the decoded key_prefix.
-      base_offset: the base offset.
+      key_prefix: the key prefix.
+      base_offset: the base offset of the key.
 
     Returns:
       The decoded key.
@@ -524,7 +529,7 @@ class BaseIndexedDBKey:
     """
     decoder = utils.LevelDBDecoder(stream)
     key_prefix = KeyPrefix.FromDecoder(decoder, base_offset=base_offset)
-    return cls.FromDecoder(  # type: ignore[no-any-return,attr-defined]
+    return cls.FromDecoder(
         decoder=decoder, key_prefix=key_prefix, base_offset=base_offset
     )
 
@@ -540,9 +545,7 @@ class BaseIndexedDBKey:
       The decoded key.
     """
     stream = io.BytesIO(raw_data)
-    return cls.FromStream(  # type: ignore[no-any-return,attr-defined]
-        stream=stream, base_offset=base_offset
-    )
+    return cls.FromStream(stream=stream, base_offset=base_offset)
 
 
 @dataclass
@@ -803,7 +806,9 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
   """A GlobalMetaDataKey parser."""
 
   # pylint: disable=line-too-long
-  METADATA_TYPE_TO_CLASS = {
+  METADATA_TYPE_TO_CLASS: dict[  # pylint: disable=invalid-name
+      definitions.GlobalMetadataKeyType, type[BaseIndexedDBKey]
+  ] = {
       definitions.GlobalMetadataKeyType.ACTIVE_BLOB_JOURNAL: ActiveBlobJournalKey,
       definitions.GlobalMetadataKeyType.DATA_VERSION: DataVersionKey,
       definitions.GlobalMetadataKeyType.DATABASE_FREE_LIST: DatabaseFreeListKey,
@@ -830,18 +835,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
       decoder: utils.LevelDBDecoder,
       key_prefix: KeyPrefix,
       base_offset: int = 0,
-  ) -> Union[
-      ActiveBlobJournalKey,
-      DataVersionKey,
-      DatabaseFreeListKey,
-      DatabaseNameKey,
-      EarliestSweepKey,
-      EarliestCompactionTimeKey,
-      MaxDatabaseIdKey,
-      RecoveryBlobJournalKey,
-      SchemaVersionKey,
-      ScopesPrefixKey,
-  ]:
+  ) -> BaseIndexedDBKey:
     """Decodes the global metadata key.
 
     Raises:
@@ -853,9 +847,7 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
     key_class = cls.METADATA_TYPE_TO_CLASS.get(metadata_type)
     if not key_class:
       raise errors.ParserError("Unknown metadata key type")
-    return key_class.FromDecoder(  # type: ignore[attr-defined,no-any-return]
-        decoder, key_prefix, base_offset
-    )
+    return key_class.FromDecoder(decoder, key_prefix, base_offset)
 
 
 @dataclass
@@ -1371,7 +1363,9 @@ class IndexedDbKey(BaseIndexedDBKey):
   A factory class for parsing IndexedDB keys.
   """
 
-  METADATA_TYPE_TO_CLASS = {
+  METADATA_TYPE_TO_CLASS: dict[  # pylint: disable=invalid-name
+      definitions.KeyPrefixType, Optional[type[BaseIndexedDBKey]]
+  ] = {
       definitions.KeyPrefixType.BLOB_ENTRY: BlobEntryKey,
       definitions.KeyPrefixType.DATABASE_METADATA: DatabaseMetaDataKey,
       definitions.KeyPrefixType.EXISTS_ENTRY: ExistsEntryKey,
@@ -1400,7 +1394,7 @@ class IndexedDbKey(BaseIndexedDBKey):
     key_class = cls.METADATA_TYPE_TO_CLASS.get(key_type)
     if not key_class:
       raise errors.ParserError("Unknown KeyPrefixType")
-    return key_class.FromDecoder(  # type: ignore[attr-defined,no-any-return]
+    return key_class.FromDecoder(
         decoder=decoder,
         key_prefix=key_prefix,
         base_offset=base_offset,
