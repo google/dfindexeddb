@@ -54,6 +54,8 @@ class FirefoxIndexedDBRecord:
     object_store_id: the object store id.
     object_store_name: the object store name from the object_store table.
     database_name: the IndexedDB database name from the database table.
+    raw_key: the raw key.
+    raw_value: the raw value.
   """
 
   key: Any
@@ -62,6 +64,8 @@ class FirefoxIndexedDBRecord:
   object_store_id: int
   object_store_name: str
   database_name: str
+  raw_key: Optional[bytes] = None
+  raw_value: Optional[bytes] = None
 
 
 class FileReader:
@@ -134,7 +138,7 @@ class FileReader:
         )
 
   def RecordsByObjectStoreId(
-      self, object_store_id: int
+      self, object_store_id: int, include_raw_data: bool = False
   ) -> Generator[FirefoxIndexedDBRecord, None, None]:
     """Returns FirefoxIndexedDBRecords by a given object store id.
 
@@ -163,9 +167,13 @@ class FileReader:
             file_ids=row[3],
             object_store_name=row[4].decode("utf-8"),
             database_name=self.database_name,
+            raw_key=row[0] if include_raw_data else None,
+            raw_value=row[1] if include_raw_data else None,
         )
 
-  def Records(self) -> Generator[FirefoxIndexedDBRecord, None, None]:
+  def Records(
+      self, include_raw_data: bool = False
+  ) -> Generator[FirefoxIndexedDBRecord, None, None]:
     """Returns FirefoxIndexedDBRecords from the database."""
     with sqlite3.connect(f"file:{self.filename}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
@@ -187,6 +195,8 @@ class FileReader:
             file_ids=row[3],
             object_store_name=row[4].decode("utf-8"),
             database_name=self.database_name,
+            raw_key=row[0] if include_raw_data else None,
+            raw_value=row[1] if include_raw_data else None,
         )
 
 
