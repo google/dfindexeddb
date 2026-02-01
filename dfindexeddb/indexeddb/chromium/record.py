@@ -24,6 +24,7 @@ from datetime import datetime
 from typing import (
     Any,
     BinaryIO,
+    ClassVar,
     Generator,
     Optional,
     Tuple,
@@ -806,8 +807,10 @@ class GlobalMetaDataKey(BaseIndexedDBKey):
   """A GlobalMetaDataKey parser."""
 
   # pylint: disable=line-too-long
-  METADATA_TYPE_TO_CLASS: dict[  # pylint: disable=invalid-name
-      definitions.GlobalMetadataKeyType, type[BaseIndexedDBKey]
+  METADATA_TYPE_TO_CLASS: ClassVar[
+      dict[  # pylint: disable=invalid-name
+          definitions.GlobalMetadataKeyType, type[BaseIndexedDBKey]
+      ]
   ] = {
       definitions.GlobalMetadataKeyType.ACTIVE_BLOB_JOURNAL: ActiveBlobJournalKey,
       definitions.GlobalMetadataKeyType.DATA_VERSION: DataVersionKey,
@@ -1363,8 +1366,10 @@ class IndexedDbKey(BaseIndexedDBKey):
   A factory class for parsing IndexedDB keys.
   """
 
-  METADATA_TYPE_TO_CLASS: dict[  # pylint: disable=invalid-name
-      definitions.KeyPrefixType, Optional[type[BaseIndexedDBKey]]
+  METADATA_TYPE_TO_CLASS: ClassVar[
+      dict[  # pylint: disable=invalid-name
+          definitions.KeyPrefixType, Optional[type[BaseIndexedDBKey]]
+      ]
   ] = {
       definitions.KeyPrefixType.BLOB_ENTRY: BlobEntryKey,
       definitions.KeyPrefixType.DATABASE_METADATA: DatabaseMetaDataKey,
