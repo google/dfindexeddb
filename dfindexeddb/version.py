@@ -15,7 +15,7 @@
 """Version information for dfIndexeddb."""
 
 
-__version__ = "20251109"
+__version__ = "20260130"
 
 
 def GetVersion() -> str:
