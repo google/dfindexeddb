@@ -14,13 +14,13 @@ maintainers = [
   {name = "dfIndexeddb Developers", email = "dfindexeddb-dev@googlegroups.com"},
 ]
 dependencies = [
-  'python-snappy==0.6.1',
+  "python-snappy==0.6.1",
   "zstd==1.5.5.1",
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 classifiers = [
-  'Development Status :: 3 - Alpha',
-  'Programming Language :: Python',
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python",
 ]
 
 [project.optional-dependencies]
@@ -57,5 +57,5 @@ force-exclude = '.*_pb2\.py'
 disable_error_code = ["override"]
 ignore_missing_imports = true
 strict = true
-exclude = ['_pb2\.py', 'tests']
+exclude = ['_pb2\.py', "tests"]
 disallow_untyped_calls = false
