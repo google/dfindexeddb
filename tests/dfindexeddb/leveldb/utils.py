@@ -14,7 +14,6 @@
 # limitations under the License.
 """Unit tests for utility classes."""
 import io
-import struct
 import unittest
 
 from dfindexeddb.leveldb import utils
@@ -62,18 +61,14 @@ class LevelDBDecoderTest(unittest.TestCase):
   def test_decode_sortable_double(self):
     """Tests the DecodeSortableDouble method."""
     with self.subTest("positive"):
-      bits = struct.unpack(">Q", struct.pack(">d", 1.0))[0]
-      bits ^= 1 << 63
-      data = bits.to_bytes(8, byteorder="big")
+      data = b"\xbf\xf0\x00\x00\x00\x00\x00\x00"
       decoder = utils.LevelDBDecoder(io.BytesIO(data))
       offset, result = decoder.DecodeSortableDouble()
       self.assertEqual(offset, 0)
       self.assertEqual(result, 1.0)
 
     with self.subTest("negative"):
-      bits = struct.unpack(">Q", struct.pack(">d", -1.0))[0]
-      bits ^= 0xFFFFFFFFFFFFFFFF
-      data = bits.to_bytes(8, byteorder="big")
+      data = b"\x40\x0f\xff\xff\xff\xff\xff\xff"
       decoder = utils.LevelDBDecoder(io.BytesIO(data))
       _, result = decoder.DecodeSortableDouble()
       self.assertEqual(result, -1.0)
