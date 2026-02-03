@@ -216,6 +216,95 @@ class IDBKey(utils.FromDecoderMixin):
     return cls(base_offset + offset, key_type, value)
 
 
+@dataclass(frozen=True)
+class SortableIDBKey(utils.FromDecoderMixin):
+  """A sortable IDBKey.
+
+  Attributes:
+    offset: the offset of the IDBKey.
+    type: the type of the IDBKey.
+    value: the value of the IDBKey.
+  """
+
+  offset: int = field(compare=False)
+  type: definitions.IDBKeyType
+  value: Union[list[Any], bytes, str, float, datetime, None]
+
+  _MAXIMUM_DEPTH = 2000
+
+  @classmethod
+  def FromDecoder(
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0,
+  ) -> SortableIDBKey:
+    """Decodes a sortable IDBKey from the current position of a LevelDBDecoder.
+
+    Args:
+      decoder: the LevelDBDecoder.
+      base_offset: the base offset.
+
+    Returns:
+      The decoded SortableIDBKey.
+
+    Raises:
+      ParserError: on invalid key type or truncated data.
+      RecursionError: if maximum depth encountered.
+    """
+
+    def RecursiveParse(depth: int) -> Tuple[int, definitions.IDBKeyType, Any]:
+      """Recursively parses sortable IDBKeys.
+
+      Args:
+        depth: the current recursion depth.
+
+      Returns:
+        A tuple of the offset, the key type and the key value (where the value
+          can be bytes, str, float, datetime or a list of these types).
+
+      Raises:
+        ParserError: on invalid IDBKeyType or invalid array length during
+          parsing.
+        RecursionError: if maximum depth encountered during parsing.
+      """
+      if depth == cls._MAXIMUM_DEPTH:
+        raise RecursionError("Maximum recursion depth encountered")
+
+      value: Any = None
+      offset, ordered_type = decoder.DecodeUint8()
+      if ordered_type == definitions.OrderedIDBKeyType.NUMBER:
+        _, value = decoder.DecodeSortableDouble()
+        return offset, definitions.IDBKeyType.NUMBER, value
+      if ordered_type == definitions.OrderedIDBKeyType.DATE:
+        _, raw_date = decoder.DecodeSortableDouble()
+        return (
+            offset,
+            definitions.IDBKeyType.DATE,
+            datetime.utcfromtimestamp(raw_date / 1000.0),
+        )
+      if ordered_type == definitions.OrderedIDBKeyType.STRING:
+        _, value = decoder.DecodeSortableString()
+        return offset, definitions.IDBKeyType.STRING, value
+      if ordered_type == definitions.OrderedIDBKeyType.BINARY:
+        _, value = decoder.DecodeSortableBinary()
+        return offset, definitions.IDBKeyType.BINARY, value
+      if ordered_type == definitions.OrderedIDBKeyType.ARRAY:
+        value = []
+        while True:
+          _, next_byte = decoder.PeekBytes(1)
+          if next_byte[0] == definitions.SENTINEL:
+            decoder.ReadBytes(1)
+            break
+          _, _, item = RecursiveParse(depth + 1)
+          value.append(item)
+        return offset, definitions.IDBKeyType.ARRAY, value
+
+      raise errors.ParserError(f"Unknown ordered key type {ordered_type}")
+
+    offset, key_type, value = RecursiveParse(0)
+    return cls(base_offset + offset, key_type, value)
+
+
 @dataclass
 class IDBKeyPath(utils.FromDecoderMixin):
   """An IDBKeyPath.

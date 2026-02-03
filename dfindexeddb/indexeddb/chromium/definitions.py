@@ -19,6 +19,8 @@ REQUIRES_PROCESSING_SSV_PSEUDO_VERSION = 0x11
 REPLACE_WITH_BLOB = 0x01
 COMPRESSED_WITH_SNAPPY = 0x02
 
+SENTINEL = 0x00
+
 
 class DatabaseMetaDataKeyType(IntEnum):
   """Database Metadata key types."""
@@ -70,6 +72,16 @@ class IDBKeyType(IntEnum):
   ARRAY = 4
   MIN_KEY = 5
   BINARY = 6
+
+
+class OrderedIDBKeyType(IntEnum):
+  """Ordered IndexedDB key types."""
+
+  NUMBER = 0x10
+  DATE = 0x20
+  STRING = 0x30
+  BINARY = 0x40
+  ARRAY = 0x50
 
 
 class IndexMetaDataKeyType(IntEnum):
