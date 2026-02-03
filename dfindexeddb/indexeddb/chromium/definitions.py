@@ -72,6 +72,16 @@ class IDBKeyType(IntEnum):
   BINARY = 6
 
 
+class OrderedIDBKeyType(IntEnum):
+  """Ordered IndexedDB key types."""
+
+  NUMBER = 0x10
+  DATE = 0x20
+  STRING = 0x30
+  BINARY = 0x40
+  ARRAY = 0x50
+
+
 class IndexMetaDataKeyType(IntEnum):
   """IndexedDB metadata key types."""
 
