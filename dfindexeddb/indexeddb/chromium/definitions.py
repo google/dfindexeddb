@@ -20,6 +20,8 @@ REQUIRES_PROCESSING_SSV_PSEUDO_VERSION = 0x11
 REPLACE_WITH_BLOB = 0x01
 COMPRESSED_WITH_SNAPPY = 0x02
 
+SENTINEL = 0x00
+
 
 class DatabaseMetaDataKeyType(IntEnum):
   """Database Metadata key types."""

@@ -292,7 +292,7 @@ class SortableIDBKey(utils.FromDecoderMixin):
         value = []
         while True:
           _, next_byte = decoder.PeekBytes(1)
-          if next_byte[0] == 0:  # Sentinel
+          if next_byte[0] == definitions.SENTINEL:
             decoder.ReadBytes(1)
             break
           _, _, item = RecursiveParse(depth + 1)
