@@ -14,6 +14,7 @@
 # limitations under the License.
 """Definitions for IndexedDB."""
 from enum import Enum, IntEnum, IntFlag
+import textwrap
 
 REQUIRES_PROCESSING_SSV_PSEUDO_VERSION = 0x11
 REPLACE_WITH_BLOB = 0x01
@@ -410,3 +411,82 @@ class SerializedImageOrientation(IntEnum):
   RIGHT_BOTTOM = 6
   LEFT_BOTTOM = 7
   LAST = LEFT_BOTTOM
+
+
+class DatabaseCompressionType(IntEnum):
+  """Database Compression Types."""
+
+  UNCOMPRESSED = 0
+  ZSTD = 1
+  SNAPPY = 2
+
+
+SQL_RECORDS_QUERY_BASE = textwrap.dedent(
+    """
+    SELECT
+        row_id,
+        object_store_id,
+        compression_type,
+        key,
+        value,
+        EXISTS (
+            SELECT 1
+            FROM blob_references
+            WHERE record_row_id = records.row_id
+        ) AS has_blobs
+    FROM records"""
+).strip()
+
+SQL_RECORDS_QUERY = SQL_RECORDS_QUERY_BASE
+
+SQL_RECORDS_BY_ID_QUERY = f"{SQL_RECORDS_QUERY_BASE} WHERE object_store_id = ?"
+
+SQL_RECORDS_BY_NAME_QUERY = textwrap.dedent(
+    f"""
+    {SQL_RECORDS_QUERY_BASE}
+    JOIN object_stores ON records.object_store_id = object_stores.id
+    WHERE object_stores.name = ?"""
+).strip()
+
+SQL_OBJECT_STORES_QUERY = textwrap.dedent(
+    """
+    SELECT
+        id,
+        name,
+        key_path,
+        auto_increment,
+        key_generator_current_number
+    FROM object_stores"""
+).strip()
+
+SQL_BLOB_DATA_QUERY = textwrap.dedent(
+    """
+    SELECT
+        b.row_id,
+        b.object_type,
+        b.mime_type,
+        b.size_bytes,
+        b.file_name,
+        0 AS chunk_index,
+        b.bytes
+    FROM blobs b
+    JOIN blob_references r ON b.row_id = r.blob_row_id
+    WHERE r.record_row_id = ?
+
+    UNION ALL
+
+    SELECT
+        c.blob_row_id AS row_id,
+        b.object_type,
+        b.mime_type,
+        b.size_bytes,
+        b.file_name,
+        c.chunk_index,
+        c.bytes
+    FROM overflow_blob_chunks c
+    JOIN blobs b ON c.blob_row_id = b.row_id
+    JOIN blob_references r ON b.row_id = r.blob_row_id
+    WHERE r.record_row_id = ?
+
+    ORDER BY row_id, chunk_index"""
+).strip()
