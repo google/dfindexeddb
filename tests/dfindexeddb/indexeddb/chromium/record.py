@@ -14,6 +14,7 @@
 # limitations under the License.
 """Unit tests for Chromium IndexedDB encoded leveldb databases."""
 import datetime
+import pathlib
 import unittest
 
 from dfindexeddb.indexeddb.chromium import definitions, record
@@ -903,6 +904,32 @@ class ChromiumIndexedDBTest(unittest.TestCase):
 
     parsed_key = record.IndexedDbKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
+
+
+class FolderReaderTest(unittest.TestCase):
+  """Unit tests for the FolderReader and BlobFolderReader classes."""
+
+  def test_blob_folder_reader(self):
+    """Tests the BlobFolderReader class."""
+    blob_path = pathlib.Path(
+        "test_data/indexeddb/chrome/linux_109_64/file__0.indexeddb.blob"
+    )
+    reader = record.BlobFolderReader(blob_path)
+    blob_path, blob_data = reader.ReadBlob(database_id=1, blob_id=2)
+    self.assertTrue(blob_path.endswith("file__0.indexeddb.blob/1/00/2"))
+    self.assertEqual(blob_data[:4], bytes.fromhex("ff15fe00"))
+
+  def test_folder_reader_linux(self):
+    """Tests the FolderReader class with Linux test data."""
+    leveldb_path = pathlib.Path(
+        "test_data/indexeddb/chrome/linux_109_64/file__0.indexeddb.leveldb"
+    )
+    reader = record.FolderReader(leveldb_path)
+    records = list(record for record in reader.GetRecords() if record.blobs)
+    self.assertEqual(len(records), 2)
+    blob_path, blob_data = records[1].blobs[0]
+    self.assertTrue(blob_path.endswith("file__0.indexeddb.blob/1/00/3"))
+    self.assertIsInstance(blob_data, dict)  #  the parsed blob data
 
 
 if __name__ == "__main__":

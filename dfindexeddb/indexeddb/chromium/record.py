@@ -1560,7 +1560,7 @@ class IndexedDBExternalObject(utils.FromDecoderMixin):
 
 
 @dataclass
-class ChromiumLevelDBIndexedDBRecord:
+class ChromiumIndexedDBRecord:
   """An IndexedDB Record parsed from LevelDB.
 
   Attributes:
@@ -1577,7 +1577,7 @@ class ChromiumLevelDBIndexedDBRecord:
     object_store_id: the object store ID.
     database_name: the name of the database, if available.
     object_store_name: the name of the object store, if available.
-    blob: the blob contents, if available.
+    blobs: the list of blob paths and contents, if available.
     raw_key: the raw key, if available.
     raw_value: the raw value, if available.
   """
@@ -1594,7 +1594,7 @@ class ChromiumLevelDBIndexedDBRecord:
   object_store_id: int
   database_name: Optional[str] = None
   object_store_name: Optional[str] = None
-  blob: Optional[list[bytes]] = None
+  blobs: Optional[list[tuple[str, bytes]]] = None
   raw_key: Optional[bytes] = None
   raw_value: Optional[bytes] = None
 
@@ -1605,8 +1605,8 @@ class ChromiumLevelDBIndexedDBRecord:
       parse_value: bool = True,
       include_raw_data: bool = False,
       blob_folder_reader: Optional[BlobFolderReader] = None,
-  ) -> ChromiumLevelDBIndexedDBRecord:
-    """Returns an ChromiumLevelDBIndexedDBRecord from a ParsedInternalKey."""
+  ) -> ChromiumIndexedDBRecord:
+    """Returns an ChromiumIndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
         db_record.record.key, base_offset=db_record.record.offset
     )
@@ -1618,11 +1618,14 @@ class ChromiumLevelDBIndexedDBRecord:
 
     blobs = []
     if isinstance(idb_value, IndexedDBExternalObject) and blob_folder_reader:
-      for blob_data in blob_folder_reader.ReadBlobsFromExternalObjectEntries(
+      for (
+          blob_path,
+          blob_data,
+      ) in blob_folder_reader.ReadBlobsFromExternalObjectEntries(
           idb_key.key_prefix.database_id, idb_value.entries
       ):
         blob = blink.V8ScriptValueDecoder.FromBytes(blob_data)
-        blobs.append(blob)
+        blobs.append((blob_path, blob))
 
     return cls(
         path=db_record.path,
@@ -1641,7 +1644,7 @@ class ChromiumLevelDBIndexedDBRecord:
         object_store_id=idb_key.key_prefix.object_store_id,
         database_name=None,
         object_store_name=None,
-        blob=blobs,
+        blobs=blobs,
         raw_key=db_record.record.key if include_raw_data else None,
         raw_value=db_record.record.value if include_raw_data else None,
     )
@@ -1653,8 +1656,8 @@ class ChromiumLevelDBIndexedDBRecord:
       parse_value: bool = True,
       include_raw_data: bool = False,
       blob_folder_reader: Optional[BlobFolderReader] = None,
-  ) -> Generator[ChromiumLevelDBIndexedDBRecord, None, None]:
-    """Yields IndexedDBRecords from a file."""
+  ) -> Generator[ChromiumIndexedDBRecord, None, None]:
+    """Yields ChromiumIndexedDBRecord from a file."""
     for db_record in record.LevelDBRecord.FromFile(file_path):
       try:
         yield cls.FromLevelDBRecord(
@@ -1699,7 +1702,7 @@ class BlobFolderReader:
       raise ValueError(f"{folder_name} is None or not a directory")
     self.folder_name = folder_name.absolute()
 
-  def ReadBlob(self, database_id: int, blob_id: int) -> bytes:
+  def ReadBlob(self, database_id: int, blob_id: int) -> tuple[str, bytes]:
     """Returns the blob contents.
 
     Args:
@@ -1707,7 +1710,7 @@ class BlobFolderReader:
       blob_id: the blob id to read.
 
     Returns:
-      the blob contents.
+      the blob path and contents.
 
     Raises:
       FileNotFoundError: if the database directory or blob folder or blob not
@@ -1726,19 +1729,19 @@ class BlobFolderReader:
       raise FileNotFoundError(f"Blob ({blob_id}) not found: {blob_path}")
 
     with open(blob_path, "rb") as f:
-      return f.read()
+      return str(blob_path), f.read()
 
   def ReadBlobsFromExternalObjectEntries(
       self, database_id: int, entries: list[ExternalObjectEntry]
-  ) -> Generator[bytes, None, None]:
-    """Returns the blob contents.
+  ) -> Generator[tuple[str, bytes], None, None]:
+    """Yields the blob path and contents.
 
     Args:
       database_id: the database id.
       entries: the external object entries.
 
     Yields:
-      The blob contents.
+      The blob path and contents.
 
     Raises:
       ParserError: if any blob file is not found.
@@ -1795,8 +1798,8 @@ class FolderReader:
       use_sequence_number: bool = False,
       parse_value: bool = True,
       include_raw_data: bool = False,
-  ) -> Generator[ChromiumLevelDBIndexedDBRecord, None, None]:
-    """Yield ChromiumLevelDBIndexedDBRecord.
+  ) -> Generator[ChromiumIndexedDBRecord, None, None]:
+    """Yields ChromiumIndexedDBRecord.
 
     Args:
       use_manifest: True to use the current manifest in the folder as a means to
@@ -1806,14 +1809,14 @@ class FolderReader:
       parse_value: True to parse values.
 
     Yields:
-      ChromiumLevelDBIndexedDBRecord.
+      ChromiumIndexedDBRecord.
     """
     leveldb_folder_reader = record.FolderReader(self.folder_name)
     for leveldb_record in leveldb_folder_reader.GetRecords(
         use_manifest=use_manifest, use_sequence_number=use_sequence_number
     ):
       try:
-        yield ChromiumLevelDBIndexedDBRecord.FromLevelDBRecord(
+        yield ChromiumIndexedDBRecord.FromLevelDBRecord(
             leveldb_record,
             parse_value=parse_value,
             include_raw_data=include_raw_data,
