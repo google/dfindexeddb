@@ -16,9 +16,19 @@
 from __future__ import annotations
 
 import io
+import struct
 from typing import BinaryIO, Tuple, Type, TypeVar
 
 from dfindexeddb import errors, utils
+
+
+_CHUNK_SIZE = 8
+_MARKER = _CHUNK_SIZE + 1
+_EMPTY_BINARY_SENTINEL = 0
+_SIGN_BIT = 1 << 63
+_SENTINEL = 0
+_TWO_BYTE_ENCODING_INDICATOR = 0x80
+_THREE_BYTE_ENCODING_INDICATOR = 0xFF
 
 
 class LevelDBDecoder(utils.StreamDecoder):
@@ -63,6 +73,80 @@ class LevelDBDecoder(utils.StreamDecoder):
     offset, length = self.DecodeUint64Varint()
     _, buffer = self.ReadBytes(length * 2)
     return offset, buffer.decode(encoding=encoding)
+
+  def DecodeSortableBinary(self) -> Tuple[int, bytes]:
+    """Decodes a sortable binary from the binary stream.
+
+    Returns:
+      a tuple of the offset and the decoded bytes.
+
+    Raises:
+      errors.ParserError: if an invalid tag is encountered.
+    """
+    output = bytearray()
+
+    offset, first = self.PeekBytes(1)
+    if first[0] == _EMPTY_BINARY_SENTINEL:
+      self.ReadBytes(1)
+      return offset, b""
+
+    while True:
+      _, marker_or_sentinel = self.DecodeUint8()
+      if marker_or_sentinel == _MARKER:
+        _, chunk = self.ReadBytes(_CHUNK_SIZE)
+        output.extend(chunk)
+        continue
+      if 1 <= marker_or_sentinel <= _CHUNK_SIZE:
+        payload_len = marker_or_sentinel
+        padding_len = _CHUNK_SIZE - payload_len
+        if padding_len > 0:
+          return offset, bytes(output[:-padding_len])
+        return offset, bytes(output)
+      raise errors.ParserError(
+          f"Invalid marker or sentinel {marker_or_sentinel} in sortable binary"
+      )
+
+  def DecodeSortableDouble(self) -> Tuple[int, float]:
+    """Decodes a sortable double-precision float from the binary stream.
+
+    Returns:
+      a tuple of the offset and the decoded double.
+    """
+    offset, host_bits = self.DecodeInt(8, byte_order="big", signed=False)
+    if host_bits & _SIGN_BIT:
+      host_bits ^= _SIGN_BIT
+    else:
+      host_bits ^= 0xFFFFFFFFFFFFFFFF
+    blob = host_bits.to_bytes(8, byteorder="big")
+    return offset, struct.unpack(">d", blob)[0]
+
+  def DecodeSortableString(self) -> Tuple[int, str]:
+    """Decodes a sortable string from the binary stream.
+
+    Returns:
+      a tuple of the offset and the decoded string.
+
+    Raises:
+      errors.ParserError: if an invalid byte is encountered.
+    """
+    output = []
+    offset = self.stream.tell()
+    while True:
+      _, first = self.DecodeUint8()
+      if first == _SENTINEL:
+        break
+      if (first & 0x80) == 0:
+        output.append(chr((first & 0x7F) - 1))
+      elif (first & 0xC0) == _TWO_BYTE_ENCODING_INDICATOR:
+        _, second = self.DecodeUint8()
+        output.append(chr(((first & 0x3F) << 8) | second))
+      elif first == _THREE_BYTE_ENCODING_INDICATOR:
+        _, high = self.DecodeUint8()
+        _, low = self.DecodeUint8()
+        output.append(chr((high << 8) | low))
+      else:
+        raise errors.ParserError(f"Invalid byte {first} in sortable string")
+    return offset, "".join(output)
 
 
 T = TypeVar("T")
