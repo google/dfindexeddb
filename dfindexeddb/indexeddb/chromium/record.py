@@ -1703,14 +1703,14 @@ class BlobFolderReader:
     self.folder_name = folder_name.absolute()
 
   def ReadBlob(self, database_id: int, blob_id: int) -> tuple[str, bytes]:
-    """Returns the blob contents.
+    """Reads a blob from the blob folder.
 
     Args:
       database_id: the database id of the blob to read.
       blob_id: the blob id to read.
 
     Returns:
-      the blob path and contents.
+      A tuple of the blob path and contents.
 
     Raises:
       FileNotFoundError: if the database directory or blob folder or blob not
@@ -1734,14 +1734,14 @@ class BlobFolderReader:
   def ReadBlobsFromExternalObjectEntries(
       self, database_id: int, entries: list[ExternalObjectEntry]
   ) -> Generator[tuple[str, bytes], None, None]:
-    """Yields the blob path and contents.
+    """Reads blobs from the blob folder.
 
     Args:
       database_id: the database id.
       entries: the external object entries.
 
     Yields:
-      The blob path and contents.
+      A tuple of blob path and contents.
 
     Raises:
       ParserError: if any blob file is not found.
