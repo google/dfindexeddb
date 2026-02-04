@@ -1577,7 +1577,7 @@ class ChromiumIndexedDBRecord:
     object_store_id: the object store ID.
     database_name: the name of the database, if available.
     object_store_name: the name of the object store, if available.
-    blobs: the list of blob paths and contents, if available.
+    blobs: the list of blob paths and contents or error message, if available.
     raw_key: the raw key, if available.
     raw_value: the raw value, if available.
   """
@@ -1594,7 +1594,7 @@ class ChromiumIndexedDBRecord:
   object_store_id: int
   database_name: Optional[str] = None
   object_store_name: Optional[str] = None
-  blobs: Optional[list[tuple[str, bytes]]] = None
+  blobs: Optional[list[tuple[str, Optional[Any]]]] = None
   raw_key: Optional[bytes] = None
   raw_value: Optional[bytes] = None
 
@@ -1619,13 +1619,16 @@ class ChromiumIndexedDBRecord:
     blobs = []
     if isinstance(idb_value, IndexedDBExternalObject) and blob_folder_reader:
       for (
-          blob_path,
+          blob_path_or_error,
           blob_data,
       ) in blob_folder_reader.ReadBlobsFromExternalObjectEntries(
           idb_key.key_prefix.database_id, idb_value.entries
       ):
-        blob = blink.V8ScriptValueDecoder.FromBytes(blob_data)
-        blobs.append((blob_path, blob))
+        if blob_data:
+          blob = blink.V8ScriptValueDecoder.FromBytes(blob_data)
+        else:
+          blob = None
+        blobs.append((blob_path_or_error, blob))
 
     return cls(
         path=db_record.path,
@@ -1733,7 +1736,7 @@ class BlobFolderReader:
 
   def ReadBlobsFromExternalObjectEntries(
       self, database_id: int, entries: list[ExternalObjectEntry]
-  ) -> Generator[tuple[str, bytes], None, None]:
+  ) -> Generator[tuple[str, Optional[bytes]], None, None]:
     """Reads blobs from the blob folder.
 
     Args:
@@ -1741,10 +1744,8 @@ class BlobFolderReader:
       entries: the external object entries.
 
     Yields:
-      A tuple of blob path and contents.
-
-    Raises:
-      ParserError: if any blob file is not found.
+      A tuple of blob path and contents or if the blob is not found, an error
+      message and None.
     """
     for entry in entries:
       if (
@@ -1758,9 +1759,12 @@ class BlobFolderReader:
         try:
           yield self.ReadBlob(database_id, entry.blob_number)
         except FileNotFoundError as err:
-          raise errors.ParserError(
-              f"Blob not found for ExternalObjectEntry: {entry}"
-          ) from err
+          error_message = (
+              f"Blob not found for ExternalObjectEntry at offset {entry.offset}"
+              f": {err}"
+          )
+          print(error_message, file=sys.stderr)
+          yield error_message, None
 
 
 class FolderReader:
