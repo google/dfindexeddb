@@ -1560,8 +1560,8 @@ class IndexedDBExternalObject(utils.FromDecoderMixin):
 
 
 @dataclass
-class IndexedDBRecord:
-  """An IndexedDB Record.
+class ChromiumIndexedDBRecord:
+  """An IndexedDB Record parsed from LevelDB.
 
   Attributes:
     path: the source file path
@@ -1577,7 +1577,7 @@ class IndexedDBRecord:
     object_store_id: the object store ID.
     database_name: the name of the database, if available.
     object_store_name: the name of the object store, if available.
-    blob: the blob contents, if available.
+    blobs: the list of blob paths and contents or error message, if available.
     raw_key: the raw key, if available.
     raw_value: the raw value, if available.
   """
@@ -1594,7 +1594,7 @@ class IndexedDBRecord:
   object_store_id: int
   database_name: Optional[str] = None
   object_store_name: Optional[str] = None
-  blob: Optional[bytes] = None
+  blobs: Optional[list[tuple[str, Optional[Any]]]] = None
   raw_key: Optional[bytes] = None
   raw_value: Optional[bytes] = None
 
@@ -1604,8 +1604,9 @@ class IndexedDBRecord:
       db_record: record.LevelDBRecord,
       parse_value: bool = True,
       include_raw_data: bool = False,
-  ) -> IndexedDBRecord:
-    """Returns an IndexedDBRecord from a ParsedInternalKey."""
+      blob_folder_reader: Optional[BlobFolderReader] = None,
+  ) -> ChromiumIndexedDBRecord:
+    """Returns an ChromiumIndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
         db_record.record.key, base_offset=db_record.record.offset
     )
@@ -1615,14 +1616,30 @@ class IndexedDBRecord:
     else:
       idb_value = None
 
+    blobs = []
+    if isinstance(idb_value, IndexedDBExternalObject) and blob_folder_reader:
+      for (
+          blob_path_or_error,
+          blob_data,
+      ) in blob_folder_reader.ReadBlobsFromExternalObjectEntries(
+          idb_key.key_prefix.database_id, idb_value.entries
+      ):
+        if blob_data:
+          blob = blink.V8ScriptValueDecoder.FromBytes(blob_data)
+        else:
+          blob = None
+        blobs.append((blob_path_or_error, blob))
+
     return cls(
         path=db_record.path,
         offset=db_record.record.offset,
         key=idb_key,
         value=idb_value,
-        sequence_number=db_record.record.sequence_number
-        if hasattr(db_record.record, "sequence_number")
-        else None,
+        sequence_number=(
+            db_record.record.sequence_number
+            if hasattr(db_record.record, "sequence_number")
+            else None
+        ),
         type=db_record.record.record_type,
         level=db_record.level,
         recovered=db_record.recovered,
@@ -1630,19 +1647,28 @@ class IndexedDBRecord:
         object_store_id=idb_key.key_prefix.object_store_id,
         database_name=None,
         object_store_name=None,
-        blob=None,
+        blobs=blobs,
         raw_key=db_record.record.key if include_raw_data else None,
         raw_value=db_record.record.value if include_raw_data else None,
     )
 
   @classmethod
   def FromFile(
-      cls, file_path: pathlib.Path, parse_value: bool = True
-  ) -> Generator[IndexedDBRecord, None, None]:
-    """Yields IndexedDBRecords from a file."""
+      cls,
+      file_path: pathlib.Path,
+      parse_value: bool = True,
+      include_raw_data: bool = False,
+      blob_folder_reader: Optional[BlobFolderReader] = None,
+  ) -> Generator[ChromiumIndexedDBRecord, None, None]:
+    """Yields ChromiumIndexedDBRecord from a file."""
     for db_record in record.LevelDBRecord.FromFile(file_path):
       try:
-        yield cls.FromLevelDBRecord(db_record, parse_value=parse_value)
+        yield cls.FromLevelDBRecord(
+            db_record,
+            parse_value=parse_value,
+            include_raw_data=include_raw_data,
+            blob_folder_reader=blob_folder_reader,
+        )
       except (
           errors.ParserError,
           errors.DecoderError,
@@ -1657,6 +1683,88 @@ class IndexedDBRecord:
             file=sys.stderr,
         )
         print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
+
+
+class BlobFolderReader:
+  """A blob folder reader for Chrome/Chromium.
+
+  Attributes:
+    folder_name (str): the source blob folder.
+  """
+
+  def __init__(self, folder_name: pathlib.Path):
+    """Initializes the BlobFolderReader.
+
+    Args:
+      folder_name: the source blob folder.
+
+    Raises:
+      ValueError: if folder_name is None or not a directory.
+    """
+    if not folder_name or not folder_name.is_dir():
+      raise ValueError(f"{folder_name} is None or not a directory")
+    self.folder_name = folder_name.absolute()
+
+  def ReadBlob(self, database_id: int, blob_id: int) -> tuple[str, bytes]:
+    """Reads a blob from the blob folder.
+
+    Args:
+      database_id: the database id of the blob to read.
+      blob_id: the blob id to read.
+
+    Returns:
+      A tuple of the blob path and contents.
+
+    Raises:
+      FileNotFoundError: if the database directory or blob folder or blob not
+          found.
+    """
+    directory_path = self.folder_name / f"{database_id:x}"
+    if not directory_path.exists():
+      raise FileNotFoundError(f"Database directory not found: {directory_path}")
+
+    blob_folder = directory_path / f"{(blob_id & 0xff00) >> 8:02x}"
+    if not blob_folder.exists():
+      raise FileNotFoundError(f"Blob folder not found: {blob_folder}")
+
+    blob_path = blob_folder / f"{blob_id:x}"
+    if not blob_path.exists():
+      raise FileNotFoundError(f"Blob ({blob_id}) not found: {blob_path}")
+
+    with open(blob_path, "rb") as f:
+      return str(blob_path), f.read()
+
+  def ReadBlobsFromExternalObjectEntries(
+      self, database_id: int, entries: list[ExternalObjectEntry]
+  ) -> Generator[tuple[str, Optional[bytes]], None, None]:
+    """Reads blobs from the blob folder.
+
+    Args:
+      database_id: the database id.
+      entries: the external object entries.
+
+    Yields:
+      A tuple of blob path and contents or if the blob is not found, an error
+      message and None.
+    """
+    for entry in entries:
+      if (
+          entry.object_type
+          in (
+              definitions.ExternalObjectType.BLOB,
+              definitions.ExternalObjectType.FILE,
+          )
+          and entry.blob_number is not None
+      ):
+        try:
+          yield self.ReadBlob(database_id, entry.blob_number)
+        except FileNotFoundError as err:
+          error_message = (
+              f"Blob not found for ExternalObjectEntry at offset {entry.offset}"
+              f": {err}"
+          )
+          print(error_message, file=sys.stderr)
+          yield error_message, None
 
 
 class FolderReader:
@@ -1677,7 +1785,16 @@ class FolderReader:
     """
     if not folder_name or not folder_name.is_dir():
       raise ValueError(f"{folder_name} is None or not a directory")
-    self.folder_name = folder_name
+    self.folder_name = folder_name.absolute()
+
+    # Locate the correponding blob folder. The folder_name should be
+    # <origin>.leveldb and the blob folder should be <origin>.blob
+    if str(self.folder_name).endswith(".leveldb"):
+      self.blob_folder_reader = BlobFolderReader(
+          pathlib.Path(str(self.folder_name).replace(".leveldb", ".blob"))
+      )
+    else:
+      self.blob_folder_reader = None  # type: ignore[assignment]
 
   def GetRecords(
       self,
@@ -1685,8 +1802,8 @@ class FolderReader:
       use_sequence_number: bool = False,
       parse_value: bool = True,
       include_raw_data: bool = False,
-  ) -> Generator[IndexedDBRecord, None, None]:
-    """Yield LevelDBRecords.
+  ) -> Generator[ChromiumIndexedDBRecord, None, None]:
+    """Yields ChromiumIndexedDBRecord.
 
     Args:
       use_manifest: True to use the current manifest in the folder as a means to
@@ -1696,17 +1813,18 @@ class FolderReader:
       parse_value: True to parse values.
 
     Yields:
-      IndexedDBRecord.
+      ChromiumIndexedDBRecord.
     """
     leveldb_folder_reader = record.FolderReader(self.folder_name)
     for leveldb_record in leveldb_folder_reader.GetRecords(
         use_manifest=use_manifest, use_sequence_number=use_sequence_number
     ):
       try:
-        yield IndexedDBRecord.FromLevelDBRecord(
+        yield ChromiumIndexedDBRecord.FromLevelDBRecord(
             leveldb_record,
             parse_value=parse_value,
             include_raw_data=include_raw_data,
+            blob_folder_reader=self.blob_folder_reader,
         )
       except (
           errors.ParserError,

@@ -155,13 +155,17 @@ def DbCommand(args: argparse.Namespace) -> None:
 
 def LdbCommand(args: argparse.Namespace) -> None:
   """The CLI for processing a LevelDB table (.ldb) file as IndexedDB."""
-  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+  for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
+      args.source
+  ):
     _Output(db_record, output=args.output)
 
 
 def LogCommand(args: argparse.Namespace) -> None:
   """The CLI for processing a LevelDB log file as IndexedDB."""
-  for db_record in chromium_record.IndexedDBRecord.FromFile(args.source):
+  for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
+      args.source
+  ):
     _Output(db_record, output=args.output)
 
 

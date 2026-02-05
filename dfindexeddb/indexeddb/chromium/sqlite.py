@@ -107,7 +107,7 @@ class DatabaseReader:
 
   def ObjectStores(self) -> Generator[ChromiumObjectStoreInfo, None, None]:
     """Yields object stores."""
-    with sqlite3.connect(self._filename) as conn:
+    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_OBJECT_STORES_QUERY)
       for row in cursor:
@@ -161,7 +161,7 @@ class DatabaseReader:
     Yields:
       ChromiumBlobInfo objects.
     """
-    with sqlite3.connect(self._filename) as conn:
+    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
 
@@ -297,7 +297,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(self._filename) as conn:
+    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_RECORDS_BY_ID_QUERY, (object_store_id,))
@@ -325,7 +325,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(self._filename) as conn:
+    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(
@@ -354,7 +354,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(self._filename) as conn:
+    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_RECORDS_QUERY)
