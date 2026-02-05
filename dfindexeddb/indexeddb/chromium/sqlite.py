@@ -260,11 +260,10 @@ class DatabaseReader:
       if load_blobs and raw_value is None:
         if not has_blobs:
           raise ValueError("Raw value is None but has_blobs is not set")
-        blobs = list(self.LoadBlobDataForRecordId(row_id))
-        if len(blobs) == 1:
-          value = blobs[0]
-        else:
-          value = blobs if blobs else None
+        value = []
+        for blob in self.LoadBlobDataForRecordId(row_id):
+          blob.blob_data = blink.V8ScriptValueDecoder.FromBytes(blob.blob_data)
+          value.append(blob)
 
       yield ChromiumIndexedDBRecord(
           row_id=row_id,
