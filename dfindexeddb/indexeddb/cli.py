@@ -69,7 +69,12 @@ class Encoder(json.JSONEncoder):
 
 
 def _Output(structure: Any, output: str) -> None:
-  """Helper method to output parsed structure to stdout."""
+  """Helper method to output parsed structure to stdout.
+
+  Args:
+    structure: The structure to output.
+    output: The output format.
+  """
   if output == "json":
     print(json.dumps(structure, indent=2, cls=Encoder))
   elif output == "jsonl":
@@ -109,6 +114,14 @@ def DbCommand(args: argparse.Namespace) -> None:
             include_raw_data=args.include_raw_data
         )
       for chromium_db_record in records:
+        if args.filter_value is not None and args.filter_value not in str(
+            chromium_db_record.value
+        ):
+          continue
+        if args.filter_key is not None and args.filter_key not in str(
+            chromium_db_record.key.value
+        ):
+          continue
         _Output(chromium_db_record, output=args.output)
     else:
       for chromium_leveldb_record in chromium_record.FolderReader(
@@ -120,6 +133,14 @@ def DbCommand(args: argparse.Namespace) -> None:
         if (
             args.object_store_id is not None
             and chromium_leveldb_record.object_store_id != args.object_store_id
+        ):
+          continue
+        if args.filter_value is not None and args.filter_value not in str(
+            chromium_leveldb_record.value
+        ):
+          continue
+        if args.filter_key is not None and args.filter_key not in str(
+            chromium_leveldb_record.key.value
         ):
           continue
         _Output(chromium_leveldb_record, output=args.output)
@@ -136,6 +157,14 @@ def DbCommand(args: argparse.Namespace) -> None:
       )
 
     for firefox_db_record in firefox_db_records:
+      if args.filter_value is not None and args.filter_value not in str(
+          firefox_db_record.value
+      ):
+        continue
+      if args.filter_key is not None and args.filter_key not in str(
+          firefox_db_record.key.value
+      ):
+        continue
       _Output(firefox_db_record, output=args.output)
   elif args.format == "safari":
     if args.object_store_id is not None:
@@ -150,6 +179,14 @@ def DbCommand(args: argparse.Namespace) -> None:
       )
 
     for safari_db_record in safari_db_records:
+      if args.filter_value is not None and args.filter_value not in str(
+          safari_db_record.value
+      ):
+        continue
+      if args.filter_key is not None and args.filter_key not in str(
+          safari_db_record.key
+      ):
+        continue
       _Output(safari_db_record, output=args.output)
 
 
@@ -158,6 +195,14 @@ def LdbCommand(args: argparse.Namespace) -> None:
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
       args.source
   ):
+    if args.filter_value is not None and args.filter_value not in str(
+        db_record.value
+    ):
+      continue
+    if args.filter_key is not None and args.filter_key not in str(
+        db_record.key
+    ):
+      continue
     _Output(db_record, output=args.output)
 
 
@@ -166,6 +211,14 @@ def LogCommand(args: argparse.Namespace) -> None:
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
       args.source
   ):
+    if args.filter_value is not None and args.filter_value not in str(
+        db_record.value
+    ):
+      continue
+    if args.filter_key is not None and args.filter_key not in str(
+        db_record.key
+    ):
+      continue
     _Output(db_record, output=args.output)
 
 
@@ -267,6 +320,22 @@ def App() -> None:
       default="json",
       help="Output format.  Default is json.",
   )
+  parser_db.add_argument(
+      "--filter_value",
+      type=str,
+      help=(
+          "Only output records where the value contains this string. "
+          "Values are normalized to strings before comparison."
+      ),
+  )
+  parser_db.add_argument(
+      "--filter_key",
+      type=str,
+      help=(
+          "Only output records where the key contains this string. "
+          "Keys are normalized to strings before comparison."
+      ),
+  )
   parser_db.set_defaults(func=DbCommand)
 
   parser_ldb = subparsers.add_parser(
@@ -286,6 +355,22 @@ def App() -> None:
       default="json",
       help="Output format.  Default is json.",
   )
+  parser_ldb.add_argument(
+      "--filter_value",
+      type=str,
+      help=(
+          "Only output records where the value contains this string. "
+          "Values are normalized to strings before comparison."
+      ),
+  )
+  parser_ldb.add_argument(
+      "--filter_key",
+      type=str,
+      help=(
+          "Only output records where the key contains this string. "
+          "Keys are normalized to strings before comparison."
+      ),
+  )
   parser_ldb.set_defaults(func=LdbCommand)
 
   parser_log = subparsers.add_parser(
@@ -304,6 +389,22 @@ def App() -> None:
       choices=["json", "jsonl", "repr"],
       default="json",
       help="Output format.  Default is json.",
+  )
+  parser_log.add_argument(
+      "--filter_value",
+      type=str,
+      help=(
+          "Only output records where the value contains this string. "
+          "Values are normalized to strings before comparison."
+      ),
+  )
+  parser_log.add_argument(
+      "--filter_key",
+      type=str,
+      help=(
+          "Only output records where the key contains this string. "
+          "Keys are normalized to strings before comparison."
+      ),
   )
   parser_log.set_defaults(func=LogCommand)
 
