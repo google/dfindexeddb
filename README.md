@@ -101,6 +101,9 @@ options:
 | **Chrome** (.ldb) | JSON-L | `dfindexeddb ldb -s SOURCE -o jsonl` |
 | **Chrome** (.log) | Python repr | `dfindexeddb log -s SOURCE -o repr` |
 | **Chrome** (Blink) | JSON | `dfindexeddb blink -s SOURCE` |
+| **Filter Records by key** | JSON | `dfindexeddb db -s SOURCE --format chrome --filter_key search_term` |
+| **Filter Records by value** | JSON | `dfindexeddb db -s SOURCE --format chrome --filter_value "search_term"` |
+
 
 ### LevelDB
 

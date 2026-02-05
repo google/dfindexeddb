@@ -162,7 +162,7 @@ def DbCommand(args: argparse.Namespace) -> None:
       ):
         continue
       if args.filter_key is not None and args.filter_key not in str(
-          firefox_db_record.key
+          firefox_db_record.key.value
       ):
         continue
       _Output(firefox_db_record, output=args.output)
