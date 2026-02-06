@@ -84,7 +84,11 @@ def _Output(structure: Any, output: str) -> None:
 
 
 def BlinkCommand(args: argparse.Namespace) -> None:
-  """The CLI for processing a file as a blink-encoded value."""
+  """The CLI for processing a file as a blink-encoded value.
+
+  Args:
+    args: The arguments for processing the blink-encoded value.
+  """
   with open(args.source, "rb") as fd:
     buffer = fd.read()
     blink_value = blink.V8ScriptValueDecoder.FromBytes(buffer)
@@ -92,134 +96,195 @@ def BlinkCommand(args: argparse.Namespace) -> None:
 
 
 def GeckoCommand(args: argparse.Namespace) -> None:
-  """The CLI for processing a file as a gecko-encoded value."""
+  """The CLI for processing a file as a gecko-encoded value.
+
+  Args:
+    args: The arguments for processing the gecko-encoded value.
+  """
   with open(args.source, "rb") as fd:
     buffer = fd.read()
     blink_value = gecko.JSStructuredCloneDecoder.FromBytes(buffer)
     _Output(blink_value, output=args.output)
 
 
+def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
+  """Returns True if the record matches the filter criteria.
+
+  Supported filters:
+  * object_store_id - filters by object store ID
+  * filter_key - filters by key
+  * filter_value - filters by value
+
+  Args:
+    record: The record to check for filtering.
+    args: The arguments containing filter criteria.
+
+  Returns:
+    True if the record matches the filter criteria or no filters are set, False
+        otherwise.
+  """
+  if (
+      args.object_store_id is not None
+      and record.object_store_id != args.object_store_id
+  ):
+    return False
+
+  if args.filter_value is not None:
+    if isinstance(record.value, chromium_record.IndexedDBExternalObject):
+      blobs = getattr(record, "blobs", []) or []
+      if all(args.filter_value not in str(blob_data) for _, blob_data in blobs):
+        return False
+
+    # Skip Chromium LevelDB metadata records
+    elif isinstance(
+        record, chromium_record.ChromiumIndexedDBRecord
+    ) and not isinstance(
+        record.value,
+        (
+            chromium_record.ObjectStoreDataValue,
+            chromium_record.IndexedDBExternalObject,
+        ),
+    ):
+      return False
+
+    elif args.filter_value not in str(record.value):
+      return False
+
+  if args.filter_key is not None:
+    if isinstance(record.key, chromium_record.ObjectStoreDataKey):
+      key_val = record.key.encoded_user_key.value
+    elif isinstance(record.key, chromium_record.BlobEntryKey):
+      key_val = record.key.user_key.value
+
+    # Skip other Chromium LevelDB key types
+    elif isinstance(record, chromium_record.ChromiumIndexedDBRecord):
+      return False
+
+    else:
+      key_val = getattr(record.key, "value", record.key)
+
+    if args.filter_key not in str(key_val):
+      return False
+
+  return True
+
+
+def HandleChromiumDB(args: argparse.Namespace) -> None:
+  """The handler for processing a directory/file as Chromium IndexedDB.
+
+  If the source is a directory, it will process as a LevelDB based IndexedDB.
+  If the source is a file, it will process as a SQLite based IndexedDB.
+
+  Args:
+    args: The arguments for processing the Chromium IndexedDB.
+  """
+  if args.source.is_file():
+    reader = sqlite.DatabaseReader(str(args.source))
+    if args.object_store_id is not None:
+      records: Any = reader.RecordsByObjectStoreId(
+          args.object_store_id,
+          include_raw_data=args.include_raw_data,
+          load_blobs=args.load_blobs,
+      )
+    else:
+      records = reader.Records(
+          include_raw_data=args.include_raw_data,
+          load_blobs=args.load_blobs,
+      )
+  else:
+    records = chromium_record.FolderReader(args.source).GetRecords(
+        use_manifest=args.use_manifest,
+        use_sequence_number=args.use_sequence_number,
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
+    )
+
+  for record in records:
+    if _MatchesFilters(record, args):
+      _Output(record, output=args.output)
+
+
+def HandleFirefoxDB(args: argparse.Namespace) -> None:
+  """The handler for processing a file as Firefox IndexedDB.
+
+  Args:
+    args: The arguments for processing the Firefox IndexedDB.
+  """
+  reader = firefox_record.FileReader(str(args.source))
+  if args.object_store_id is not None:
+    records = reader.RecordsByObjectStoreId(
+        args.object_store_id, include_raw_data=args.include_raw_data
+    )
+  else:
+    records = reader.Records(include_raw_data=args.include_raw_data)
+
+  for record in records:
+    if _MatchesFilters(record, args):
+      _Output(record, output=args.output)
+
+
+def HandleSafariDB(args: argparse.Namespace) -> None:
+  """The handler for processing a file as Safari IndexedDB.
+
+  Args:
+    args: The arguments for processing the Safari IndexedDB.
+  """
+  reader = safari_record.FileReader(str(args.source))
+  if args.object_store_id is not None:
+    records = reader.RecordsByObjectStoreId(
+        args.object_store_id,
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
+    )
+  else:
+    records = reader.Records(
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
+    )
+
+  for record in records:
+    if _MatchesFilters(record, args):
+      _Output(record, output=args.output)
+
+
 def DbCommand(args: argparse.Namespace) -> None:
-  """The CLI for processing a directory as IndexedDB."""
+  """The CLI for processing a file/directory as IndexedDB.
+
+  Args:
+    args: The arguments for processing the IndexedDB.
+  """
   if args.format in ("chrome", "chromium"):
-    if args.source.is_file():
-      if args.object_store_id is not None:
-        records = sqlite.DatabaseReader(
-            str(args.source)
-        ).RecordsByObjectStoreId(
-            args.object_store_id, include_raw_data=args.include_raw_data
-        )
-      else:
-        records = sqlite.DatabaseReader(str(args.source)).Records(
-            include_raw_data=args.include_raw_data
-        )
-      for chromium_db_record in records:
-        if args.filter_value is not None and args.filter_value not in str(
-            chromium_db_record.value
-        ):
-          continue
-        if args.filter_key is not None and args.filter_key not in str(
-            chromium_db_record.key.value
-        ):
-          continue
-        _Output(chromium_db_record, output=args.output)
-    else:
-      for chromium_leveldb_record in chromium_record.FolderReader(
-          args.source
-      ).GetRecords(
-          use_manifest=args.use_manifest,
-          use_sequence_number=args.use_sequence_number,
-      ):
-        if (
-            args.object_store_id is not None
-            and chromium_leveldb_record.object_store_id != args.object_store_id
-        ):
-          continue
-        if args.filter_value is not None and args.filter_value not in str(
-            chromium_leveldb_record.value
-        ):
-          continue
-        if args.filter_key is not None and args.filter_key not in str(
-            chromium_leveldb_record.key.value
-        ):
-          continue
-        _Output(chromium_leveldb_record, output=args.output)
+    HandleChromiumDB(args)
   elif args.format == "firefox":
-    if args.object_store_id is not None:
-      firefox_db_records = firefox_record.FileReader(
-          str(args.source)
-      ).RecordsByObjectStoreId(
-          args.object_store_id, include_raw_data=args.include_raw_data
-      )
-    else:
-      firefox_db_records = firefox_record.FileReader(str(args.source)).Records(
-          include_raw_data=args.include_raw_data
-      )
-
-    for firefox_db_record in firefox_db_records:
-      if args.filter_value is not None and args.filter_value not in str(
-          firefox_db_record.value
-      ):
-        continue
-      if args.filter_key is not None and args.filter_key not in str(
-          firefox_db_record.key.value
-      ):
-        continue
-      _Output(firefox_db_record, output=args.output)
+    HandleFirefoxDB(args)
   elif args.format == "safari":
-    if args.object_store_id is not None:
-      safari_db_records = safari_record.FileReader(
-          str(args.source)
-      ).RecordsByObjectStoreId(
-          args.object_store_id, include_raw_data=args.include_raw_data
-      )
-    else:
-      safari_db_records = safari_record.FileReader(str(args.source)).Records(
-          include_raw_data=args.include_raw_data
-      )
-
-    for safari_db_record in safari_db_records:
-      if args.filter_value is not None and args.filter_value not in str(
-          safari_db_record.value
-      ):
-        continue
-      if args.filter_key is not None and args.filter_key not in str(
-          safari_db_record.key
-      ):
-        continue
-      _Output(safari_db_record, output=args.output)
+    HandleSafariDB(args)
 
 
 def LdbCommand(args: argparse.Namespace) -> None:
-  """The CLI for processing a LevelDB table (.ldb) file as IndexedDB."""
+  """The CLI for processing a LevelDB table (.ldb) file as IndexedDB.
+
+  Args:
+    args: The arguments for processing the LevelDB table.
+  """
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
       args.source
   ):
-    if args.filter_value is not None and args.filter_value not in str(
-        db_record.value
-    ):
-      continue
-    if args.filter_key is not None and args.filter_key not in str(
-        db_record.key
-    ):
-      continue
-    _Output(db_record, output=args.output)
+    if _MatchesFilters(db_record, args):
+      _Output(db_record, output=args.output)
 
 
 def LogCommand(args: argparse.Namespace) -> None:
-  """The CLI for processing a LevelDB log file as IndexedDB."""
+  """The CLI for processing a LevelDB log file as IndexedDB.
+
+  Args:
+    args: The arguments for processing the LevelDB log file.
+  """
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
       args.source
   ):
-    if args.filter_value is not None and args.filter_value not in str(
-        db_record.value
-    ):
-      continue
-    if args.filter_key is not None and args.filter_key not in str(
-        db_record.key
-    ):
-      continue
-    _Output(db_record, output=args.output)
+    if _MatchesFilters(db_record, args):
+      _Output(db_record, output=args.output)
 
 
 def App() -> None:
@@ -311,7 +376,13 @@ def App() -> None:
   parser_db.add_argument(
       "--include_raw_data",
       action="store_true",
-      help="Include raw key and value in the output.",
+      help="Include raw key and value bytes for each record in the output.",
+  )
+  parser_db.add_argument(
+      "--load_blobs",
+      action="store_true",
+      default=False,
+      help="Load blob data, if available for each record in the output.",
   )
   parser_db.add_argument(
       "-o",

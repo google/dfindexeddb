@@ -57,5 +57,5 @@ force-exclude = '.*_pb2\.py'
 disable_error_code = ["override"]
 ignore_missing_imports = true
 strict = true
-exclude = ['_pb2\.py', "tests"]
+exclude = ['_pb2\.py']
 disallow_untyped_calls = false

@@ -21,12 +21,12 @@ from dfindexeddb.leveldb import definitions, log
 class LogTest(unittest.TestCase):
   """Unit tests for the leveldb log parser."""
 
-  def test_open_log(self):
+  def test_open_log(self) -> None:
     """Tests the log file can be opened."""
     log_file = log.FileReader("./test_data/leveldb/create key/000003.log")
     self.assertIsNotNone(log_file)
 
-  def test_blocks(self):
+  def test_blocks(self) -> None:
     """Tests the GetBlocks method."""
     log_file = log.FileReader(
         "./test_data/leveldb/large logfilerecord/000003.log"
@@ -37,7 +37,7 @@ class LogTest(unittest.TestCase):
       self.assertEqual(block.offset, block_number * log.Block.BLOCK_SIZE)
       self.assertIsInstance(block.data, bytes)
 
-  def test_log_file_record(self):
+  def test_log_file_record(self) -> None:
     """Tests the GetPhysicalRecords method."""
     log_file = log.FileReader(
         "./test_data/leveldb/large logfilerecord/000003.log"
@@ -76,7 +76,7 @@ class LogTest(unittest.TestCase):
         definitions.LogFilePhysicalRecordType.FULL,
     )
 
-  def test_batches(self):
+  def test_batches(self) -> None:
     """Tests the GetWriteBatches method."""
     log_file = log.FileReader("./test_data/leveldb/100k keys/000004.log")
     batches = list(log_file.GetWriteBatches())
@@ -89,7 +89,7 @@ class LogTest(unittest.TestCase):
     self.assertEqual(batches[-1].sequence_number, 100000)
     self.assertEqual(batches[-1].count, 1)
 
-  def test_key_value_records(self):
+  def test_key_value_records(self) -> None:
     """Tests the GetKeyValueRecords method."""
     log_file = log.FileReader("./test_data/leveldb/delete large key/000006.log")
     records = list(log_file.GetParsedInternalKeys())

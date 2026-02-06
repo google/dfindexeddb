@@ -15,6 +15,7 @@
 """Unit tests for v8 serialized values."""
 import unittest
 from datetime import datetime
+from typing import Any
 
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import definitions, v8
@@ -23,7 +24,7 @@ from dfindexeddb.indexeddb.chromium import definitions, v8
 class V8Test(unittest.TestCase):
   """Unit tests for v8 serialized values."""
 
-  def test_oddballs(self):
+  def test_oddballs(self) -> None:
     """Tests Javascript oddballs."""
     with self.subTest("undef"):
       # v8.serialize(undefined)
@@ -49,7 +50,7 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, False)
 
-  def test_int(self):
+  def test_int(self) -> None:
     """Tests int decoding."""
 
     with self.subTest("positive"):
@@ -66,7 +67,7 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_double(self):
+  def test_double(self) -> None:
     """Tests double decoding."""
 
     with self.subTest("positive"):
@@ -83,7 +84,7 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_string(self):
+  def test_string(self) -> None:
     """Tests string decoding."""
 
     with self.subTest("ascii"):
@@ -100,7 +101,7 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_bigint(self):
+  def test_bigint(self) -> None:
     """Tests bigint decoding."""
 
     with self.subTest("positive"):
@@ -131,13 +132,13 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_jsobject(self):
+  def test_jsobject(self) -> None:
     """Tests object decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize(Object.create(null)).toString('hex'))
       buffer = bytes.fromhex("ff0d6f7b00")
-      expected_value = {}
+      expected_value: Any = {}
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -148,14 +149,14 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_jsarray(self):
+  def test_jsarray(self) -> None:
     """Tests array decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize([]).toString('hex'))
       buffer = bytes.fromhex("ff0d4100240000")
       expected_value = types.JSArray()
-      parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
+      parsed_value: Any = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("one prop"):
@@ -183,13 +184,13 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_jsmap(self):
+  def test_jsmap(self) -> None:
     """Tests map decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize(new Map()).toString('hex'))
       buffer = bytes.fromhex("ff0d3b3a00")
-      expected_value = {}
+      expected_value: Any = {}
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -201,13 +202,13 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_jsset(self):
+  def test_jsset(self) -> None:
     """Tests set decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize(new Set()).toString('hex'))
       buffer = bytes.fromhex("ff0d272c00")
-      expected_value = set()
+      expected_value: Any = set()
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -218,13 +219,13 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_arraybuffer(self):
+  def test_arraybuffer(self) -> None:
     """Tests ArrayBuffer decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize(new ArrayBuffer()).toString('hex'))
       buffer = bytes.fromhex("ff0d4200")
-      expected_value = b""
+      expected_value: Any = b""
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -235,7 +236,7 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_arraybufferview(self):
+  def test_arraybufferview(self) -> None:
     """Tests ArrayBufferView decoding."""
     buffer = bytes.fromhex("ff0d42100000000000000000000000000000000056420010")
     expected_value = v8.ArrayBufferView(
@@ -248,7 +249,7 @@ class V8Test(unittest.TestCase):
     parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_date(self):
+  def test_date(self) -> None:
     """Tests date decoding."""
     # console.log(
     #     v8.serialize(new Date('1995-12-17T03:24:00Z')).toString('hex'))
@@ -257,13 +258,13 @@ class V8Test(unittest.TestCase):
     parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_wrapped_primitives(self):
+  def test_wrapped_primitives(self) -> None:
     """Tests wrapped primitive types."""
 
     with self.subTest("true"):
       # v8.serialize(new Boolean(True))
       buffer = bytes.fromhex("ff0d79")
-      parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
+      parsed_value: Any = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, True)
 
     with self.subTest("false"):
@@ -275,7 +276,7 @@ class V8Test(unittest.TestCase):
     with self.subTest("number"):
       # console.log(v8.serialize(new Number(-123456789)).toString('hex'))
       buffer = bytes.fromhex("ff0d6e00000054346f9dc1")
-      expected_value = -123456789
+      expected_value: Any = -123456789
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
@@ -294,14 +295,14 @@ class V8Test(unittest.TestCase):
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_regexp(self):
+  def test_regexp(self) -> None:
     """Test regexp decoding."""
 
     with self.subTest("empty"):
       # console.log(v8.serialize(new RegExp()).toString('hex'))
       # /(?:)/
       buffer = bytes.fromhex("ff0d522204283f3a2900")
-      expected_value = types.RegExp(pattern="(?:)", flags=str(0))
+      expected_value: Any = types.RegExp(pattern="(?:)", flags=str(0))
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 

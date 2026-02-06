@@ -23,7 +23,7 @@ from dfindexeddb.indexeddb.safari import definitions, webkit
 class WebkitTest(unittest.TestCase):
   """Unit tests for Webkit encoded JavaScript values."""
 
-  def test_parse_undefined(self):
+  def test_parse_undefined(self) -> None:
     """Tests parsing an undefined value from an IndexedDB value."""
     expected_value = {"id": 10, "value": types.Undefined()}
     value_bytes = bytes.fromhex(
@@ -32,7 +32,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_null(self):
+  def test_parse_null(self) -> None:
     """Tests parsing a null value from an IndexedDB value."""
     expected_value = {"id": 11, "value": types.Null()}
     value_bytes = bytes.fromhex(
@@ -41,7 +41,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_zero(self):
+  def test_parse_zero(self) -> None:
     """Tests parsing a zero value from an IndexedDB value."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964050C0000000500008076616C756506FFFFFFFF"
@@ -50,7 +50,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_one(self):
+  def test_parse_one(self) -> None:
     """Tests parsing a one value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964050D0000000500008076616C756507FFFFFFFF"
@@ -59,7 +59,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_integer(self):
+  def test_parse_integer(self) -> None:
     """Tests parsing an integer value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964050E0000000500008076616C7565057B000000FFFF"
@@ -69,7 +69,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_true(self):
+  def test_parse_true(self) -> None:
     """Tests parsing a true value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964050F0000000500008076616C756509FFFFFFFF"
@@ -78,7 +78,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_false(self):
+  def test_parse_false(self) -> None:
     """Tests parsing a false value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405100000000500008076616C756508FFFFFFFF"
@@ -87,7 +87,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_true_object(self):
+  def test_parse_true_object(self) -> None:
     """Tests parsing a true object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405110000000500008076616C756518FFFFFFFF"
@@ -96,7 +96,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_false_object(self):
+  def test_parse_false_object(self) -> None:
     """Tests parsing a false object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405120000000500008076616C756519FFFFFFFF"
@@ -105,7 +105,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_number(self):
+  def test_parse_number(self) -> None:
     """Tests parsing a number from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405130000000500008076616C75650A1F85EB51B81E"
@@ -115,7 +115,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_number_object(self):
+  def test_parse_number_object(self) -> None:
     """Tests parsing a number object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405140000000500008076616C75651C1F85EB51B81E"
@@ -125,7 +125,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_bigint(self):
+  def test_parse_bigint(self) -> None:
     """Tests parsing a bigint from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405150000000500008076616C75652F000200000000"
@@ -136,7 +136,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_date(self):
+  def test_parse_date(self) -> None:
     """Tests parsing a date from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405160000000500008076616C75650B00803FE17E64"
@@ -160,7 +160,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_string(self):
+  def test_parse_string(self) -> None:
     """Tests parsing a string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405170000000500008076616C756510110000807465"
@@ -170,7 +170,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_string_object(self):
+  def test_parse_string_object(self) -> None:
     """Tests parsing a string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405180000000500008076616C75651A120000807465"
@@ -180,7 +180,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_string(self):
+  def test_parse_empty_string(self) -> None:
     """Tests parsing an empty string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F0000000202000080696405190000000500008076616C756511FFFFFFFF"
@@ -189,7 +189,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_string_object(self):
+  def test_parse_empty_string_object(self) -> None:
     """Tests parsing an empty string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964051A0000000500008076616C75651BFFFFFFFF"
@@ -198,7 +198,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_set(self):
+  def test_parse_set(self) -> None:
     """Tests parsing a set from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964051B0000000500008076616C75651D070502000000"
@@ -211,7 +211,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_map(self):
+  def test_parse_empty_map(self) -> None:
     """Tests parsing a map from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964051C0000000500008076616C75651E1FFFFFFFFFFFFF"
@@ -221,7 +221,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_regexp(self):
+  def test_parse_regexp(self) -> None:
     """Tests parsing a regexp from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964051D0000000500008076616C75651200000080FEFF"
@@ -231,7 +231,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_object(self):
+  def test_parse_empty_object(self) -> None:
     """Tests parsing a empty object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964051E0000000500008076616C756502FFFFFFFFFFFF"
@@ -241,7 +241,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_mixed_object(self):
+  def test_mixed_object(self) -> None:
     """Tests parsing a object with mixed values from an IndexedDB value."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964070A000080746573745F756E646566030900008074"
@@ -298,7 +298,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_nested_array(self):
+  def test_nested_array(self) -> None:
     """Tests parsing a nested array value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "0F00000002020000806964050200000009000080746573745F646174650B0090"
@@ -332,7 +332,7 @@ class WebkitTest(unittest.TestCase):
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_date_key(self):
+  def test_parse_date_key(self) -> None:
     """Tests parsing a date from an IDB key."""
     expected_key = webkit.IDBKeyData(
         offset=0,
@@ -343,7 +343,7 @@ class WebkitTest(unittest.TestCase):
     parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_number_key(self):
+  def test_parse_number_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = webkit.IDBKeyData(
         offset=0, key_type=definitions.SIDBKeyType.NUMBER, data=-3.14
@@ -352,7 +352,7 @@ class WebkitTest(unittest.TestCase):
     parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_string_key(self):
+  def test_parse_string_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = webkit.IDBKeyData(
         offset=0,
@@ -366,7 +366,7 @@ class WebkitTest(unittest.TestCase):
     parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_uintarray_key(self):
+  def test_parse_uintarray_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = webkit.IDBKeyData(
         offset=0, key_type=definitions.SIDBKeyType.BINARY, data=b"\x00\x00\x00"
@@ -375,7 +375,7 @@ class WebkitTest(unittest.TestCase):
     parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_array_key(self):
+  def test_parse_array_key(self) -> None:
     """Tests parsing an array from an IDB key."""
     expected_key = webkit.IDBKeyData(
         offset=0, key_type=definitions.SIDBKeyType.ARRAY, data=[1, 2, 3]

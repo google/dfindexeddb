@@ -23,7 +23,7 @@ from dfindexeddb.indexeddb.firefox import definitions, gecko
 class GeckoTest(unittest.TestCase):
   """Unit tests for Gecko encoded JavaScript values."""
 
-  def test_parse_undefined(self):
+  def test_parse_undefined(self) -> None:
     """Tests parsing an undefined value from an IndexedDB value."""
     expected_value = {"id": 10, "value": types.Undefined()}
     value_bytes = bytes.fromhex(
@@ -33,7 +33,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_null(self):
+  def test_parse_null(self) -> None:
     """Tests parsing a null value from an IndexedDB value."""
     expected_value = {"id": 11, "value": types.Null()}
     value_bytes = bytes.fromhex(
@@ -43,7 +43,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_zero(self):
+  def test_parse_zero(self) -> None:
     """Tests parsing a zero value from an IndexedDB value."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800000C"
@@ -53,7 +53,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_one(self):
+  def test_parse_one(self) -> None:
     """Tests parsing a one value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800000D"
@@ -64,7 +64,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_integer(self):
+  def test_parse_integer(self) -> None:
     """Tests parsing an integer value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800000E"
@@ -75,7 +75,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_true(self):
+  def test_parse_true(self) -> None:
     """Tests parsing a true value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800000F"
@@ -86,7 +86,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_false(self):
+  def test_parse_false(self) -> None:
     """Tests parsing a false value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800001"
@@ -97,7 +97,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_true_object(self):
+  def test_parse_true_object(self) -> None:
     """Tests parsing a true object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF6964011228000011"
@@ -108,7 +108,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_false_object(self):
+  def test_parse_false_object(self) -> None:
     """Tests parsing a false object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF6964011228000012"
@@ -118,7 +118,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_number(self):
+  def test_parse_number(self) -> None:
     """Tests parsing a number from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF6964011228000013"
@@ -129,7 +129,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_number_object(self):
+  def test_parse_number_object(self) -> None:
     """Tests parsing a number object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "50040300010104F1FF0106340800FFFF020000800400FFFF6964011228000014"
@@ -140,7 +140,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_bigint(self):
+  def test_parse_bigint(self) -> None:
     """Tests parsing a bigint from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "58040300010104F1FF0106340800FFFF020000800400FFFF696401122C000015"
@@ -152,7 +152,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_date(self):
+  def test_parse_date(self) -> None:
     """Tests parsing a date from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "50040300010104F1FF0106340800FFFF020000800400FFFF6964011228000016"
@@ -178,7 +178,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_string(self):
+  def test_parse_string(self) -> None:
     """Tests parsing a string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "60040300010104F1FF0106340800FFFF020000800400FFFF6964011228000017"
@@ -189,7 +189,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_string_object(self):
+  def test_parse_string_object(self) -> None:
     """Tests parsing a string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "60040300010104F1FF0106340800FFFF020000800400FFFF6964011228000018"
@@ -200,7 +200,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_string(self):
+  def test_parse_empty_string(self) -> None:
     """Tests parsing an empty string from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF6964011228000019"
@@ -210,7 +210,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_string_object(self):
+  def test_parse_empty_string_object(self) -> None:
     """Tests parsing an empty string object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "48040300010104F1FF0106340800FFFF020000800400FFFF696401122800001A"
@@ -221,7 +221,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_set(self):
+  def test_parse_set(self) -> None:
     """Tests parsing a set from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "68040300010104F1FF0106340800FFFF020000800400FFFF696401122800001B"
@@ -235,7 +235,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_map(self):
+  def test_parse_empty_map(self) -> None:
     """Tests parsing a map from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "50040300010104F1FF0106340800FFFF020000800400FFFF696401122800001C"
@@ -246,7 +246,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_regexp(self):
+  def test_parse_regexp(self) -> None:
     """Tests parsing a regexp from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "50040300010104F1FF0106340800FFFF020000800400FFFF696401122800001D"
@@ -257,7 +257,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_empty_object(self):
+  def test_parse_empty_object(self) -> None:
     """Tests parsing a empty object from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "50040300010104F1FF0106340800FFFF020000800400FFFF696401122800001E"
@@ -268,7 +268,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_mixed_object(self):
+  def test_mixed_object(self) -> None:
     """Tests parsing a object with mixed values from an IndexedDB value."""
     value_bytes = bytes.fromhex(
         "8008040300010104F1FF0106340800FFFF020000800400FFFF69640112280000"
@@ -322,7 +322,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_nested_array(self):
+  def test_nested_array(self) -> None:
     """Tests parsing a nested array value from an IndexedDB record."""
     value_bytes = bytes.fromhex(
         "F003040300010104F1FF0106340800FFFF020000800400FFFF69640112280000"
@@ -357,7 +357,7 @@ class GeckoTest(unittest.TestCase):
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
 
-  def test_parse_date_key(self):
+  def test_parse_date_key(self) -> None:
     """Tests parsing a date from an IDB key."""
     expected_key = gecko.IDBKey(
         offset=0,
@@ -370,7 +370,7 @@ class GeckoTest(unittest.TestCase):
     parsed_key = gecko.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_number_key(self):
+  def test_parse_number_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = gecko.IDBKey(
         offset=0, type=definitions.IndexedDBKeyType.FLOAT, value=-3.14
@@ -379,7 +379,7 @@ class GeckoTest(unittest.TestCase):
     parsed_key = gecko.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_string_key(self):
+  def test_parse_string_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = gecko.IDBKey(
         offset=0,
@@ -390,7 +390,7 @@ class GeckoTest(unittest.TestCase):
     parsed_key = gecko.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_uintarray_key(self):
+  def test_parse_uintarray_key(self) -> None:
     """Tests parsing a number from an IDB key."""
     expected_key = gecko.IDBKey(
         offset=0,
@@ -401,7 +401,7 @@ class GeckoTest(unittest.TestCase):
     parsed_key = gecko.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_parse_array_key(self):
+  def test_parse_array_key(self) -> None:
     """Tests parsing an array from an IDB key."""
     expected_key = gecko.IDBKey(
         offset=0, type=definitions.IndexedDBKeyType.ARRAY, value=[1, 2, 3]

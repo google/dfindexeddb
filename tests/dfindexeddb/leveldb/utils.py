@@ -22,7 +22,7 @@ from dfindexeddb.leveldb import utils
 class LevelDBDecoderTest(unittest.TestCase):
   """Unit tests for the LevelDBDecoder class."""
 
-  def test_decode_bool(self):
+  def test_decode_bool(self) -> None:
     """Tests the decode_bool method."""
     data = b"\x01"
     stream = io.BytesIO(data)
@@ -31,7 +31,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, True)
 
-  def test_decode_string(self):
+  def test_decode_string(self) -> None:
     """Tests the decode_string method."""
     data = b"\x00a\x00b"
     stream = io.BytesIO(data)
@@ -40,7 +40,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, "ab")
 
-  def test_decode_blob_with_length(self):
+  def test_decode_blob_with_length(self) -> None:
     """Tests the decode_blob_with_length method."""
     data = b"\x02\x00a"
     stream = io.BytesIO(data)
@@ -49,7 +49,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, b"\x00a")
 
-  def test_decode_string_with_length(self):
+  def test_decode_string_with_length(self) -> None:
     """Tests the decode_string_with_length method."""
     data = b"\x01\x00a"
     stream = io.BytesIO(data)
@@ -58,7 +58,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, "a")
 
-  def test_decode_sortable_double(self):
+  def test_decode_sortable_double(self) -> None:
     """Tests the DecodeSortableDouble method."""
     with self.subTest("positive"):
       data = b"\xbf\xf0\x00\x00\x00\x00\x00\x00"
@@ -73,7 +73,7 @@ class LevelDBDecoderTest(unittest.TestCase):
       _, result = decoder.DecodeSortableDouble()
       self.assertEqual(result, -1.0)
 
-  def test_decode_sortable_string(self):
+  def test_decode_sortable_string(self) -> None:
     """Tests the DecodeSortableString method."""
     data = b"\x42\x43\x44\x00"  # "ABC"
     decoder = utils.LevelDBDecoder(io.BytesIO(data))
@@ -81,7 +81,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     self.assertEqual(offset, 0)
     self.assertEqual(result, "ABC")
 
-  def test_decode_sortable_binary(self):
+  def test_decode_sortable_binary(self) -> None:
     """Tests the DecodeSortableBinary method."""
     with self.subTest("empty"):
       data = b"\x00"
