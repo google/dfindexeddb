@@ -268,7 +268,9 @@ def LdbCommand(args: argparse.Namespace) -> None:
     args: The arguments for processing the LevelDB table.
   """
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
-      args.source
+      args.source,
+      include_raw_data=args.include_raw_data,
+      load_blobs=args.load_blobs,
   ):
     if _MatchesFilters(db_record, args):
       _Output(db_record, output=args.output)
@@ -281,7 +283,9 @@ def LogCommand(args: argparse.Namespace) -> None:
     args: The arguments for processing the LevelDB log file.
   """
   for db_record in chromium_record.ChromiumIndexedDBRecord.FromFile(
-      args.source
+      args.source,
+      include_raw_data=args.include_raw_data,
+      load_blobs=args.load_blobs,
   ):
     if _MatchesFilters(db_record, args):
       _Output(db_record, output=args.output)
@@ -363,6 +367,7 @@ def App() -> None:
       ),
   )
   parser_db.add_argument(
+      "-f",
       "--format",
       required=True,
       choices=["chromium", "chrome", "firefox", "safari"],
@@ -427,6 +432,22 @@ def App() -> None:
       help="Output format.  Default is json.",
   )
   parser_ldb.add_argument(
+      "--object_store_id",
+      type=int,
+      help="The object store ID to filter by.",
+  )
+  parser_ldb.add_argument(
+      "--include_raw_data",
+      action="store_true",
+      help="Include raw key and value bytes for each record in the output.",
+  )
+  parser_ldb.add_argument(
+      "--load_blobs",
+      action="store_true",
+      default=False,
+      help="Load blob data, if available for each record in the output.",
+  )
+  parser_ldb.add_argument(
       "--filter_value",
       type=str,
       help=(
@@ -460,6 +481,22 @@ def App() -> None:
       choices=["json", "jsonl", "repr"],
       default="json",
       help="Output format.  Default is json.",
+  )
+  parser_log.add_argument(
+      "--object_store_id",
+      type=int,
+      help="The object store ID to filter by.",
+  )
+  parser_log.add_argument(
+      "--include_raw_data",
+      action="store_true",
+      help="Include raw key and value bytes for each record in the output.",
+  )
+  parser_log.add_argument(
+      "--load_blobs",
+      action="store_true",
+      default=False,
+      help="Load blob data, if available for each record in the output.",
   )
   parser_log.add_argument(
       "--filter_value",

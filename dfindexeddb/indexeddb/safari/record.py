@@ -110,7 +110,7 @@ class FileReader:
     self.max_object_store_id = 0
 
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       cursor = conn.execute(
           'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseVersion"'
@@ -181,7 +181,7 @@ class FileReader:
     """
     blobs = []
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       cursor = conn.execute(
           "SELECT r.blobURL, f.fileName "
@@ -220,7 +220,7 @@ class FileReader:
       ObjectStoreInfo instances.
     """
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       cursor = conn.execute(
           "SELECT id, name, keypath, autoinc FROM ObjectStoreInfo"
@@ -301,7 +301,7 @@ class FileReader:
           database.
     """
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
@@ -329,7 +329,7 @@ class FileReader:
       IndexedDBRecord instances.
     """
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
@@ -354,7 +354,7 @@ class FileReader:
       IndexedDBRecord instances.
     """
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
@@ -372,7 +372,7 @@ class FileReader:
   ) -> Generator[SafariIndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
     with sqlite3.connect(
-        f"file:{self.filename}?mode=ro&immutable=1", uri=True
+        f"file://{self.filename}?mode=ro&immutable=1", uri=True
     ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
