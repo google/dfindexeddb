@@ -352,7 +352,9 @@ class CLITest(unittest.TestCase):
     self.args.source = "source.ldb"
     cli.LdbCommand(self.args)
 
-    mock_from_file.assert_called_once_with("source.ldb")
+    mock_from_file.assert_called_once_with(
+        "source.ldb", include_raw_data=False, load_blobs=False
+    )
     mock_output.assert_called_once_with(record, output="json")
 
   @mock.patch("dfindexeddb.indexeddb.cli._Output")
@@ -380,7 +382,9 @@ class CLITest(unittest.TestCase):
     self.args.source = "source.log"
     cli.LogCommand(self.args)
 
-    mock_from_file.assert_called_once_with("source.log")
+    mock_from_file.assert_called_once_with(
+        "source.log", include_raw_data=False, load_blobs=False
+    )
     mock_output.assert_called_once_with(record, output="json")
 
 
