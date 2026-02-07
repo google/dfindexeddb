@@ -23,7 +23,7 @@ from dfindexeddb.indexeddb.chromium import sqlite
 class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
   """Unit tests for Chromium IndexedDB encoded sqlite3 databases."""
 
-  def setUp(self):
+  def setUp(self) -> None:
     self.reader = sqlite.DatabaseReader(
         "./test_data/indexeddb/chrome/osx_144_64/file__0/sample"
     )
@@ -57,7 +57,7 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
         },
     }
 
-  def test_object_stores(self):
+  def test_object_stores(self) -> None:
     """Tests the ObjectStores method."""
     object_stores = list(self.reader.ObjectStores())
     self.assertEqual(object_stores[0].id, 1)
@@ -66,7 +66,7 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
     self.assertEqual(object_stores[0].key_generator_current_number, 1)
     self.assertEqual(object_stores[0].auto_increment, 0)
 
-  def test_records(self):
+  def test_records(self) -> None:
     """Tests the Records method."""
     records = list(self.reader.Records())
     self.assertEqual(len(records), 4)
@@ -79,7 +79,7 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
     self.assertIsNone(records[0].raw_key)
     self.assertIsNone(records[0].raw_value)
 
-  def test_records_by_object_store_id(self):
+  def test_records_by_object_store_id(self) -> None:
     """Tests the RecordsByObjectStoreId method."""
     records = list(self.reader.RecordsByObjectStoreId(1))
     self.assertEqual(len(records), 4)

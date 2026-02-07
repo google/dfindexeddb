@@ -22,3 +22,4 @@ jobs:
     - name: Analysing the code with mypy
       run: |
         uv run --with mypy mypy dfindexeddb
+        uv run --with mypy mypy dfindexeddb tests

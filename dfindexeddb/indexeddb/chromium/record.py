@@ -1605,6 +1605,7 @@ class ChromiumIndexedDBRecord:
       parse_value: bool = True,
       include_raw_data: bool = False,
       blob_folder_reader: Optional[BlobFolderReader] = None,
+      load_blobs: bool = True,
   ) -> ChromiumIndexedDBRecord:
     """Returns an ChromiumIndexedDBRecord from a ParsedInternalKey."""
     idb_key = IndexedDbKey.FromBytes(
@@ -1616,8 +1617,13 @@ class ChromiumIndexedDBRecord:
     else:
       idb_value = None
 
-    blobs = []
-    if isinstance(idb_value, IndexedDBExternalObject) and blob_folder_reader:
+    blobs = None
+    if (
+        load_blobs
+        and isinstance(idb_value, IndexedDBExternalObject)
+        and blob_folder_reader
+    ):
+      blobs = []
       for (
           blob_path_or_error,
           blob_data,
@@ -1659,6 +1665,7 @@ class ChromiumIndexedDBRecord:
       parse_value: bool = True,
       include_raw_data: bool = False,
       blob_folder_reader: Optional[BlobFolderReader] = None,
+      load_blobs: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
     """Yields ChromiumIndexedDBRecord from a file."""
     for db_record in record.LevelDBRecord.FromFile(file_path):
@@ -1668,6 +1675,7 @@ class ChromiumIndexedDBRecord:
             parse_value=parse_value,
             include_raw_data=include_raw_data,
             blob_folder_reader=blob_folder_reader,
+            load_blobs=load_blobs,
         )
       except (
           errors.ParserError,
@@ -1802,6 +1810,7 @@ class FolderReader:
       use_sequence_number: bool = False,
       parse_value: bool = True,
       include_raw_data: bool = False,
+      load_blobs: bool = True,
   ) -> Generator[ChromiumIndexedDBRecord, None, None]:
     """Yields ChromiumIndexedDBRecord.
 
@@ -1825,6 +1834,7 @@ class FolderReader:
             parse_value=parse_value,
             include_raw_data=include_raw_data,
             blob_folder_reader=self.blob_folder_reader,
+            load_blobs=load_blobs,
         )
       except (
           errors.ParserError,

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dfindexeddb"
-version = "20260205"
+version = "20260207"
 requires-python = ">=3.9"
 description = "dfindexeddb is an experimental Python tool for performing digital forensic analysis of IndexedDB and leveldb files."
 license = "Apache-2.0"
@@ -54,5 +54,5 @@ force-exclude = '.*_pb2\.py'
 disable_error_code = ["override"]
 ignore_missing_imports = true
 strict = true
-exclude = ['_pb2\.py', "tests"]
+exclude = ['_pb2\.py']
 disallow_untyped_calls = false
