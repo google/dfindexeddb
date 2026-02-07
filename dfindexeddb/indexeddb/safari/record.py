@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Safari IndexedDB records."""
-import os
+import pathlib
 import plistlib
 import sqlite3
 import sys
@@ -103,15 +103,14 @@ class FileReader:
     Args:
       filename: the IndexedDB filename.
     """
-    self.filename = os.path.abspath(filename)
+    self.filename = filename
+    self._uri = pathlib.Path(filename).resolve().as_uri()
     self.database_name = ""
     self.database_version = 0
     self.metadata_version = 0
     self.max_object_store_id = 0
 
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
           'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseVersion"'
       )
@@ -180,9 +179,7 @@ class FileReader:
       a list of SafariBlobInfo instances.
     """
     blobs = []
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
           "SELECT r.blobURL, f.fileName "
           "FROM BlobRecords r "
@@ -195,19 +192,18 @@ class FileReader:
         file_name = self._DecodeString(row[1])
 
         # Check in .blobs subfolder first, then try the base directory
-        file_path = os.path.join(f"{self.filename}.blobs", file_name)
-        if not os.path.exists(file_path):
-          file_path = os.path.join(os.path.dirname(self.filename), file_name)
+        blob_file_path = pathlib.Path(f"{self.filename}.blobs") / file_name
+        if not blob_file_path.exists():
+          blob_file_path = pathlib.Path(self.filename).parent / file_name
 
         blob_data = None
-        if os.path.exists(file_path):
-          with open(file_path, "rb") as fd:
-            blob_data = fd.read()
+        if blob_file_path.exists():
+          blob_data = blob_file_path.read_bytes()
         blobs.append(
             SafariBlobInfo(
                 blob_url=blob_url,
                 file_name=file_name,
-                file_path=file_path,
+                file_path=str(blob_file_path),
                 blob_data=blob_data,
             )
         )
@@ -219,9 +215,7 @@ class FileReader:
     Yields:
       ObjectStoreInfo instances.
     """
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       cursor = conn.execute(
           "SELECT id, name, keypath, autoinc FROM ObjectStoreInfo"
       )
@@ -300,9 +294,7 @@ class FileReader:
       the IndexedDBRecord or None if the record_id does not exist in the
           database.
     """
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -328,9 +320,7 @@ class FileReader:
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -353,9 +343,7 @@ class FileReader:
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -371,9 +359,7 @@ class FileReader:
       self, include_raw_data: bool = False, load_blobs: bool = True
   ) -> Generator[SafariIndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
-    with sqlite3.connect(
-        f"file://{self.filename}?mode=ro&immutable=1", uri=True
-    ) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
