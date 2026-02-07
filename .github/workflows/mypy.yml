@@ -24,4 +24,4 @@ jobs:
         pip install mypy
     - name: Analysing the code with mypy
       run: |
-        mypy dfindexeddb
+        mypy dfindexeddb tests

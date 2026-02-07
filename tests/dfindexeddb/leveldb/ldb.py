@@ -21,12 +21,12 @@ from dfindexeddb.leveldb import definitions, ldb
 class LDBTest(unittest.TestCase):
   """Unit tests for the leveldb ldb parser."""
 
-  def test_init_ldb(self):
+  def test_init_ldb(self) -> None:
     """Tests initializing a Ldb FileReader."""
     ldb_file = ldb.FileReader("./test_data/leveldb/100k keys/000005.ldb")
     self.assertIsNotNone(ldb_file)
 
-  def test_blocks(self):
+  def test_blocks(self) -> None:
     """Tests the blocks method."""
     ldb_file = ldb.FileReader("./test_data/leveldb/100k keys/000005.ldb")
     blocks = list(ldb_file.GetBlocks())
@@ -37,7 +37,7 @@ class LDBTest(unittest.TestCase):
     self.assertEqual(first_block.length, 1721)
     self.assertTrue(first_block.IsSnappyCompressed())
 
-  def test_records(self):
+  def test_records(self) -> None:
     """Tests the records method."""
     ldb_file = ldb.FileReader("./test_data/leveldb/100k keys/000005.ldb")
 
@@ -50,7 +50,7 @@ class LDBTest(unittest.TestCase):
         records[0].record_type, definitions.InternalRecordType.VALUE
     )
 
-  def test_range_iter(self):
+  def test_range_iter(self) -> None:
     """Tests the RangeIter method."""
     ldb_file = ldb.FileReader("./test_data/leveldb/100k keys/000005.ldb")
 

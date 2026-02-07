@@ -366,7 +366,7 @@ class SerializedScriptValueDecoder:
     """Decodes a Blob value."""
     url = self.DecodeStringData()
     blob_type = self.DecodeStringData()
-    size = self.decoder.DecodeUint64()
+    _, size = self.decoder.DecodeUint64()
     if self.version >= 11:
       _, memory_cost = self.decoder.DecodeUint64()
     else:
@@ -539,6 +539,7 @@ class SerializedScriptValueDecoder:
       raise errors.ParserError(
           f"{current_version} is not the expected CurrentVersion"
       )
+    self.version = current_version
     _, value = self.DecodeValue()
     return value
 

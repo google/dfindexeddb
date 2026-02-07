@@ -14,7 +14,7 @@
 # limitations under the License.
 """Chromium IndexedDB records encoded in sqlite3 databases."""
 
-import os
+import pathlib
 import sqlite3
 from typing import Any, Generator, Optional
 from dataclasses import dataclass
@@ -95,7 +95,11 @@ class ChromiumBlobInfo:
 
 
 class DatabaseReader:
-  """A reader for Chromium IndexedDB sqlite3 files."""
+  """A reader for Chromium IndexedDB sqlite3 files.
+
+  Attributes:
+    filename: the path to the sqlite3 file.
+  """
 
   def __init__(self, filename: str):
     """Initializes the reader.
@@ -103,11 +107,12 @@ class DatabaseReader:
     Args:
       filename: the path to the sqlite3 file.
     """
-    self._filename = filename
+    self.filename = filename
+    self._uri = pathlib.Path(filename).resolve().as_uri()
 
   def ObjectStores(self) -> Generator[ChromiumObjectStoreInfo, None, None]:
     """Yields object stores."""
-    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_OBJECT_STORES_QUERY)
       for row in cursor:
@@ -128,9 +133,9 @@ class DatabaseReader:
     Returns:
       The path to the legacy blob file.
     """
-    base, ext = os.path.splitext(self._filename)
-    db_dir = f"{base}_{ext}"
-    return os.path.join(db_dir, f"{blob_id:x}")
+    db_dir = pathlib.Path(self.filename).parent
+    blob_path = db_dir / f"{blob_id:x}"
+    return str(blob_path)
 
   def LoadLegacyBlobData(self, blob_id: int) -> bytes:
     """Loads legacy blob data from disk.
@@ -144,10 +149,9 @@ class DatabaseReader:
     Raises:
       FileNotFoundError: if the legacy blob file is not found.
     """
-    blob_path = self._GetLegacyBlobPath(blob_id)
-    if os.path.exists(blob_path):
-      with open(blob_path, "rb") as f:
-        return f.read()
+    blob_path = pathlib.Path(self._GetLegacyBlobPath(blob_id))
+    if blob_path.exists():
+      return blob_path.read_bytes()
     raise FileNotFoundError(f"Legacy blob file not found: {blob_path}")
 
   def LoadBlobDataForRecordId(
@@ -161,7 +165,7 @@ class DatabaseReader:
     Yields:
       ChromiumBlobInfo objects.
     """
-    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
 
@@ -296,7 +300,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_RECORDS_BY_ID_QUERY, (object_store_id,))
@@ -324,7 +328,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(
@@ -353,7 +357,7 @@ class DatabaseReader:
     Yields:
       ChromiumIndexedDBRecord records.
     """
-    with sqlite3.connect(f"file:{self._filename}?mode=ro", uri=True) as conn:
+    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
       conn.row_factory = sqlite3.Row
       cursor = conn.cursor()
       cursor.execute(definitions.SQL_RECORDS_QUERY)

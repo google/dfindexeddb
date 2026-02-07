@@ -15,21 +15,20 @@
 """Unit tests for LevelDB Manifest files."""
 import unittest
 
-# from dfindexeddb.leveldb import definitions
 from dfindexeddb.leveldb import descriptor, log
 
 
 class DescriptorTests(unittest.TestCase):
   """Unit tests for the Descriptor/MANIFEST parser."""
 
-  def test_open_manifest(self):
+  def test_open_manifest(self) -> None:
     """Tests the manifest file can be opened."""
     manifest_file = descriptor.FileReader(
         "./test_data/leveldb/create key/MANIFEST-000002"
     )
     self.assertIsNotNone(manifest_file)
 
-  def test_blocks(self):
+  def test_blocks(self) -> None:
     """Tests the GetBlocks method."""
     manifest_file = descriptor.FileReader(
         "./test_data/leveldb/create large key/MANIFEST-000002"
@@ -40,7 +39,7 @@ class DescriptorTests(unittest.TestCase):
       self.assertEqual(block.offset, block_number * log.Block.BLOCK_SIZE)
       self.assertIsInstance(block.data, bytes)
 
-  def test_versionedit(self):
+  def test_versionedit(self) -> None:
     """Tests the GetVersionEdits method."""
     manifest_file = descriptor.FileReader(
         "./test_data/leveldb/large logfilerecord/MANIFEST-000002"
@@ -59,7 +58,7 @@ class DescriptorTests(unittest.TestCase):
     self.assertEqual(version_edits[1].new_files, [])
     self.assertEqual(version_edits[1].deleted_files, [])
 
-  def test_versions(self):
+  def test_versions(self) -> None:
     """Tests the GetVersions method."""
     manifest_file = descriptor.FileReader(
         "./test_data/leveldb/100k keys delete/MANIFEST-000002"
@@ -87,19 +86,20 @@ class DescriptorTests(unittest.TestCase):
     self.assertEqual(versions[2].current_log, "000004.log")
     self.assertEqual(versions[2].last_sequence, 85673)
 
-  def test_latestversion(self):
+  def test_latestversion(self) -> None:
     """Tests the GetLatestVersion method."""
     manifest_file = descriptor.FileReader(
         "./test_data/leveldb/100k keys delete/MANIFEST-000002"
     )
     latest_version = manifest_file.GetLatestVersion()
     self.assertIsNotNone(latest_version)
-    self.assertEqual(len(latest_version.active_files), 1)
-    self.assertIn(2, latest_version.active_files)
-    self.assertIn("000005.ldb", latest_version.active_files[2])
-    self.assertEqual(latest_version.deleted_files, {})
-    self.assertEqual(latest_version.current_log, "000004.log")
-    self.assertEqual(latest_version.last_sequence, 85673)
+    if latest_version:
+      self.assertEqual(len(latest_version.active_files), 1)
+      self.assertIn(2, latest_version.active_files)
+      self.assertIn("000005.ldb", latest_version.active_files[2])
+      self.assertEqual(latest_version.deleted_files, {})
+      self.assertEqual(latest_version.current_log, "000004.log")
+      self.assertEqual(latest_version.last_sequence, 85673)
 
 
 if __name__ == "__main__":

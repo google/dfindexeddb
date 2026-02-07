@@ -16,6 +16,7 @@
 import datetime
 import pathlib
 import unittest
+from typing import Any, cast
 
 from dfindexeddb.indexeddb.chromium import definitions, record
 
@@ -23,7 +24,7 @@ from dfindexeddb.indexeddb.chromium import definitions, record
 class ChromiumIndexedDBTest(unittest.TestCase):
   """Unit tests for Chromium IndexedDB encoded leveldb databases."""
 
-  def test_parse_key_prefix(self):
+  def test_parse_key_prefix(self) -> None:
     """Tests the KeyPrefix class."""
     expected_key_prefix = record.KeyPrefix(
         offset=0, database_id=1, object_store_id=2, index_id=3
@@ -32,7 +33,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
-  def test_parse_key_prefix_multi_byte_database_id(self):
+  def test_parse_key_prefix_multi_byte_database_id(self) -> None:
     """Tests the KeyPrefix class with multi-byte database id."""
     expected_key_prefix = record.KeyPrefix(
         offset=0, database_id=257, object_store_id=2, index_id=3
@@ -41,7 +42,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
-  def test_parse_key_prefix_multi_byte_object_store_id(self):
+  def test_parse_key_prefix_multi_byte_object_store_id(self) -> None:
     """Tests the KeyPrefix class with multi-byte object store id."""
     expected_key_prefix = record.KeyPrefix(
         offset=0, database_id=0, object_store_id=257, index_id=3
@@ -50,7 +51,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
-  def test_parse_key_prefix_multi_byte_index_id(self):
+  def test_parse_key_prefix_multi_byte_index_id(self) -> None:
     """Tests the KeyPrefix class with multi-byte index id."""
     expected_key_prefix = record.KeyPrefix(
         offset=0, database_id=1, object_store_id=2, index_id=257
@@ -59,7 +60,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key_prefix = record.KeyPrefix.FromBytes(key_bytes)
     self.assertEqual(parsed_key_prefix, expected_key_prefix)
 
-  def test_parse_idbkey(self):
+  def test_parse_idbkey(self) -> None:
     """Tests the IDBKey class."""
     expected_idbkey = record.IDBKey(
         offset=4, type=definitions.IDBKeyType.NUMBER, value=2.0
@@ -68,7 +69,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_idbkey = record.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_idbkey, expected_idbkey)
 
-  def test_parse_idbkeypath(self):
+  def test_parse_idbkeypath(self) -> None:
     """Tests the IDBKeyPath class."""
     expected_key = record.IDBKeyPath(
         offset=3, type=definitions.IDBKeyPathType.STRING, value="id"
@@ -77,7 +78,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.IDBKeyPath.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_decode_sortable_binary(self):
+  def test_decode_sortable_binary(self) -> None:
     """Tests the SortableIDBKey class with binary data."""
     with self.subTest("empty"):
       key_bytes = bytes.fromhex("4000")  # type 0x40 + sentinel 0x00
@@ -108,7 +109,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           parsed_idbkey.value, b"\x01\x02\x03\x04\x05\x06\x07\x08\x09"
       )
 
-  def test_decode_sortable_number(self):
+  def test_decode_sortable_number(self) -> None:
     """Tests the SortableIDBKey class with number data."""
     with self.subTest("1.0"):
       key_bytes = bytes.fromhex(
@@ -127,7 +128,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkey.value, -1.0)
 
-  def test_decode_sortable_string(self):
+  def test_decode_sortable_string(self) -> None:
     """Tests the SortableIDBKey class with string data."""
     with self.subTest("'a'"):
       key_bytes = bytes.fromhex(
@@ -144,7 +145,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkey.value, "ab")
 
-  def test_decode_sortable_date(self):
+  def test_decode_sortable_date(self) -> None:
     """Tests the SortableIDBKey class with date data."""
     with self.subTest("Unix Epoch"):
       key_bytes = bytes.fromhex(
@@ -156,7 +157,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           parsed_idbkey.value, datetime.datetime(1970, 1, 1, tzinfo=None)
       )
 
-  def test_decode_sortable_array(self):
+  def test_decode_sortable_array(self) -> None:
     """Tests the SortableIDBKey class with array data."""
     with self.subTest("[1.0]"):
       key_bytes = bytes.fromhex(
@@ -173,14 +174,14 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkey.value, [1.0, "a"])
 
-  def test_parse_blob_journal(self):
+  def test_parse_blob_journal(self) -> None:
     """Tests the BlobJournal class"""
     expected_key = record.BlobJournal(offset=4, entries=[])
     key_bytes = b""
     parsed_key = record.BlobJournal.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
-  def test_schema_version_key(self):
+  def test_schema_version_key(self) -> None:
     """Tests the SchemaVersionKey."""
     expected_key = record.SchemaVersionKey(
         offset=4,
@@ -191,7 +192,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = 5
 
     record_bytes = (bytes.fromhex("0000000000"), bytes.fromhex("05"))
-    parsed_key = record.SchemaVersionKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.SchemaVersionKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -200,7 +201,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_max_database_id_key(self):
+  def test_max_database_id_key(self) -> None:
     """Tests the MaxDatabaseIdKey."""
     expected_key = record.MaxDatabaseIdKey(
         offset=4,
@@ -211,7 +212,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = 4
 
     record_bytes = (bytes.fromhex("0000000001"), bytes.fromhex("04"))
-    parsed_key = record.MaxDatabaseIdKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.MaxDatabaseIdKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -220,7 +221,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_data_version_key(self):
+  def test_data_version_key(self) -> None:
     """Tests the DataVersionKey."""
     expected_key = record.DataVersionKey(
         offset=4,
@@ -231,7 +232,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = 64424509460
 
     record_bytes = (bytes.fromhex("0000000002"), bytes.fromhex("140000000f"))
-    parsed_key = record.DataVersionKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.DataVersionKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -240,7 +241,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_earliest_sweep_key(self):
+  def test_earliest_sweep_key(self) -> None:
     """Tests the EarliestSweepKey."""
     expected_key = record.EarliestSweepKey(
         offset=4,
@@ -254,7 +255,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("0000000005"),
         bytes.fromhex("6a3773e0c7502f"),
     )
-    parsed_key = record.EarliestSweepKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.EarliestSweepKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -263,7 +264,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_earliest_compaction_key(self):
+  def test_earliest_compaction_key(self) -> None:
     """Tests the EarliestCompactionTimeKey."""
     expected_key = record.EarliestCompactionTimeKey(
         offset=4,
@@ -277,7 +278,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("0000000006"),
         bytes.fromhex("e88a9eeddb502f"),
     )
-    parsed_key = record.EarliestCompactionTimeKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.EarliestCompactionTimeKey.FromBytes(
+        record_bytes[0]
+    )
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -286,7 +289,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_scopes_prefix_key(self):
+  def test_scopes_prefix_key(self) -> None:
     """Tests the ScopesPrefixKey."""
     expected_key = record.ScopesPrefixKey(
         offset=4,
@@ -297,7 +300,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     expected_value = bytes.fromhex("0801")
 
     record_bytes = (bytes.fromhex("000000003200"), bytes.fromhex("0801"))
-    parsed_key = record.ScopesPrefixKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.ScopesPrefixKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -306,7 +309,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_database_name_key(self):
+  def test_database_name_key(self) -> None:
     """Tests the DatabaseNameKey."""
     expected_key = record.DatabaseNameKey(
         offset=4,
@@ -325,7 +328,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         ),
         bytes.fromhex("04"),
     )
-    parsed_key = record.DatabaseNameKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.DatabaseNameKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
 
     self.assertEqual(expected_key, parsed_key)
@@ -334,7 +337,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.GlobalMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_database_metadata_key(self):
+  def test_database_metadata_key(self) -> None:
     """Tests the DatabaseMetadataKey."""
     with self.subTest("ORIGIN_NAME"):
       expected_key = record.DatabaseMetaDataKey(
@@ -344,11 +347,11 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           ),
           metadata_type=definitions.DatabaseMetaDataKeyType.ORIGIN_NAME,
       )
-      expected_value = "a"
+      expected_value: Any = "a"
 
       record_bytes = (bytes.fromhex("0004000000"), bytes.fromhex("0061"))
 
-      parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
+      parsed_key: Any = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
       self.assertEqual(parsed_value, expected_value)
@@ -428,7 +431,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       self.assertEqual(expected_key, parsed_key)
       self.assertEqual(parsed_value, expected_value)
 
-  def test_index_metadata_key(self):
+  def test_index_metadata_key(self) -> None:
     """Tests the IndexMetaDataKey."""
     with self.subTest("INDEX_NAME"):
       expected_key = record.IndexMetaDataKey(
@@ -440,13 +443,13 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           index_id=31,
           metadata_type=definitions.IndexMetaDataKeyType.INDEX_NAME,
       )
-      expected_value = "test index a"
+      expected_value: Any = "test index a"
 
       record_bytes = (
           bytes.fromhex("0004000064011f00"),
           bytes.fromhex("007400650073007400200069006e00640065007800200061"),
       )
-      parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
+      parsed_key: Any = record.IndexMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
       self.assertEqual(parsed_value, expected_value)
@@ -454,7 +457,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       self.assertEqual(expected_key, parsed_key)
 
-    with self.subTest("INDEX_NAME"):
+    with self.subTest("INDEX_NAME_DUPLICATE"):
       expected_key = record.IndexMetaDataKey(
           offset=4,
           key_prefix=record.KeyPrefix(
@@ -548,7 +551,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       self.assertEqual(expected_key, parsed_key)
 
-  def test_object_store_meta_data_key(self):
+  def test_object_store_meta_data_key(self) -> None:
     """Tests the ObjectStoreMetaDataKey."""
     with self.subTest("OBJECT_STORE_NAME"):
       expected_key = record.ObjectStoreMetaDataKey(
@@ -561,14 +564,14 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               definitions.ObjectStoreMetaDataKeyType.OBJECT_STORE_NAME
           ),
       )
-      expected_value = "test store a"
+      expected_value: Any = "test store a"
 
       record_bytes = (
           bytes.fromhex("00040000320100"),
           bytes.fromhex("0074006500730074002000730074006f0072006500200061"),
       )
 
-      parsed_key = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
+      parsed_key: Any = record.ObjectStoreMetaDataKey.FromBytes(record_bytes[0])
       parsed_value = parsed_key.ParseValue(record_bytes[1])
       self.assertEqual(expected_key, parsed_key)
       self.assertEqual(parsed_value, expected_value)
@@ -602,7 +605,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       self.assertEqual(expected_key, parsed_key)
 
-    with self.subTest("KEY_PATH"):
+    with self.subTest("AUTO_INCREMENT_FLAG"):
       expected_key = record.ObjectStoreMetaDataKey(
           offset=4,
           key_prefix=record.KeyPrefix(
@@ -736,15 +739,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
       self.assertEqual(expected_key, parsed_key)
 
-  # def test_object_store_free_list_key(self):
-  #   """Tests the ObjectStoreFreeListKey"""
-  #   pass
-
-  # def test_index_free_list_key(self):
-  #   """Tests the IndexFreeListKey"""
-  #   pass
-
-  def test_object_store_names_key(self):
+  def test_object_store_names_key(self) -> None:
     """Tests the ObjectStoreNamesKey."""
     expected_key = record.ObjectStoreNamesKey(
         offset=4,
@@ -761,7 +756,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("02"),
     )
 
-    parsed_key = record.ObjectStoreNamesKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.ObjectStoreNamesKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
     self.assertEqual(expected_key, parsed_key)
     self.assertEqual(parsed_value, expected_value)
@@ -769,11 +764,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.DatabaseMetaDataKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  # def test_index_names_key(self):
-  #   """Tests the IndexNamesKey."""
-  #   pass
-
-  def test_object_store_data_key(self):
+  def test_object_store_data_key(self) -> None:
     """Tests the ObjectStoreDataKey."""
     expected_key = record.ObjectStoreDataKey(
         offset=4,
@@ -792,7 +783,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("04ff1101d0a00600"),
     )
 
-    parsed_key = record.ObjectStoreDataKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.ObjectStoreDataKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
     self.assertEqual(expected_key, parsed_key)
     self.assertEqual(parsed_value, expected_value)
@@ -800,7 +791,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.IndexedDbKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_exists_entry_key(self):
+  def test_exists_entry_key(self) -> None:
     """Tests the ExistsEntryKey."""
     expected_key = record.ExistsEntryKey(
         offset=4,
@@ -818,7 +809,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("02"),
     )
 
-    parsed_key = record.ExistsEntryKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.ExistsEntryKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
     self.assertEqual(expected_key, parsed_key)
     self.assertEqual(parsed_value, expected_value)
@@ -826,7 +817,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.IndexedDbKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_index_data_key(self):
+  def test_index_data_key(self) -> None:
     """Tests the IndexDataKey."""
     expected_key = record.IndexDataKey(
         offset=4,
@@ -843,7 +834,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
             offset=3720, type=definitions.IDBKeyType.NUMBER, value=4.0
         ),
     )
-    expected_value = (
+    expected_value: Any = (
         5,
         record.IDBKey(offset=1, type=definitions.IDBKeyType.NUMBER, value=4.0),
     )
@@ -853,7 +844,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         bytes.fromhex("05030000000000001040"),
     )
 
-    parsed_key = record.IndexDataKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.IndexDataKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
     self.assertEqual(expected_key, parsed_key)
     self.assertEqual(parsed_value, expected_value)
@@ -861,7 +852,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
     parsed_key = record.IndexedDbKey.FromBytes(record_bytes[0])
     self.assertEqual(parsed_key, expected_key)
 
-  def test_blob_entry_key(self):
+  def test_blob_entry_key(self) -> None:
     """Tests the BlobEntryKey and the IndexedDBExternalObject."""
     expected_key = record.BlobEntryKey(
         offset=4,
@@ -897,7 +888,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         ),
     )
 
-    parsed_key = record.BlobEntryKey.FromBytes(record_bytes[0])
+    parsed_key: Any = record.BlobEntryKey.FromBytes(record_bytes[0])
     parsed_value = parsed_key.ParseValue(record_bytes[1])
     self.assertEqual(expected_key, parsed_key)
     self.assertEqual(parsed_value, expected_value)
@@ -909,27 +900,31 @@ class ChromiumIndexedDBTest(unittest.TestCase):
 class FolderReaderTest(unittest.TestCase):
   """Unit tests for the FolderReader and BlobFolderReader classes."""
 
-  def test_blob_folder_reader(self):
+  def test_blob_folder_reader(self) -> None:
     """Tests the BlobFolderReader class."""
     blob_path = pathlib.Path(
         "test_data/indexeddb/chrome/linux_109_64/file__0.indexeddb.blob"
     )
     reader = record.BlobFolderReader(blob_path)
-    blob_path, blob_data = reader.ReadBlob(database_id=1, blob_id=2)
-    self.assertTrue(blob_path.endswith("file__0.indexeddb.blob/1/00/2"))
+    # Renamed blob_path_str to avoid shadowing.
+    blob_path_str: Any
+    blob_path_str, blob_data = reader.ReadBlob(database_id=1, blob_id=2)
+    self.assertTrue(blob_path_str.endswith("file__0.indexeddb.blob/1/00/2"))
     self.assertEqual(blob_data[:4], bytes.fromhex("ff15fe00"))
 
-  def test_folder_reader_linux(self):
+  def test_folder_reader_linux(self) -> None:
     """Tests the FolderReader class with Linux test data."""
     leveldb_path = pathlib.Path(
         "test_data/indexeddb/chrome/linux_109_64/file__0.indexeddb.leveldb"
     )
     reader = record.FolderReader(leveldb_path)
-    records = list(record for record in reader.GetRecords() if record.blobs)
-    self.assertEqual(len(records), 2)
-    blob_path, blob_data = records[1].blobs[0]
-    self.assertTrue(blob_path.endswith("file__0.indexeddb.blob/1/00/3"))
-    self.assertIsInstance(blob_data, dict)  #  the parsed blob data
+    recs = list(r for r in reader.GetRecords() if r.blobs)
+    self.assertEqual(len(recs), 2)
+    # Using cast to reassure mypy that r.blobs is not None here.
+    blobs = cast(list[tuple[str, Any]], recs[1].blobs)
+    blob_path_str, blob_data = blobs[0]
+    self.assertTrue(blob_path_str.endswith("file__0.indexeddb.blob/1/00/3"))
+    self.assertIsInstance(blob_data, dict)  # the parsed blob data
 
 
 if __name__ == "__main__":
