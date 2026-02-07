@@ -9,15 +9,12 @@ requires-python = ">=3.9"
 description = "dfindexeddb is an experimental Python tool for performing digital forensic analysis of IndexedDB and leveldb files."
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-authors = [{name = "Syd Pleno", email = "sydp@google.com"}]
+authors = [{ name = "Syd Pleno", email = "sydp@google.com" }]
 maintainers = [
-  {name = "dfIndexeddb Developers", email = "dfindexeddb-dev@googlegroups.com"},
+  { name = "dfIndexeddb Developers", email = "dfindexeddb-dev@googlegroups.com" },
 ]
-dependencies = [
-  "python-snappy==0.6.1",
-  "zstd==1.5.5.1",
-]
-readme = {file = "README.md", content-type = "text/markdown"}
+dependencies = ["python-snappy>=0.6.1", "zstd>=1.5.5.1"]
+readme = { file = "README.md", content-type = "text/markdown" }
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python",
