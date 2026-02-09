@@ -123,20 +123,32 @@ def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
     True if the record matches the filter criteria or no filters are set, False
         otherwise.
   """
+  # Filter by object_store_id
   if (
       args.object_store_id is not None
       and record.object_store_id != args.object_store_id
   ):
     return False
 
+  # Filter by filter_value, check value and if available, check blobs. Checks
+  # for the value in the string representation i.e. `str(value)` and
+  # `str(blob_data)`.
   if args.filter_value is not None:
-    if isinstance(record.value, chromium_record.IndexedDBExternalObject):
-      blobs = getattr(record, "blobs", []) or []
-      if all(args.filter_value not in str(blob_data) for _, blob_data in blobs):
-        return False
+    filter_match = False
+    if args.filter_value in str(record.value):
+      filter_match = True
 
-    # Skip Chromium LevelDB metadata records
-    elif isinstance(
+    if not filter_match and getattr(record, "blobs", None):
+      for blob_info in record.blobs:
+        if args.filter_value in str(getattr(blob_info, "blob_data", "")):
+          filter_match = True
+          break
+
+    if not filter_match:
+      return False
+
+    # Filter out Chromium LevelDB metadata records when filtering by value
+    if isinstance(
         record, chromium_record.ChromiumIndexedDBRecord
     ) and not isinstance(
         record.value,
@@ -147,20 +159,22 @@ def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
     ):
       return False
 
-    elif args.filter_value not in str(record.value):
-      return False
-
+  # Filter by filter_key
   if args.filter_key is not None:
+
+    # For Chromium LevelDB, extract the user key from the ObjectStoreDataKey
+    # or BlobEntryKey.
     if isinstance(record.key, chromium_record.ObjectStoreDataKey):
       key_val = record.key.encoded_user_key.value
     elif isinstance(record.key, chromium_record.BlobEntryKey):
       key_val = record.key.user_key.value
 
-    # Skip other Chromium LevelDB key types
+    # Filter out other Chromium LevelDB key types when filtering by key
     elif isinstance(record, chromium_record.ChromiumIndexedDBRecord):
       return False
 
     else:
+      # For other implementations, extract the key value
       key_val = getattr(record.key, "value", record.key)
 
     if args.filter_key not in str(key_val):

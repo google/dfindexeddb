@@ -92,6 +92,30 @@ class MutableFile:
 
 
 @dataclasses.dataclass
+class Directory:
+  """A parsed JavaScript Directory.
+
+  Attributes:
+    path: the directory path.
+  """
+
+  path: str
+
+
+@dataclasses.dataclass
+class WasmModule:
+  """A parsed JavaScript WasmModule.
+
+  Attributes:
+    unused1: unused value 1.
+    unused2: unused value 2.
+  """
+
+  unused1: int
+  unused2: int
+
+
+@dataclasses.dataclass
 class IDBKey(utils.FromDecoderMixin):
   """An IndexedDB Key.
 
@@ -626,12 +650,15 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     if tag == definitions.StructuredCloneTags.WASM_MODULE:
       _, unused1 = self.decoder.DecodeUint32()
       _, unused2 = self.decoder.DecodeUint32()
-      return {"unused1": unused1, "unused2": unused2}
+      return WasmModule(unused1=unused1, unused2=unused2)
 
     if tag == definitions.StructuredCloneTags.MUTABLEFILE:
       mutable_file_type = self._ReadBlobString()
       mutable_file_name = self._ReadBlobString()
       return MutableFile(name=mutable_file_name, type=mutable_file_type)
+
+    if tag == definitions.StructuredCloneTags.DIRECTORY:
+      return Directory(path=self._ReadBlobString())
 
     raise errors.ParserError(
         "Unsupported StructuredCloneTag", definitions.StructuredCloneTags(tag)
