@@ -83,6 +83,40 @@ class FirefoxIndexedDBRecord:
   raw_value: Optional[bytes] = None
   blobs: Optional[List[FirefoxBlobInfo]] = None
 
+  @property
+  def is_key_filterable(self) -> bool:
+    """True if the record key is filterable."""
+    return True
+
+  @property
+  def is_value_filterable(self) -> bool:
+    """True if the record value is filterable."""
+    return True
+
+  def MatchesKey(self, term: str) -> bool:
+    """Returns True if the record key matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    key_val = getattr(self.key, "value", self.key)
+    return term in str(key_val)
+
+  def MatchesValue(self, term: str) -> bool:
+    """Returns True if the record value or blobs matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    if term in str(self.value):
+      return True
+
+    if self.blobs:
+      for blob_info in self.blobs:
+        if blob_info.blob_data is not None and term in str(blob_info.blob_data):
+          return True
+    return False
+
 
 class FileReader:
   """A reader for Firefox IndexedDB sqlite3 files.
