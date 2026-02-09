@@ -515,7 +515,7 @@ class BaseIndexedDBKey:
     Raises:
       NotImplementedError.
     """
-    raise NotImplementedError(f"{cls.__class__.__name__}.decode_key")
+    raise NotImplementedError(f"{cls.__name__}.decode_key")
 
   @classmethod
   def FromStream(cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:

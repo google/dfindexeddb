@@ -19,13 +19,76 @@ import dataclasses
 import datetime
 import io
 import struct
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import snappy
 
 from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.firefox import definitions
+
+
+@dataclasses.dataclass
+class Blob:
+  """A parsed JavaScript Blob.
+
+  Attributes:
+    index: the blob index.
+    size: the blob size.
+    type: the blob MIME type.
+  """
+
+  index: int
+  size: int
+  type: str
+
+
+@dataclasses.dataclass
+class File(Blob):
+  """A parsed JavaScript File.
+
+  Attributes:
+    name: the file name.
+    last_modified: the last modified date (in milliseconds).
+  """
+
+  name: str = ""
+  last_modified: Optional[int] = None
+
+
+@dataclasses.dataclass
+class URLSearchParams:
+  """A parsed JavaScript URLSearchParams.
+
+  Attributes:
+    params: the parameters.
+  """
+
+  params: List[Tuple[str, str]] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass
+class FileList:
+  """A parsed JavaScript FileList.
+
+  Attributes:
+    files: the list of files.
+  """
+
+  files: List[File | Blob] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass
+class MutableFile:
+  """A parsed JavaScript MutableFile.
+
+  Attributes:
+    name: the file name.
+    type: the file MIME type.
+  """
+
+  name: str
+  type: str
 
 
 @dataclasses.dataclass
@@ -471,6 +534,109 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     pattern = self._DecodeString(string_data)
     return types.RegExp(pattern=pattern, flags=str(flags))
 
+  def _ReadBlobString(self) -> str:
+    """Reads a length-prefixed string used in Blobs/Files.
+
+    Returns:
+      the blob string.
+    """
+    _, length = self.decoder.DecodeUint64()
+    _, string_bytes = self.decoder.ReadBytes(length)
+    return string_bytes.decode("utf-8")
+
+  def _DecodeBlobOrFile(self, tag: int, index: int) -> Union[Blob, File]:
+    """Decodes a Blob or File.
+
+    Args:
+      tag: the structured clone tag.
+      index: the blob index.
+
+    Returns:
+      the decoded Blob or File.
+    """
+    _, size = self.decoder.DecodeUint64()
+    mime_type = self._ReadBlobString()
+
+    if tag == definitions.StructuredCloneTags.BLOB:
+      return Blob(index=index, size=size, type=mime_type)
+
+    last_modified = None
+    if tag == definitions.StructuredCloneTags.FILE:
+      _, last_modified = self.decoder.DecodeUint64()
+    elif tag == definitions.StructuredCloneTags.FILE_WITHOUT_LASTMODIFIEDDATE:
+      last_modified = 0x7FFFFFFFFFFFFFFF  # INT64_MAX
+
+    name = self._ReadBlobString()
+
+    return File(
+        index=index,
+        size=size,
+        type=mime_type,
+        name=name,
+        last_modified=last_modified,
+    )
+
+  def _DecodeURLSearchParams(self) -> URLSearchParams:
+    """Decodes URLSearchParams."""
+    _, param_count = self.decoder.DecodeUint32()
+    _, _ = self.decoder.DecodeUint32()
+    params = []
+    for _ in range(param_count):
+      key = self._ReadBlobString()
+      value = self._ReadBlobString()
+      params.append((key, value))
+    return URLSearchParams(params=params)
+
+  def _DecodeFileList(self, data: int) -> FileList:
+    """Decodes a FileList.
+
+    Args:
+      data: the number of files in the list.
+    """
+    files = []
+    for _ in range(data):
+      _, tag = self.decoder.DecodeUint32()
+      _, index = self.decoder.DecodeUint32()
+      if tag != definitions.StructuredCloneTags.FILE:
+        raise errors.ParserError("Unexpected tag in FileList", hex(tag))
+
+      files.append(self._DecodeBlobOrFile(tag, index))
+    return FileList(files=files)
+
+  def _DecodeStructuredCloneTypes(self, tag: int, data: int) -> Any:
+    """Decodes structured clone types.
+
+    Args:
+      tag: the structured clone tag.
+      data: the data.
+    """
+    if tag == definitions.StructuredCloneTags.URLSEARCHPARAMS:
+      return self._DecodeURLSearchParams()
+
+    if tag == definitions.StructuredCloneTags.FILELIST:
+      return self._DecodeFileList(data)
+
+    if tag in (
+        definitions.StructuredCloneTags.BLOB,
+        definitions.StructuredCloneTags.FILE,
+        definitions.StructuredCloneTags.FILE_WITHOUT_LASTMODIFIEDDATE,
+    ):
+      return self._DecodeBlobOrFile(tag, data)
+
+    if tag == definitions.StructuredCloneTags.WASM_MODULE:
+      _, unused1 = self.decoder.DecodeUint32()
+      _, unused2 = self.decoder.DecodeUint32()
+      return {"unused1": unused1, "unused2": unused2}
+
+    if tag == definitions.StructuredCloneTags.MUTABLEFILE:
+      mutable_file_type = self._ReadBlobString()
+      mutable_file_name = self._ReadBlobString()
+      return MutableFile(name=mutable_file_name, type=mutable_file_type)
+
+    raise errors.ParserError(
+        "Unsupported StructuredCloneTag", definitions.StructuredCloneTags(tag)
+    )
+
   def _StartRead(self) -> Any:
     """Reads the start of a serialized value.
 
@@ -556,13 +722,13 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
         <= definitions.StructuredDataType.TYPED_ARRAY_V1_UINT8_CLAMPED
     ):
       value = self._DecodeTypedArray(tag, data)
+
+    elif tag in definitions.StructuredCloneTags.__members__.values():
+      value = self._DecodeStructuredCloneTypes(tag, data)
+
     elif tag in definitions.StructuredDataType.__members__.values():
       raise errors.ParserError(
           "Unsupported StructuredDataType", definitions.StructuredDataType(tag)
-      )
-    elif tag in definitions.StructuredCloneTags.__members__.values():
-      raise errors.ParserError(
-          "Unsupported StructuredCloneTag", definitions.StructuredCloneTags(tag)
       )
     else:
       raise errors.ParserError("Unknown tag", hex(tag))
@@ -571,7 +737,6 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     offset = self.decoder.stream.tell() % 8
     if offset:
       _, slack_bytes = self.decoder.ReadBytes(8 - offset)  # pylint: disable=unused-variable
-
     return value
 
   @classmethod
@@ -613,12 +778,18 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
         if is_uncompressed:
           uncompressed_data += raw_data[pos + 8 : pos + 8 + block_size - 4]
         else:
-          uncompressed_data += snappy.decompress(
-              raw_data[pos + 8 : pos + 8 + block_size - 4]
-          )
+          try:
+            uncompressed_data += snappy.decompress(
+                raw_data[pos + 8 : pos + 8 + block_size - 4]
+            )
+          except snappy.UncompressError as err:
+            raise errors.ParserError("Failed to decompress", err)
         pos += block_size + 4
     else:
-      uncompressed_data = snappy.decompress(raw_data)
+      try:
+        uncompressed_data = snappy.decompress(raw_data)
+      except snappy.UncompressError as err:
+        raise errors.ParserError("Failed to decompress", err)
     stream = io.BytesIO(uncompressed_data)
 
     return cls.FromStream(stream=stream, base_offset=base_offset)

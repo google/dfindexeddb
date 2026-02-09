@@ -213,10 +213,15 @@ def HandleFirefoxDB(args: argparse.Namespace) -> None:
   reader = firefox_record.FileReader(str(args.source))
   if args.object_store_id is not None:
     records = reader.RecordsByObjectStoreId(
-        args.object_store_id, include_raw_data=args.include_raw_data
+        args.object_store_id,
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
     )
   else:
-    records = reader.Records(include_raw_data=args.include_raw_data)
+    records = reader.Records(
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
+    )
 
   for record in records:
     if _MatchesFilters(record, args):
