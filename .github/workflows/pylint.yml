@@ -11,17 +11,14 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: astral-sh/setup-uv@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install python-snappy
-        pip install zstd
-        pip install pylint
+        uv sync
     - name: Analysing the code with pylint
       run: |
-        pylint --rc-file=.pylintrc dfindexeddb tests
+        uv run --with pylint pylint --rc-file=.pylintrc dfindexeddb tests
