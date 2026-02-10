@@ -101,8 +101,21 @@ options:
 | **Chrome** (.ldb) | JSON-L | `dfindexeddb ldb -s SOURCE -o jsonl` |
 | **Chrome** (.log) | Python repr | `dfindexeddb log -s SOURCE -o repr` |
 | **Chrome** (Blink) | JSON | `dfindexeddb blink -s SOURCE` |
-| **Filter Records by key** | JSON | `dfindexeddb db -s SOURCE --format chrome --filter_key search_term` |
-| **Filter Records by value** | JSON | `dfindexeddb db -s SOURCE --format chrome --filter_value "search_term"` |
+
+
+#### Options:
+
+| Option | Description |
+| :--- | :--- |
+| `--filter_key [term]` | Performs a substring match on the string representation of the record's key.  |
+| `--filter_value [term]` | Performs a substring match on the string representation of the record's value. If `--load_blobs` is used, it also searches within any associated blob data. |
+| `--include_raw_data` | Include the raw key and value bytes in the record output. |
+| `--load_blobs` | For Firefox, Safari and Chromium-based browsers, attempt to find and read associated blob files. |
+
+> **Note**: Refer to source to understand the structure of the records and how
+> the filter options available in the CLI tool work. For more fine-grained
+> control over filtering, it is preferable to use `jq` to filter and transform
+> the JSON output.
 
 
 ### LevelDB
