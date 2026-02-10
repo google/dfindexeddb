@@ -107,7 +107,9 @@ def GeckoCommand(args: argparse.Namespace) -> None:
     _Output(blink_value, output=args.output)
 
 
-def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
+def _MatchesFilters(
+    record: types.FilterableRecord, args: argparse.Namespace
+) -> bool:
   """Returns True if the record matches the filter criteria.
 
   Supported filters:

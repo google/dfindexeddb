@@ -76,7 +76,8 @@ class ChromiumIndexedDBRecord:
     Args:
       term: the filter term.
     """
-    # Blobs in Chromium SQLite are part of the value when loaded
+    if self.has_blobs and self.value:
+      return any(term in str(blob_info.blob_data) for blob_info in self.value)
     return term in str(self.value)
 
 
