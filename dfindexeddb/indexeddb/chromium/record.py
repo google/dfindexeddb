@@ -515,7 +515,7 @@ class BaseIndexedDBKey:
     Raises:
       NotImplementedError.
     """
-    raise NotImplementedError(f"{cls.__class__.__name__}.decode_key")
+    raise NotImplementedError(f"{cls.__name__}.decode_key")
 
   @classmethod
   def FromStream(cls: Type[T], stream: BinaryIO, base_offset: int = 0) -> T:
@@ -1597,6 +1597,45 @@ class ChromiumIndexedDBRecord:
   blobs: Optional[list[tuple[str, Optional[Any]]]] = None
   raw_key: Optional[bytes] = None
   raw_value: Optional[bytes] = None
+
+  @property
+  def is_key_filterable(self) -> bool:
+    """True if the record key is filterable."""
+    return isinstance(self.key, (ObjectStoreDataKey, BlobEntryKey))
+
+  @property
+  def is_value_filterable(self) -> bool:
+    """True if the record value is filterable."""
+    return isinstance(
+        self.value, (ObjectStoreDataValue, IndexedDBExternalObject)
+    )
+
+  def MatchesKey(self, term: str) -> bool:
+    """Returns True if the record key matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    if isinstance(self.key, ObjectStoreDataKey):
+      return term in str(self.key.encoded_user_key.value)
+    if isinstance(self.key, BlobEntryKey):
+      return term in str(self.key.user_key.value)
+    return False
+
+  def MatchesValue(self, term: str) -> bool:
+    """Returns True if the record value or blobs matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    if term in str(self.value):
+      return True
+
+    if self.blobs:
+      for _, blob_data in self.blobs:
+        if blob_data is not None and term in str(blob_data):
+          return True
+    return False
 
   @classmethod
   def FromLevelDBRecord(

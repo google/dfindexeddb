@@ -107,7 +107,9 @@ def GeckoCommand(args: argparse.Namespace) -> None:
     _Output(blink_value, output=args.output)
 
 
-def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
+def _MatchesFilters(
+    record: types.FilterableRecord, args: argparse.Namespace
+) -> bool:
   """Returns True if the record matches the filter criteria.
 
   Supported filters:
@@ -130,40 +132,15 @@ def _MatchesFilters(record: Any, args: argparse.Namespace) -> bool:
     return False
 
   if args.filter_value is not None:
-    if isinstance(record.value, chromium_record.IndexedDBExternalObject):
-      blobs = getattr(record, "blobs", []) or []
-      if all(args.filter_value not in str(blob_data) for _, blob_data in blobs):
-        return False
-
-    # Skip Chromium LevelDB metadata records
-    elif isinstance(
-        record, chromium_record.ChromiumIndexedDBRecord
-    ) and not isinstance(
-        record.value,
-        (
-            chromium_record.ObjectStoreDataValue,
-            chromium_record.IndexedDBExternalObject,
-        ),
-    ):
+    if not record.is_value_filterable:
       return False
-
-    elif args.filter_value not in str(record.value):
+    if not record.MatchesValue(args.filter_value):
       return False
 
   if args.filter_key is not None:
-    if isinstance(record.key, chromium_record.ObjectStoreDataKey):
-      key_val = record.key.encoded_user_key.value
-    elif isinstance(record.key, chromium_record.BlobEntryKey):
-      key_val = record.key.user_key.value
-
-    # Skip other Chromium LevelDB key types
-    elif isinstance(record, chromium_record.ChromiumIndexedDBRecord):
+    if not record.is_key_filterable:
       return False
-
-    else:
-      key_val = getattr(record.key, "value", record.key)
-
-    if args.filter_key not in str(key_val):
+    if not record.MatchesKey(args.filter_key):
       return False
 
   return True
@@ -213,10 +190,15 @@ def HandleFirefoxDB(args: argparse.Namespace) -> None:
   reader = firefox_record.FileReader(str(args.source))
   if args.object_store_id is not None:
     records = reader.RecordsByObjectStoreId(
-        args.object_store_id, include_raw_data=args.include_raw_data
+        args.object_store_id,
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
     )
   else:
-    records = reader.Records(include_raw_data=args.include_raw_data)
+    records = reader.Records(
+        include_raw_data=args.include_raw_data,
+        load_blobs=args.load_blobs,
+    )
 
   for record in records:
     if _MatchesFilters(record, args):

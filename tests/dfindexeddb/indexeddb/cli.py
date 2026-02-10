@@ -289,7 +289,9 @@ class CLITest(unittest.TestCase):
     cli.HandleFirefoxDB(self.args)
 
     mock_reader_cls.assert_called_once_with("source_file")
-    mock_reader.Records.assert_called_once_with(include_raw_data=False)
+    mock_reader.Records.assert_called_once_with(
+        include_raw_data=False, load_blobs=False
+    )
     mock_output.assert_called_once_with(record, output="json")
 
   @mock.patch("dfindexeddb.indexeddb.cli._Output")

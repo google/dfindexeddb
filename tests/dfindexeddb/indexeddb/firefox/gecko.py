@@ -410,6 +410,91 @@ class GeckoTest(unittest.TestCase):
     parsed_key = gecko.IDBKey.FromBytes(key_bytes)
     self.assertEqual(parsed_key, expected_key)
 
+  def test_parse_blob(self) -> None:
+    """Tests parsing a blob from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "300000050128F1FF010000000180FFFF6405100800000A0D083C746578742F70"
+        "6C61696E000000000000"
+    )
+    expected_value = gecko.Blob(index=1, size=100, type="text/plain")
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_file(self) -> None:
+    """Tests parsing a file from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "480000050128f1ff020000000580ffffc80510080000090d0830696d6167652f"
+        "706e6715cd5b0701140008010544000000746573742e706e6700000000000000"
+    )
+    expected_value = gecko.File(
+        index=2,
+        size=200,
+        type="image/png",
+        last_modified=123456789,
+        name="test.png",
+    )
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_urlsearchparams(self) -> None:
+    """Tests parsing URLSearchParams from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "400000050104f1ff0107101480ffff0201090c0000000101050c000000611109"
+        "00311109346201000000000000003200000000"
+    )
+    expected_value = gecko.URLSearchParams(params=[("a", "1"), ("b", "2")])
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_filelist(self) -> None:
+    """Tests parsing FileList from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "480000050148f1ff010000000380ffff0580ffff030000002c01110c00000008"
+        "010538000000746578742f637376b168de3a011011181c646174612e637376"
+    )
+    expected_value = gecko.FileList(
+        files=[
+            gecko.File(
+                index=3,
+                size=300,
+                type="text/csv",
+                last_modified=987654321,
+                name="data.csv",
+            )
+        ]
+    )
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_mutablefile(self) -> None:
+    """Tests parsing a MutableFile from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "380000050104f1ff0107100480ffff0a010934000000746578742f706c61696e"
+        "0b010f400000006d757461626c652e747874000000"
+    )
+    expected_value = gecko.MutableFile(name="mutable.txt", type="text/plain")
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_directory(self) -> None:
+    """Tests parsing a Directory from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "280000050104f1ff0107102080ffff0c0109480000002f706174682f746f2f64"
+        "697200000000"
+    )
+    expected_value = gecko.Directory(path="/path/to/dir")
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_wasm_module(self) -> None:
+    """Tests parsing a WasmModule from an IndexedDB value."""
+    value_bytes = bytes.fromhex(
+        "180000050104f1ff01072c0680ffff7b000000c8010000"
+    )
+    expected_value = gecko.WasmModule(unused1=123, unused2=456)
+    parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
+    self.assertEqual(parsed_value, expected_value)
+
 
 if __name__ == "__main__":
   unittest.main()

@@ -51,6 +51,35 @@ class ChromiumIndexedDBRecord:
   raw_key: Optional[bytes]
   raw_value: Optional[bytes]
 
+  @property
+  def is_key_filterable(self) -> bool:
+    """True if the record key is filterable."""
+    return True
+
+  @property
+  def is_value_filterable(self) -> bool:
+    """True if the record value is filterable."""
+    return True
+
+  def MatchesKey(self, term: str) -> bool:
+    """Returns True if the record key matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    key_val = getattr(self.key, "value", self.key)
+    return term in str(key_val)
+
+  def MatchesValue(self, term: str) -> bool:
+    """Returns True if the record value matches the filter term.
+
+    Args:
+      term: the filter term.
+    """
+    if self.has_blobs and self.value:
+      return any(term in str(blob_info.blob_data) for blob_info in self.value)
+    return term in str(self.value)
+
 
 @dataclass
 class ChromiumObjectStoreInfo:
