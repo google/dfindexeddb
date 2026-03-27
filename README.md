@@ -75,20 +75,21 @@ installation:
 
 ```
 $ dfindexeddb -h
-usage: dfindexeddb [-h] {blink,gecko,db,ldb,log} ...
+usage: dfindexeddb [-h] {blink,gecko,db,db_info,ldb,log} ...
 
 A cli tool for parsing IndexedDB files
 
 positional arguments:
-  {blink,gecko,db,ldb,log}
+  {blink,gecko,db,db_info,ldb,log}
     blink               Parse a file as a blink-encoded value.
     gecko               Parse a file as a gecko-encoded value.
     db                  Parse a directory/file as IndexedDB.
+    db_info             Extract and filter IndexedDB metadata.
     ldb                 Parse a ldb file as IndexedDB.
     log                 Parse a log file as IndexedDB.
 
 options:
-  -h, --help    show this help message and exit
+  -h, --help            show this help message and exit
 ```
 
 #### Examples:
@@ -101,6 +102,7 @@ options:
 | **Chrome** (.ldb) | JSON-L | `dfindexeddb ldb -s SOURCE -o jsonl` |
 | **Chrome** (.log) | Python repr | `dfindexeddb log -s SOURCE -o repr` |
 | **Chrome** (Blink) | JSON | `dfindexeddb blink -s SOURCE` |
+| **Database/Object Store information** (All) | JSON | `dfindexeddb db_info -s SOURCE --format [chrome\|firefox\|safari]` |
 
 
 #### Options:
@@ -109,6 +111,8 @@ options:
 | :--- | :--- |
 | `--filter_key [term]` | Performs a substring match on the string representation of the record's key.  |
 | `--filter_value [term]` | Performs a substring match on the string representation of the record's value. If `--load_blobs` is used, it also searches within any associated blob data. |
+| `--database_id [id]` | Filters records or metadata by database ID (where available). |
+| `--object_store_id [id]` | Filters records or metadata by object store ID. |
 | `--include_raw_data` | Include the raw key and value bytes in the record output. |
 | `--load_blobs` | For Firefox, Safari and Chromium-based browsers, attempt to find and read associated blob files. |
 
