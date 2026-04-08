@@ -1560,6 +1560,79 @@ class IndexedDBExternalObject(utils.FromDecoderMixin):
 
 
 @dataclass
+class ChromiumLevelDBObjectStoreInfo:
+  """Chromium IndexedDB object store info parsed from LevelDB.
+
+  Attributes:
+    database_id: the database ID.
+    id: the object store ID.
+    name: the object store name.
+    key_path: the object store key path.
+    auto_increment: whether the object store is auto increment.
+    database_name: the database name.
+  """
+
+  database_id: int
+  id: int
+  name: str = ""
+  key_path: Optional[Union[str, list[str]]] = None
+  auto_increment: bool = False
+  database_name: str = ""
+
+  @classmethod
+  def FromRecords(
+      cls, records: Generator[Any, None, None]
+  ) -> Generator[ChromiumLevelDBObjectStoreInfo, None, None]:
+    """Yields ChromiumLevelDBObjectStoreInfo from leveldb records.
+
+    Args:
+      records: An iterable or generator of records (ChromiumIndexedDBRecord).
+    """
+    stores: dict[tuple[int, int], ChromiumLevelDBObjectStoreInfo] = {}
+    db_names: dict[int, str] = {}
+
+    for record_obj in records:
+      if not hasattr(record_obj, "key"):
+        continue
+      key = record_obj.key
+
+      if isinstance(key, DatabaseNameKey):
+        db_names[record_obj.value] = key.database_name
+        continue
+
+      if not isinstance(key, ObjectStoreMetaDataKey):
+        continue
+
+      db_id = key.key_prefix.database_id
+      store_id = key.object_store_id
+      key_tuple = (db_id, store_id)
+
+      if key_tuple not in stores:
+        stores[key_tuple] = cls(database_id=db_id, id=store_id)
+
+      store = stores[key_tuple]
+      value = record_obj.value
+
+      if key.metadata_type == (
+          definitions.ObjectStoreMetaDataKeyType.OBJECT_STORE_NAME
+      ):
+        store.name = value
+      elif key.metadata_type == (
+          definitions.ObjectStoreMetaDataKeyType.KEY_PATH
+      ):
+        store.key_path = value.value if hasattr(value, "value") else value
+      elif key.metadata_type == (
+          definitions.ObjectStoreMetaDataKeyType.AUTO_INCREMENT_FLAG
+      ):
+        store.auto_increment = value
+
+    for store in stores.values():
+      if store.database_id in db_names:
+        store.database_name = db_names[store.database_id]
+      yield store
+
+
+@dataclass
 class ChromiumIndexedDBRecord:
   """An IndexedDB Record parsed from LevelDB.
 
@@ -1746,10 +1819,10 @@ class BlobFolderReader:
       folder_name: the source blob folder.
 
     Raises:
-      ValueError: if folder_name is None or not a directory.
+      FileNotFoundError: if folder_name is None or not a directory.
     """
     if not folder_name or not folder_name.is_dir():
-      raise ValueError(f"{folder_name} is None or not a directory")
+      raise FileNotFoundError(f"{folder_name} is None or not a directory")
     self.folder_name = folder_name.absolute()
 
   def ReadBlob(self, database_id: int, blob_id: int) -> tuple[str, bytes]:
@@ -1837,9 +1910,12 @@ class FolderReader:
     # Locate the correponding blob folder. The folder_name should be
     # <origin>.leveldb and the blob folder should be <origin>.blob
     if str(self.folder_name).endswith(".leveldb"):
-      self.blob_folder_reader = BlobFolderReader(
-          pathlib.Path(str(self.folder_name).replace(".leveldb", ".blob"))
-      )
+      try:
+        self.blob_folder_reader = BlobFolderReader(
+            pathlib.Path(str(self.folder_name).replace(".leveldb", ".blob"))
+        )
+      except FileNotFoundError:
+        self.blob_folder_reader = None  # type: ignore[assignment]
     else:
       self.blob_folder_reader = None  # type: ignore[assignment]
 

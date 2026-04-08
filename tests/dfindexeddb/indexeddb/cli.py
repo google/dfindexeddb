@@ -35,6 +35,7 @@ class CLITest(unittest.TestCase):
     self.args = argparse.Namespace(
         source="source_file",
         format="chrome",
+        database_id=None,
         object_store_id=None,
         include_raw_data=False,
         filter_value=None,
@@ -79,6 +80,40 @@ class CLITest(unittest.TestCase):
     self.args.object_store_id = 2
     # pylint: disable=protected-access
     self.assertFalse(cli._MatchesFilters(record, self.args))
+
+  def test_matches_filters_database_id(self) -> None:
+    """Tests _MatchesFilters with database_id filter."""
+    record = chromium_record.ChromiumIndexedDBRecord(
+        path="path",
+        offset=0,
+        key="key",
+        value="val",
+        sequence_number=1,
+        type=1,
+        level=0,
+        recovered=False,
+        database_id=1,
+        object_store_id=1,
+    )
+    self.args.database_id = 1
+    # pylint: disable=protected-access
+    self.assertTrue(cli._MatchesFilters(record, self.args))
+
+    self.args.database_id = 2
+    # pylint: disable=protected-access
+    self.assertFalse(cli._MatchesFilters(record, self.args))
+
+    # Test soft filtering (records without database_id should pass)
+    safari_record_obj = safari_record.SafariIndexedDBRecord(
+        key="key",
+        value="val",
+        object_store_id=1,
+        object_store_name="store",
+        database_name="db",
+        record_id=1,
+    )
+    # pylint: disable=protected-access
+    self.assertTrue(cli._MatchesFilters(safari_record_obj, self.args))
 
   def test_matches_filters_value(self) -> None:
     """Tests _MatchesFilters with value filter."""

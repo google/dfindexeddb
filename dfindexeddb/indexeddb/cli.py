@@ -113,6 +113,7 @@ def _MatchesFilters(
   """Returns True if the record matches the filter criteria.
 
   Supported filters:
+  * database_id - filters by database ID
   * object_store_id - filters by object store ID
   * filter_key - filters by key
   * filter_value - filters by value
@@ -130,6 +131,11 @@ def _MatchesFilters(
       and record.object_store_id != args.object_store_id
   ):
     return False
+
+  if args.database_id is not None:
+    db_id_record = getattr(record, "database_id", None)
+    if db_id_record is not None and db_id_record != args.database_id:
+      return False
 
   if args.filter_value is not None:
     if not record.is_value_filterable:
@@ -241,6 +247,53 @@ def DbCommand(args: argparse.Namespace) -> None:
     HandleFirefoxDB(args)
   elif args.format == "safari":
     HandleSafariDB(args)
+
+
+def DbInfoCommand(args: argparse.Namespace) -> None:
+  """The CLI for providing information about an IndexedDB's object stores.
+
+  Args:
+    args: The arguments for processing the IndexedDB metadata.
+  """
+  records: Any = []
+  if args.format in ("chrome", "chromium"):
+    if args.source.is_file():
+      sqlite_reader = sqlite.DatabaseReader(str(args.source))
+      records = sqlite_reader.ObjectStores()
+    else:
+      raw_records = chromium_record.FolderReader(args.source).GetRecords(
+          use_manifest=args.use_manifest,
+          use_sequence_number=args.use_sequence_number,
+          include_raw_data=False,
+          load_blobs=False,
+      )
+      records = chromium_record.ChromiumLevelDBObjectStoreInfo.FromRecords(
+          raw_records
+      )
+  elif args.format == "firefox":
+    firefox_reader = firefox_record.FileReader(str(args.source))
+    records = firefox_reader.ObjectStores()
+  elif args.format == "safari":
+    safari_reader = safari_record.FileReader(str(args.source))
+    records = safari_reader.ObjectStores()
+
+  for record_item in records:
+    if args.database_id is not None:
+      if (
+          hasattr(record_item, "database_id")
+          and record_item.database_id != args.database_id
+      ):
+        continue
+    if args.object_store_id is not None:
+      if hasattr(record_item, "id") and record_item.id != args.object_store_id:
+        continue
+      if (
+          hasattr(record_item, "object_store_id")
+          and record_item.object_store_id != args.object_store_id
+      ):
+        continue
+
+    _Output(record_item, output=args.output)
 
 
 def LdbCommand(args: argparse.Namespace) -> None:
@@ -361,6 +414,11 @@ def App() -> None:
       help="The object store ID to filter by.",
   )
   parser_db.add_argument(
+      "--database_id",
+      type=int,
+      help="The database ID to filter by.",
+  )
+  parser_db.add_argument(
       "--include_raw_data",
       action="store_true",
       help="Include raw key and value bytes for each record in the output.",
@@ -395,6 +453,59 @@ def App() -> None:
       ),
   )
   parser_db.set_defaults(func=DbCommand)
+
+  parser_db_info = subparsers.add_parser(
+      "db_info", help="Extract and filter IndexedDB metadata."
+  )
+  parser_db_info.add_argument(
+      "-s",
+      "--source",
+      required=True,
+      type=pathlib.Path,
+      help=(
+          "The source IndexedDB folder (for chrome/chromium) "
+          "or sqlite3 file (for firefox/safari)."
+      ),
+  )
+  recover_group_info = parser_db_info.add_mutually_exclusive_group()
+  recover_group_info.add_argument(
+      "--use_manifest",
+      action="store_true",
+      help="Use manifest file to determine active/deleted records.",
+  )
+  recover_group_info.add_argument(
+      "--use_sequence_number",
+      action="store_true",
+      help=(
+          "Use sequence number and file offset to determine active/deleted "
+          "records."
+      ),
+  )
+  parser_db_info.add_argument(
+      "-f",
+      "--format",
+      required=True,
+      choices=["chromium", "chrome", "firefox", "safari"],
+      help="The type of IndexedDB to parse.",
+  )
+  parser_db_info.add_argument(
+      "--database_id",
+      type=int,
+      help="The database ID to filter by.",
+  )
+  parser_db_info.add_argument(
+      "--object_store_id",
+      type=int,
+      help="The object store ID to filter by.",
+  )
+  parser_db_info.add_argument(
+      "-o",
+      "--output",
+      choices=["json", "jsonl", "repr"],
+      default="json",
+      help="Output format.  Default is json.",
+  )
+  parser_db_info.set_defaults(func=DbInfoCommand)
 
   parser_ldb = subparsers.add_parser(
       "ldb", help="Parse a ldb file as IndexedDB."

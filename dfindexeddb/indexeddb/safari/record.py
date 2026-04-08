@@ -43,8 +43,8 @@ class SafariBlobInfo:
 
 
 @dataclass
-class ObjectStoreInfo:
-  """An ObjectStoreInfo.
+class SafariObjectStoreInfo:
+  """A Safari ObjectStoreInfo.
 
   Attributes:
     id: the object store ID.
@@ -243,7 +243,7 @@ class FileReader:
         )
     return blobs
 
-  def ObjectStores(self) -> Generator[ObjectStoreInfo, None, None]:
+  def ObjectStores(self) -> Generator[SafariObjectStoreInfo, None, None]:
     """Returns the Object Store information from the IndexedDB database.
 
     Yields:
@@ -256,7 +256,7 @@ class FileReader:
       results = cursor.fetchall()
       for result in results:
         key_path = plistlib.loads(result[2])
-        yield ObjectStoreInfo(
+        yield SafariObjectStoreInfo(
             id=result[0],
             name=self._DecodeString(result[1]),
             key_path=key_path,
