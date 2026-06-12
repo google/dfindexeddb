@@ -20,8 +20,7 @@ import os
 from dataclasses import dataclass, field
 from typing import BinaryIO, Iterable, Tuple
 
-import snappy
-import zstd
+from cramjam import snappy, zstd
 
 from dfindexeddb.leveldb import definitions, utils
 
@@ -111,7 +110,7 @@ class Block:
   def GetBuffer(self) -> bytes:
     """Returns the block buffer, decompressing if required."""
     if self.IsSnappyCompressed():
-      return bytes(snappy.decompress(self.data))
+      return bytes(snappy.decompress_raw(self.data))
     if self.IsZstdCompressed():
       return bytes(zstd.decompress(self.data))
     return self.data

@@ -15,7 +15,9 @@
 """Unit tests for Gecko encoded JavaScript values."""
 import datetime
 import unittest
+from cramjam import DecompressionError
 
+from dfindexeddb import errors
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.firefox import definitions, gecko
 
@@ -494,6 +496,14 @@ class GeckoTest(unittest.TestCase):
     expected_value = gecko.WasmModule(unused1=123, unused2=456)
     parsed_value = gecko.JSStructuredCloneDecoder.FromBytes(value_bytes)
     self.assertEqual(parsed_value, expected_value)
+
+  def test_parse_corrupt_data(self) -> None:
+    """Tests that corrupt data raises ParserError due to decompression error."""
+    corrupt_bytes = b"\xff\xff\xff\xff"
+    with self.assertRaises(errors.ParserError) as context:
+      gecko.JSStructuredCloneDecoder.FromBytes(corrupt_bytes)
+    self.assertEqual(context.exception.args[0], "Failed to decompress")
+    self.assertIsInstance(context.exception.args[1], DecompressionError)
 
 
 if __name__ == "__main__":
