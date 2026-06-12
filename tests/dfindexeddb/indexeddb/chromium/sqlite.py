@@ -15,6 +15,9 @@
 """Unit tests for Chromium IndexedDB encoded sqlite3 databases."""
 import datetime
 import unittest
+import pathlib
+import shutil
+import tempfile
 
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.chromium import sqlite
@@ -24,9 +27,15 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
   """Unit tests for Chromium IndexedDB encoded sqlite3 databases."""
 
   def setUp(self) -> None:
-    self.reader = sqlite.DatabaseReader(
+    self._temp_dir = tempfile.TemporaryDirectory()
+    temp_dir_path = pathlib.Path(self._temp_dir.name)
+    src_db = pathlib.Path(
         "./test_data/indexeddb/chrome/osx_144_64/file__0/sample"
     )
+    self._temp_db_path = temp_dir_path / "sample"
+    shutil.copy(src_db, self._temp_db_path)
+
+    self.reader = sqlite.DatabaseReader(str(self._temp_db_path))
     expected_test_array = types.JSArray()
     for value in [123, 456, "abc", "def"]:
       expected_test_array.values.append(value)
@@ -56,6 +65,9 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
             "age": 21,
         },
     }
+
+  def tearDown(self) -> None:
+    self._temp_dir.cleanup()
 
   def test_object_stores(self) -> None:
     """Tests the ObjectStores method."""
