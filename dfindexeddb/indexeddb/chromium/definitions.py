@@ -286,6 +286,7 @@ class V8SerializationTag(IntEnum):
   BEGIN_JS_SET = ord("'")
   END_JS_SET = ord(",")
   ARRAY_BUFFER = ord("B")
+  IMMUTABLE_ARRAY_BUFFER = ord("C")
   RESIZABLE_ARRAY_BUFFER = ord("~")
   ARRAY_BUFFER_TRANSFER = ord("t")
   ARRAY_BUFFER_VIEW = ord("V")
