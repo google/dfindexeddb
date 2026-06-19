@@ -565,7 +565,7 @@ class ValueDeserializer:
       raise NotImplementedError("Shared ArrayBuffer not supported yet")
 
     if is_immutable:
-      pass  # TODO if anything
+      pass  # Unused
 
     _, byte_length = self.ReadSizeT()
     max_byte_length = byte_length
