@@ -322,6 +322,7 @@ class V8ArrayBufferViewTag(IntEnum):
   UINT16_ARRAY = ord("W")
   INT32_ARRAY = ord("d")
   UINT32_ARRAY = ord("D")
+  FLOAT16_ARRAY = ord("h")
   FLOAT32_ARRAY = ord("f")
   FLOAT64_ARRAY = ord("F")
   BIGINT64_ARRAY = ord("q")
