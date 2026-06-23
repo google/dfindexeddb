@@ -62,7 +62,7 @@ class ValueDeserializer:
     version (int): the version of the serialized Javascript value/object
   """
 
-  LATEST_VERSION = 15
+  LATEST_VERSION = 16
 
   def __init__(self, stream: BinaryIO, delegate: blink.V8ScriptValueDecoder):
     """Initializes a ValueDeserializer.
@@ -241,6 +241,12 @@ class ValueDeserializer:
       parsed_object = self._ReadJSArrayBuffer(
           is_shared=False, is_resizable=True
       )
+    elif tag == definitions.V8SerializationTag.IMMUTABLE_ARRAY_BUFFER:
+      parsed_object = self._ReadJSArrayBuffer(
+          is_shared=False, is_resizable=False
+      )
+    # elif tag == definitions.V8SerializationTag.ARRAY_BUFFER_TRANSFER:
+    #   parsed_object = self._ReadTransferredJSArrayBuffer()
     elif tag == definitions.V8SerializationTag.SHARED_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
           is_shared=True, is_resizable=False
@@ -555,10 +561,10 @@ class ValueDeserializer:
     if is_shared:
       raise NotImplementedError("Shared ArrayBuffer not supported yet")
 
-    _, byte_length = self.decoder.DecodeUint32Varint()
+    _, byte_length = self.ReadSizeT()
     max_byte_length = byte_length
     if is_resizable:
-      _, max_byte_length = self.decoder.DecodeUint32Varint()
+      _, max_byte_length = self.ReadSizeT()
       if byte_length > max_byte_length:
         self.objects[next_id] = array_buffer
         return array_buffer
@@ -571,8 +577,8 @@ class ValueDeserializer:
   def _ReadJSArrayBufferView(self, buffer: bytes) -> ArrayBufferView:
     """Reads a JSArrayBufferView from the current position."""
     _, tag = self.decoder.ReadBytes(1)
-    _, byte_offset = self.decoder.DecodeUint32Varint()
-    _, byte_length = self.decoder.DecodeUint32Varint()
+    _, byte_offset = self.ReadSizeT()
+    _, byte_length = self.ReadSizeT()
 
     if self.version >= 14:  # or version_13_broken_data_mode
       _, flags = self.decoder.DecodeUint32Varint()
@@ -603,6 +609,10 @@ class ValueDeserializer:
     """Reads a shared object from the current position."""
     # _, shared_object_id = self.decoder.DecodeUint32Varint()
     raise NotImplementedError("ValueDeserializer.ReadSharedObject")
+
+  def ReadSizeT(self) -> Tuple[int, int]:
+    """Reads a size_t value."""
+    return self.decoder.DecodeUint64Varint()
 
   def ReadHostObject(self) -> Any:
     """Reads a Host object using the delegate object.
