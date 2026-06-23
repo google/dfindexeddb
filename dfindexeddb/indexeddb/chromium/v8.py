@@ -235,21 +235,21 @@ class ValueDeserializer:
       parsed_object = self._ReadJSSet()
     elif tag == definitions.V8SerializationTag.ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=False, is_resizable=False, is_immutable=False
+          is_shared=False, is_resizable=False
       )
     elif tag == definitions.V8SerializationTag.RESIZABLE_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=False, is_resizable=True, is_immutable=False
+          is_shared=False, is_resizable=True
       )
     elif tag == definitions.V8SerializationTag.IMMUTABLE_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=False, is_resizable=False, is_immutable=True
+          is_shared=False, is_resizable=False
       )
     # elif tag == definitions.V8SerializationTag.ARRAY_BUFFER_TRANSFER:
     #   parsed_object = self._ReadTransferredJSArrayBuffer()
     elif tag == definitions.V8SerializationTag.SHARED_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
-          is_shared=True, is_resizable=False, is_immutable=False
+          is_shared=True, is_resizable=False
       )
     elif tag == definitions.V8SerializationTag.ERROR:
       self._ReadJSError()
@@ -548,24 +548,18 @@ class ValueDeserializer:
     self.objects[next_id] = js_set
     return js_set
 
-  def _ReadJSArrayBuffer(
-      self, is_shared: bool, is_resizable: bool, is_immutable: bool
-  ) -> bytes:
+  def _ReadJSArrayBuffer(self, is_shared: bool, is_resizable: bool) -> bytes:
     """Reads a Javascript ArrayBuffer from the current position.
 
     Args:
       is_shared: True if the buffer is shared, False otherwise.
       is_resizable: True if the buffer is resizable, False otherwise.
-      is_immutable: True if the buffer is immutable, False otherwise.
     """
     next_id = self._GetNextId()
     array_buffer = b""
 
     if is_shared:
       raise NotImplementedError("Shared ArrayBuffer not supported yet")
-
-    if is_immutable:
-      pass  # Unused
 
     _, byte_length = self.ReadSizeT()
     max_byte_length = byte_length
