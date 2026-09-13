@@ -37,7 +37,7 @@ class LevelDBDecoder(utils.StreamDecoder):
   def DecodeBool(self) -> Tuple[int, bool]:
     """Returns a Tuple of the offset of decoding and the bool value."""
     offset, buffer = self.ReadBytes(1)
-    return offset, buffer[0] is not None
+    return offset, buffer[0] != 0
 
   def DecodeString(self) -> Tuple[int, str]:
     """Returns a tuple of the offset of decoding and the string value.
