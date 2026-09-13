@@ -23,13 +23,22 @@ class LevelDBDecoderTest(unittest.TestCase):
   """Unit tests for the LevelDBDecoder class."""
 
   def test_decode_bool(self) -> None:
-    """Tests the decode_bool method."""
+    """Tests decoding a true boolean value."""
     data = b"\x01"
     stream = io.BytesIO(data)
     decoder = utils.LevelDBDecoder(stream)
     offset, result = decoder.DecodeBool()
     self.assertEqual(offset, 0)
     self.assertEqual(result, True)
+  
+  def test_decode_bool_false(self) -> None:
+    """Tests decoding a false boolean value."""
+    data = b"\x00"
+    stream = io.BytesIO(data)
+    decoder = utils.LevelDBDecoder(stream)
+    offset, result = decoder.DecodeBool()
+    self.assertEqual(offset, 0)
+    self.assertEqual(result, False)
 
   def test_decode_string(self) -> None:
     """Tests the decode_string method."""
