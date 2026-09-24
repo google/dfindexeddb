@@ -245,8 +245,6 @@ class ValueDeserializer:
       parsed_object = self._ReadJSArrayBuffer(
           is_shared=False, is_resizable=False
       )
-    # elif tag == definitions.V8SerializationTag.ARRAY_BUFFER_TRANSFER:
-    #   parsed_object = self._ReadTransferredJSArrayBuffer()
     elif tag == definitions.V8SerializationTag.SHARED_ARRAY_BUFFER:
       parsed_object = self._ReadJSArrayBuffer(
           is_shared=True, is_resizable=False
