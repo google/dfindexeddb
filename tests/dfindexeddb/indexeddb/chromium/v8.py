@@ -237,38 +237,55 @@ class V8Test(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 empty"):
+      # v8.serialize(new ArrayBuffer()).toString('hex')
       buffer = bytes.fromhex("ff104200")
       expected_value = b""
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 initialised"):
-      buffer = bytes.fromhex("ff1042080000000000000000")
+      # v8.serialize(new ArrayBuffer(8)).toString('hex')
+      buffer = bytes.fromhex("ff0f42080000000000000000")
       expected_value = bytes.fromhex("0000000000000000")
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 resizable"):
+      # v8.serialize(new ArrayBuffer(8, { maxByteLength: 16 })).toString('hex')
       buffer = bytes.fromhex("ff107e08100000000000000000")
       expected_value = bytes.fromhex("0000000000000000")
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 immutable empty"):
+      # v8.serialize(new ArrayBuffer().transferToImmutable()).toString('hex')
       buffer = bytes.fromhex("ff104300")
       expected_value = b""
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 immutable initialised"):
+      # v8.serialize(new ArrayBuffer(8).transferToImmutable()).toString('hex')
       buffer = bytes.fromhex("ff1043080000000000000000")
       expected_value = bytes.fromhex("0000000000000000")
       parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
       self.assertEqual(parsed_value, expected_value)
 
   def test_arraybufferview(self) -> None:
-    """Tests ArrayBufferView decoding."""
+    """Tests ArrayBufferView decoding.
+
+    ```
+    function serializeView(view) {
+      const serializer = new v8.Serializer();
+      serializer._setTreatArrayBufferViewsAsHostObjects(false);
+      serializer.writeHeader();
+      serializer.writeValue(view);
+      return serializer.releaseBuffer().toString('hex');
+    }
+    ```
+    """
     with self.subTest("v13"):
+      # serializeView(new Uint8Array(16))
       buffer = bytes.fromhex("ff0d42100000000000000000000000000000000056420010")
       expected_value = v8.ArrayBufferView(
           buffer=bytes.fromhex("00000000000000000000000000000000"),
@@ -281,6 +298,7 @@ class V8Test(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 ArrayBuffer"):
+      # serializeView(new Uint8Array(16))
       buffer = bytes.fromhex(
           "ff104210000000000000000000000000000000005642001000"
       )
@@ -295,6 +313,7 @@ class V8Test(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 ImmutableArrayBuffer"):
+      # serializeView(new Uint8Array(new ArrayBuffer(16).transferToImmutable()))
       buffer = bytes.fromhex(
           "ff104310000000000000000000000000000000005642001000"
       )
@@ -309,6 +328,7 @@ class V8Test(unittest.TestCase):
       self.assertEqual(parsed_value, expected_value)
 
     with self.subTest("v16 Float16Array"):
+      # serializeView(new Float16Array(8))
       buffer = bytes.fromhex(
           "ff104210000000000000000000000000000000005668001000"
       )
