@@ -30,7 +30,7 @@ class LevelDBDecoderTest(unittest.TestCase):
     offset, result = decoder.DecodeBool()
     self.assertEqual(offset, 0)
     self.assertEqual(result, True)
-  
+
   def test_decode_bool_false(self) -> None:
     """Tests decoding a false boolean value."""
     data = b"\x00"
