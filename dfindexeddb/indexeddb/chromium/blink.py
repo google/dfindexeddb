@@ -19,7 +19,7 @@ import io
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
-import snappy
+from cramjam import snappy
 
 from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb.chromium import definitions, v8
@@ -1056,5 +1056,5 @@ class V8ScriptValueDecoder:
         and data[2] == definitions.COMPRESSED_WITH_SNAPPY
     ):
       # ignore the wrapped header bytes when decompressing
-      data = snappy.decompress(data[3:])
+      data = bytes(snappy.decompress_raw(data[3:]))
     return cls(data).Deserialize()

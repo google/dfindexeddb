@@ -18,13 +18,7 @@ include:
 
 ## Installation
 
-1. [Linux] Install the snappy compression development package
-
-```
-    $ sudo apt install libsnappy-dev
-```
-
-2. Create a virtual environment and install the package
+1. Create a virtual environment and install the package
 
 ```
     $ python3 -m venv .venv
@@ -42,15 +36,9 @@ To also install the dependencies for leveldb/indexeddb plugins, run
 
 ## Installation from source
 
-1. [Linux] Install the snappy compression development package
+1. Clone or download/unzip the repository to your local machine.
 
-```
-    $ sudo apt install libsnappy-dev
-```
-
-2. Clone or download/unzip the repository to your local machine.
-
-3. Create a virtual environment and install the package
+2. Create a virtual environment and install the package
 
 ```
     $ python3 -m venv .venv
@@ -64,6 +52,27 @@ To also install the dependencies for leveldb/indexeddb plugins, run
 ```
     $ pip install '.[plugins]'
 ```
+
+## Developer Setup
+
+To set up the development environment, install the package with development dependencies:
+
+```
+    $ pip install -e '.[dev]'
+```
+
+Then install the pre-commit hooks:
+
+```
+    $ pre-commit install
+```
+
+You can manually run the pre-commit hooks on all files:
+
+```
+    $ pre-commit run --all-files
+```
+
 
 ## Usage
 

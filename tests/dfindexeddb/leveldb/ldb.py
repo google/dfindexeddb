@@ -15,6 +15,8 @@
 """Unit tests for LevelDB Table (.ldb) files."""
 import unittest
 
+import cramjam
+
 from dfindexeddb.leveldb import definitions, ldb
 
 
@@ -60,6 +62,38 @@ class LDBTest(unittest.TestCase):
     self.assertEqual(range_iter_records[0][0], b"\x00\x00\x00\x00")
     self.assertIsInstance(range_iter_records[0][1], bytes)
     self.assertEqual(range_iter_records[0][1], b"test value\x00\x00\x00\x00")
+
+  def test_zstd_block_decompression(self) -> None:
+    """Tests decompressing a ZSTD compressed block."""
+    raw_data = b"test block data"
+    compressed_data = bytes(cramjam.zstd.compress(raw_data))
+    footer = (
+        bytes([definitions.BlockCompressionType.ZSTD]) + b"\x00\x00\x00\x00"
+    )
+    block = ldb.Block(
+        offset=0,
+        block_offset=0,
+        length=len(compressed_data),
+        data=compressed_data,
+        footer=footer,
+    )
+    self.assertEqual(block.GetBuffer(), raw_data)
+
+  def test_snappy_block_decompression(self) -> None:
+    """Tests decompressing a Snappy compressed block."""
+    raw_data = b"test block data"
+    compressed_data = bytes(cramjam.snappy.compress_raw(raw_data))
+    footer = (
+        bytes([definitions.BlockCompressionType.SNAPPY]) + b"\x00\x00\x00\x00"
+    )
+    block = ldb.Block(
+        offset=0,
+        block_offset=0,
+        length=len(compressed_data),
+        data=compressed_data,
+        footer=footer,
+    )
+    self.assertEqual(block.GetBuffer(), raw_data)
 
 
 if __name__ == "__main__":

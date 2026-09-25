@@ -21,7 +21,7 @@ import io
 import struct
 from typing import Any, List, Optional, Tuple, Union
 
-import snappy
+from cramjam import DecompressionError, snappy
 
 from dfindexeddb import errors, utils
 from dfindexeddb.indexeddb import types
@@ -791,6 +791,7 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
     Returns:
       A python representation of the parsed JavaScript object.
     """
+    uncompressed_data: Union[bytes, bytearray]
     if raw_data.startswith(definitions.FRAME_HEADER):
       uncompressed_data = bytearray()
       pos = len(definitions.FRAME_HEADER)
@@ -806,16 +807,18 @@ class JSStructuredCloneDecoder(utils.FromDecoderMixin):
           uncompressed_data += raw_data[pos + 8 : pos + 8 + block_size - 4]
         else:
           try:
-            uncompressed_data += snappy.decompress(
-                raw_data[pos + 8 : pos + 8 + block_size - 4]
+            uncompressed_data += bytes(
+                snappy.decompress_raw(
+                    raw_data[pos + 8 : pos + 8 + block_size - 4]
+                )
             )
-          except snappy.UncompressError as err:
+          except DecompressionError as err:
             raise errors.ParserError("Failed to decompress", err)
         pos += block_size + 4
     else:
       try:
-        uncompressed_data = snappy.decompress(raw_data)
-      except snappy.UncompressError as err:
+        uncompressed_data = bytes(snappy.decompress_raw(raw_data))
+      except DecompressionError as err:
         raise errors.ParserError("Failed to decompress", err)
     stream = io.BytesIO(uncompressed_data)
 

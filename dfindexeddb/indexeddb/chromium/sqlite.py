@@ -19,8 +19,7 @@ import sqlite3
 from typing import Any, Generator, Optional
 from dataclasses import dataclass
 
-import snappy
-import zstd
+from cramjam import snappy, zstd
 
 from dfindexeddb.indexeddb.chromium import blink
 from dfindexeddb.indexeddb.chromium import definitions
@@ -283,11 +282,11 @@ class DatabaseReader:
           value = blink.V8ScriptValueDecoder.FromBytes(raw_value)
         elif compression_type == definitions.DatabaseCompressionType.ZSTD:
           value = blink.V8ScriptValueDecoder.FromBytes(
-              zstd.decompress(raw_value)
+              bytes(zstd.decompress(raw_value))
           )
         elif compression_type == definitions.DatabaseCompressionType.SNAPPY:
           value = blink.V8ScriptValueDecoder.FromBytes(
-              snappy.decompress(raw_value)
+              bytes(snappy.decompress_raw(raw_value))
           )
 
       if load_blobs and raw_value is None:
