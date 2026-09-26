@@ -155,6 +155,7 @@ class WebkitTest(unittest.TestCase):
             minute=20,
             second=30,
             microsecond=456000,
+            tzinfo=datetime.timezone.utc,
         ),
     }
     parsed_value = webkit.SerializedScriptValueDecoder.FromBytes(value_bytes)
@@ -285,7 +286,9 @@ class WebkitTest(unittest.TestCase):
         "test_boolean_true_object": True,
         "test_boolean_false_object": False,
         "test_bigint": 12300000000000001048576,
-        "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+        "test_date": datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+        ),
         "test_set": expected_set,
         "test_map": {"a": 1, "b": 2, "c": 3},
         "test_regexp": types.RegExp("\\w+", ""),
@@ -311,7 +314,9 @@ class WebkitTest(unittest.TestCase):
     )
     expected_value = {
         "id": 2,
-        "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 457000),
+        "test_date": datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 457000, tzinfo=datetime.timezone.utc
+        ),
         "test_nested_array": {
             "level_id": 1,
             "child": {
@@ -337,7 +342,9 @@ class WebkitTest(unittest.TestCase):
     expected_key = webkit.IDBKeyData(
         offset=0,
         key_type=definitions.SIDBKeyType.DATE,
-        data=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+        data=datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+        ),
     )
     key_bytes = bytes.fromhex("004000803FE17E647842")
     parsed_key = webkit.IDBKeyData.FromBytes(key_bytes)

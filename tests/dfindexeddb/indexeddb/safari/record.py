@@ -215,6 +215,7 @@ class SafariIndexedDBTest(unittest.TestCase):
                 minute=20,
                 second=30,
                 microsecond=456000,
+                tzinfo=datetime.timezone.utc,
             ),
         },
         object_store_id=1,
@@ -366,7 +367,9 @@ class SafariIndexedDBTest(unittest.TestCase):
             "test_boolean_true_object": True,
             "test_boolean_false_object": False,
             "test_bigint": 12300000000000001048576,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+            ),
             "test_set": expected_set,
             "test_map": {"a": 1, "b": 2, "c": 3},
             "test_regexp": types.RegExp("\\w+", ""),
@@ -391,7 +394,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=2,
         value={
             "id": 2,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 457000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 457000, tzinfo=datetime.timezone.utc
+            ),
             "test_nested_array": {
                 "level_id": 1,
                 "child": {
@@ -427,7 +432,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=3,
         value={
             "id": 3,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 458000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 458000, tzinfo=datetime.timezone.utc
+            ),
             "buffer": b"*" * 1024 + b"\x00" * 99 * 1024,
             "buffer_view": webkit.ArrayBufferView(
                 array_buffer_view_subtag=(
@@ -453,7 +460,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=4,
         value={
             "id": 4,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 459000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 459000, tzinfo=datetime.timezone.utc
+            ),
             "view": webkit.ArrayBufferView(
                 array_buffer_view_subtag=(
                     definitions.ArrayBufferViewSubtag.UINT8_ARRAY
@@ -475,9 +484,13 @@ class SafariIndexedDBTest(unittest.TestCase):
   def test_date_key_record(self) -> None:
     """Tests for an IndexedDB record with a date in the key."""
     expected_record = record.SafariIndexedDBRecord(
-        key=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+        key=datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+        ),
         value={
-            "id": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+            "id": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+            ),
             "value": {},
         },
         object_store_id=1,

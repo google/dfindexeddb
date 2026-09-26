@@ -154,7 +154,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.DATE)
       self.assertEqual(
-          parsed_idbkey.value, datetime.datetime(1970, 1, 1, tzinfo=None)
+          parsed_idbkey.value,
+          datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
       )
 
   def test_decode_sortable_array(self) -> None:
@@ -491,7 +492,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           index_id=31,
           metadata_type=definitions.IndexMetaDataKeyType.UNIQUE_FLAG,
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("0004000064011f01"), bytes.fromhex("00"))
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
@@ -539,7 +540,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           index_id=31,
           metadata_type=definitions.IndexMetaDataKeyType.MULTI_ENTRY_FLAG,
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("0004000064011f03"), bytes.fromhex("00"))
 
@@ -616,7 +617,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               definitions.ObjectStoreMetaDataKeyType.AUTO_INCREMENT_FLAG
           ),
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("00040000320102"), bytes.fromhex("00"))
 
@@ -637,7 +638,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           object_store_id=1,
           metadata_type=(definitions.ObjectStoreMetaDataKeyType.IS_EVICTABLE),
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("00040000320103"), bytes.fromhex("00"))
 
@@ -827,7 +828,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         encoded_user_key=record.IDBKey(
             offset=5,
             type=definitions.IDBKeyType.DATE,
-            value=datetime.datetime(2023, 2, 12, 23, 20, 30, 459000),
+            value=datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 459000, tzinfo=datetime.timezone.utc
+            ),
         ),
         sequence_number=0,
         encoded_primary_key=record.IDBKey(

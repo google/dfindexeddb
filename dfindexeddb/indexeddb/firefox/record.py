@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Firefox IndexedDB records."""
+import contextlib
 import pathlib
 import sqlite3
 import sys
@@ -138,7 +139,9 @@ class FileReader:
     self.filename = filename
     self._uri = pathlib.Path(filename).resolve().as_uri()
 
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       cursor = conn.execute(
           "SELECT name, origin, version, last_vacuum_time, last_analyze_time "
           "FROM database"
@@ -218,7 +221,9 @@ class FileReader:
     Yields:
       FirefoxObjectStoreInfo instances.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       cursor = conn.execute(
           "SELECT id, auto_increment, name, key_path FROM object_store"
       )
@@ -288,7 +293,9 @@ class FileReader:
       include_raw_data: whether to include the raw data.
       load_blobs: whether to load the record blobs.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name "
@@ -311,7 +318,9 @@ class FileReader:
     Yields:
       FirefoxIndexedDBRecord instances.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT od.key, od.data, od.object_store_id, od.file_ids, os.name "

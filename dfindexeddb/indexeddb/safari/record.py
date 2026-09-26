@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Safari IndexedDB records."""
+import contextlib
 import pathlib
 import plistlib
 import sqlite3
@@ -144,7 +145,9 @@ class FileReader:
     self.metadata_version = 0
     self.max_object_store_id = 0
 
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       cursor = conn.execute(
           'SELECT value FROM IDBDatabaseInfo WHERE key = "DatabaseVersion"'
       )
@@ -213,7 +216,9 @@ class FileReader:
       a list of SafariBlobInfo instances.
     """
     blobs = []
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       cursor = conn.execute(
           "SELECT r.blobURL, f.fileName "
           "FROM BlobRecords r "
@@ -249,7 +254,9 @@ class FileReader:
     Yields:
       ObjectStoreInfo instances.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       cursor = conn.execute(
           "SELECT id, name, keypath, autoinc FROM ObjectStoreInfo"
       )
@@ -328,7 +335,9 @@ class FileReader:
       the IndexedDBRecord or None if the record_id does not exist in the
           database.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -354,7 +363,9 @@ class FileReader:
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -377,7 +388,9 @@ class FileReader:
     Yields:
       IndexedDBRecord instances.
     """
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
@@ -393,7 +406,9 @@ class FileReader:
       self, include_raw_data: bool = False, load_blobs: bool = True
   ) -> Generator[SafariIndexedDBRecord, None, None]:
     """Returns all the IndexedDBRecords."""
-    with sqlite3.connect(f"{self._uri}?mode=ro", uri=True) as conn:
+    with contextlib.closing(
+        sqlite3.connect(f"{self._uri}?mode=ro", uri=True)
+    ) as conn:
       conn.text_factory = bytes
       cursor = conn.execute(
           "SELECT r.key, r.value, r.objectStoreID, o.name, typeof(o.name), "
