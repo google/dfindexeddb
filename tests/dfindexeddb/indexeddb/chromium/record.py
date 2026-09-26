@@ -491,7 +491,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           index_id=31,
           metadata_type=definitions.IndexMetaDataKeyType.UNIQUE_FLAG,
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("0004000064011f01"), bytes.fromhex("00"))
       parsed_key = record.IndexMetaDataKey.FromBytes(record_bytes[0])
@@ -539,7 +539,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           index_id=31,
           metadata_type=definitions.IndexMetaDataKeyType.MULTI_ENTRY_FLAG,
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("0004000064011f03"), bytes.fromhex("00"))
 
@@ -616,7 +616,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
               definitions.ObjectStoreMetaDataKeyType.AUTO_INCREMENT_FLAG
           ),
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("00040000320102"), bytes.fromhex("00"))
 
@@ -637,7 +637,7 @@ class ChromiumIndexedDBTest(unittest.TestCase):
           object_store_id=1,
           metadata_type=(definitions.ObjectStoreMetaDataKeyType.IS_EVICTABLE),
       )
-      expected_value = True
+      expected_value = False
 
       record_bytes = (bytes.fromhex("00040000320103"), bytes.fromhex("00"))
 
