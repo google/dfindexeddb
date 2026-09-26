@@ -154,7 +154,8 @@ class ChromiumIndexedDBTest(unittest.TestCase):
       parsed_idbkey = record.SortableIDBKey.FromBytes(key_bytes)
       self.assertEqual(parsed_idbkey.type, definitions.IDBKeyType.DATE)
       self.assertEqual(
-          parsed_idbkey.value, datetime.datetime(1970, 1, 1, tzinfo=None)
+          parsed_idbkey.value,
+          datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
       )
 
   def test_decode_sortable_array(self) -> None:
@@ -827,7 +828,9 @@ class ChromiumIndexedDBTest(unittest.TestCase):
         encoded_user_key=record.IDBKey(
             offset=5,
             type=definitions.IDBKeyType.DATE,
-            value=datetime.datetime(2023, 2, 12, 23, 20, 30, 459000),
+            value=datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 459000, tzinfo=datetime.timezone.utc
+            ),
         ),
         sequence_number=0,
         encoded_primary_key=record.IDBKey(

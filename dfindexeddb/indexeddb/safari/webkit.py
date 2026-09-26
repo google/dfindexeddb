@@ -18,7 +18,7 @@ from __future__ import annotations
 import io
 import plistlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple, Union
 
 from dfindexeddb import errors, utils
@@ -129,7 +129,7 @@ class IDBKeyData(utils.FromDecoderMixin):
         _, data = decoder.DecodeDouble()
       elif key_type == definitions.SIDBKeyType.DATE:
         _, timestamp = decoder.DecodeDouble()
-        data = datetime.utcfromtimestamp(timestamp / 1000)
+        data = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
       elif key_type == definitions.SIDBKeyType.STRING:
         _, length = decoder.DecodeUint32()
         _, raw_data = decoder.ReadBytes(length * 2)
@@ -314,7 +314,7 @@ class SerializedScriptValueDecoder:
   def DecodeDate(self) -> datetime:
     """Decodes a Date value."""
     _, timestamp = self.decoder.DecodeDouble()
-    value = datetime.utcfromtimestamp(timestamp / 1000)
+    value = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
     return value
 
   def DecodeFileData(self) -> FileData:
