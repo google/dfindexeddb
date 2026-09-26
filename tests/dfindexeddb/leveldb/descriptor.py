@@ -15,7 +15,8 @@
 """Unit tests for LevelDB Manifest files."""
 import unittest
 
-from dfindexeddb.leveldb import descriptor, log
+from dfindexeddb import errors
+from dfindexeddb.leveldb import descriptor, ldb, log
 
 
 class DescriptorTests(unittest.TestCase):
@@ -100,6 +101,50 @@ class DescriptorTests(unittest.TestCase):
       self.assertEqual(latest_version.deleted_files, {})
       self.assertEqual(latest_version.current_log, "000004.log")
       self.assertEqual(latest_version.last_sequence, 85673)
+
+  def test_versionedit_with_new_files(self) -> None:
+    """Tests GetVersionEdits method with new files containing internal keys."""
+    manifest_file = descriptor.FileReader(
+        "./test_data/leveldb/100k keys/MANIFEST-000002"
+    )
+    version_edits = list(manifest_file.GetVersionEdits())
+    self.assertEqual(len(version_edits), 3)
+    new_files = version_edits[2].new_files
+    self.assertEqual(len(new_files), 1)
+    self.assertEqual(new_files[0].level, 2)
+    self.assertEqual(new_files[0].number, 5)
+
+    ldb_file = ldb.FileReader(
+        f"./test_data/leveldb/100k keys/{new_files[0].number:06d}.ldb"
+    )
+    ldb_records = list(ldb_file.GetKeyValueRecords())
+
+    self.assertEqual(new_files[0].smallest.user_key, ldb_records[0].key)
+    self.assertEqual(
+        new_files[0].smallest.sequence_number, ldb_records[0].sequence_number
+    )
+    self.assertEqual(new_files[0].smallest.key_type, ldb_records[0].record_type)
+    self.assertEqual(new_files[0].largest.user_key, ldb_records[-1].key)
+    self.assertEqual(
+        new_files[0].largest.sequence_number, ldb_records[-1].sequence_number
+    )
+    self.assertEqual(new_files[0].largest.key_type, ldb_records[-1].record_type)
+
+  def test_versionedit_invalid_tag(self) -> None:
+    """Tests parsing a VersionEdit with an invalid tag raises ParserError."""
+    with self.subTest("invalid tag"):
+      with self.assertRaises(errors.ParserError) as context:
+        descriptor.VersionEdit.FromBytes(b"\x63")
+      self.assertIn(
+          "Invalid VersionEditTag at offset 0", str(context.exception)
+      )
+
+    with self.subTest("invalid tag after valid tag"):
+      with self.assertRaises(errors.ParserError) as context:
+        descriptor.VersionEdit.FromBytes(b"\x04\x2a\x63")
+      self.assertIn(
+          "Invalid VersionEditTag at offset 2", str(context.exception)
+      )
 
 
 if __name__ == "__main__":

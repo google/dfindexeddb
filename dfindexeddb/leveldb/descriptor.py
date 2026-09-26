@@ -57,7 +57,7 @@ class InternalKey:
     if len(slice_bytes) < definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH:
       raise errors.ParserError("Insufficient bytes to parse InternalKey")
 
-    user_key = slice_bytes[: -definitions.SEQUENCE_LENGTH]
+    user_key = slice_bytes[: -definitions.PACKED_SEQUENCE_AND_TYPE_LENGTH]
     sequence_number = int.from_bytes(
         slice_bytes[-definitions.SEQUENCE_LENGTH :],
         byteorder="little",
@@ -234,7 +234,7 @@ class VersionEdit(utils.FromDecoderMixin):
     while tag_byte:
       try:
         tag = definitions.VersionEditTags(tag_byte)
-      except TypeError as error:
+      except ValueError as error:
         raise errors.ParserError(
             f"Invalid VersionEditTag at offset {offset}"
         ) from error
