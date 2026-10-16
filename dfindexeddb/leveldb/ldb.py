@@ -216,19 +216,28 @@ class FileReader:
   """
 
   def __init__(self, filename: str):
-    """Initializes the LogFile.
+    """Initializes the Ldb FileReader.
 
     Args:
       filename: the .ldb filename.
 
     Raises:
-      ValueError if the file has an invalid magic number at the end.
+      ValueError: if the file is empty, smaller than the minimum table footer
+          size, or has an invalid magic number.
     """
     self.filename = filename
     with open(self.filename, "rb") as fh:
+      file_size = fh.seek(0, os.SEEK_END)
+      if file_size == 0:
+        raise ValueError(f"{self.filename} is empty.")
+      if file_size < definitions.TABLE_FOOTER_SIZE:
+        raise ValueError(
+            f"{self.filename} is not large enough to parse "
+            f"({file_size} < {definitions.TABLE_FOOTER_SIZE} bytes)."
+        )
       fh.seek(-len(definitions.TABLE_MAGIC), os.SEEK_END)
       if fh.read(len(definitions.TABLE_MAGIC)) != definitions.TABLE_MAGIC:
-        raise ValueError(f"Invalid magic number in {self.filename}")
+        raise ValueError(f"Invalid magic number in {self.filename}.")
 
       fh.seek(-definitions.TABLE_FOOTER_SIZE, os.SEEK_END)
       # meta_handle, need to read first due to variable integers
