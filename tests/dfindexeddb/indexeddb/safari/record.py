@@ -14,7 +14,9 @@
 # limitations under the License.
 """Unit tests for Safari IndexedDB encoded sqlite3 databases."""
 import datetime
+import sqlite3
 import unittest
+from unittest import mock
 
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions, record, webkit
@@ -570,3 +572,101 @@ class SafariIndexedDBTest(unittest.TestCase):
     )
     parsed_record = self.db.RecordById(30)
     self.assertEqual(parsed_record, expected_record)
+
+  def test_records(self) -> None:
+    """Tests the Records method."""
+    records = list(self.db.Records())
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].record_id, 1)
+    self.assertEqual(records[0].blobs, [])
+
+  def test_records_without_blobs(self) -> None:
+    """Tests the Records method with load_blobs=False."""
+    records = list(self.db.Records(load_blobs=False))
+    self.assertEqual(len(records), 30)
+    self.assertIsNone(records[0].blobs)
+
+  def test_records_by_object_store_id(self) -> None:
+    """Tests the RecordsByObjectStoreId method."""
+    records = list(self.db.RecordsByObjectStoreId(1))
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].object_store_id, 1)
+
+  def test_records_by_object_store_name(self) -> None:
+    """Tests the RecordsByObjectStoreName method."""
+    records = list(self.db.RecordsByObjectStoreName("test store a"))
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].object_store_name, "test store a")
+
+  def test_records_single_connection(self) -> None:
+    """Tests that Records only opens a single SQLite connection."""
+    with mock.patch("sqlite3.connect", wraps=sqlite3.connect) as mock_connect:
+      records = list(self.db.Records(load_blobs=True))
+      self.assertEqual(len(records), 30)
+      self.assertEqual(mock_connect.call_count, 1)
+
+  def test_load_blobs_for_record_with_blob(self) -> None:
+    """Tests loading blobs for a record with associated blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    blobs = db_with_blob.LoadBlobsForRecordId(1)
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)
+
+  def test_records_with_blobs(self) -> None:
+    """Tests the Records method for a database containing blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    records = list(db_with_blob.Records(load_blobs=True))
+    self.assertEqual(len(records), 1)
+    blobs = records[0].blobs
+    self.assertIsNotNone(blobs)
+    assert blobs is not None
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)
+
+  def test_record_by_id_with_blobs(self) -> None:
+    """Tests the RecordById method for a record with blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    blob_record = db_with_blob.RecordById(1, load_blobs=True)
+    self.assertIsNotNone(blob_record)
+    assert blob_record is not None
+    blobs = blob_record.blobs
+    self.assertIsNotNone(blobs)
+    assert blobs is not None
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)
