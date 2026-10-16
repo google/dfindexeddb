@@ -15,6 +15,7 @@
 """Parser for LevelDB Descriptor (MANIFEST) files."""
 from __future__ import annotations
 
+import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, Generator, Optional
@@ -273,6 +274,13 @@ class VersionEdit(utils.FromDecoderMixin):
     return version_edit
 
 
+LevelNumber = int
+FileName = str
+
+ActiveFiles = Dict[LevelNumber, Dict[FileName, NewFile]]
+DeletedFiles = Dict[LevelNumber, Dict[FileName, DeletedFile]]
+
+
 @dataclass
 class LevelDBVersion:
   """A LevelDBVersion.
@@ -286,13 +294,23 @@ class LevelDBVersion:
 
   "Deleted files" will typically no longer exist but may be forensically
   recoverable.
+
+  Attributes:
+    current_log: the filename of the active log file (e.g. "000003.log").
+    version_edit_offset: the byte offset where the corresponding VersionEdit was
+        parsed.
+    last_sequence: the highest sequence number in this version.
+    active_files: mapping of Level number (int) to a mapping of table filename
+        (str, e.g. "000005.ldb") to NewFile metadata.
+    deleted_files: mapping of Level number (int) to a mapping of table filename
+        (str, e.g. "000004.ldb") to DeletedFile metadata.
   """
 
   current_log: Optional[str]
   version_edit_offset: int
   last_sequence: Optional[int]
-  active_files: dict[int, dict[str, NewFile]]
-  deleted_files: dict[int, dict[str, DeletedFile]]
+  active_files: ActiveFiles
+  deleted_files: DeletedFiles
 
 
 class FileReader:
@@ -386,8 +404,10 @@ class FileReader:
     Yields:
       LevelDBVersion
     """
-    active_files: Dict[int, dict[str, NewFile]] = defaultdict(dict)
-    deleted_files: Dict[int, dict[str, DeletedFile]] = defaultdict(dict)
+    active_files: Dict[LevelNumber, Dict[FileName, NewFile]] = defaultdict(dict)
+    deleted_files: Dict[LevelNumber, Dict[FileName, DeletedFile]] = defaultdict(
+        dict
+    )
     current_log = None
 
     for version_edit in self.GetVersionEdits():
@@ -398,15 +418,29 @@ class FileReader:
         active_files[new_file.level][f"{new_file.number:06d}.ldb"] = new_file
 
       for deleted_file in version_edit.deleted_files:
-        active_files[deleted_file.level].pop(f"{deleted_file.number:06d}.ldb")
-        deleted_files[deleted_file.level][
-            f"{deleted_file.number:06d}.ldb"
-        ] = deleted_file
+        ldb_filename = f"{deleted_file.number:06d}.ldb"
+        if ldb_filename not in active_files[deleted_file.level]:
+          print(
+              f"Warning: Deleted file {ldb_filename} at level "
+              f"{deleted_file.level} was not found in active files at offset "
+              f"{version_edit.offset}.",
+              file=sys.stderr,
+          )
+        else:
+          active_files[deleted_file.level].pop(ldb_filename)
+        deleted_files[deleted_file.level][ldb_filename] = deleted_file
+
+      active_files_snapshot = {
+          level: dict(files) for level, files in active_files.items() if files
+      }
+      deleted_files_snapshot = {
+          level: dict(files) for level, files in deleted_files.items() if files
+      }
 
       yield LevelDBVersion(
           current_log=current_log,
-          active_files=active_files,
-          deleted_files=deleted_files,
+          active_files=active_files_snapshot,
+          deleted_files=deleted_files_snapshot,
           version_edit_offset=version_edit.offset,
           last_sequence=version_edit.last_sequence,
       )

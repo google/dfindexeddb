@@ -80,7 +80,7 @@ class FolderReader:
   """A LevelDB folder reader.
 
   Attributes:
-    foldername (str): the source LevelDB folder.
+    foldername (pathlib.Path): the source LevelDB folder.
   """
 
   def __init__(self, foldername: pathlib.Path):
@@ -279,6 +279,8 @@ class FolderReader:
             processed_files.add(current_filename)
             for record in self._GetLdbRecords(filename=current_filename):
               record.recovered = record.record.key in active_records
+              if not record.recovered:
+                active_records[record.record.key] = record
               record.level = level
               yield record
           else:

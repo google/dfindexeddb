@@ -1,0 +1,19 @@
+2026/10/16-23:42:33.144366 1f9927f80 Delete type=3 #1
+2026/10/16-23:42:33.461307 16dc73000 Level-0 table #5: started
+2026/10/16-23:42:33.488716 16dc73000 Level-0 table #5: 1065807 bytes OK
+2026/10/16-23:42:33.488843 16dc73000 Delete type=0 #3
+2026/10/16-23:42:33.534346 16dc73000 Level-0 table #7: started
+2026/10/16-23:42:33.537959 16dc73000 Level-0 table #7: 211355 bytes OK
+2026/10/16-23:42:33.538154 16dc73000 Delete type=0 #4
+2026/10/16-23:42:33.538970 16dc73000 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
+2026/10/16-23:42:33.538989 16dc73000 Manual compaction at level-1 from (begin) .. (end); will stop at '\xff\x85\x01\x00' @ 99840 : 1
+2026/10/16-23:42:33.538994 16dc73000 Compacting 1@1 + 1@2 files
+2026/10/16-23:42:33.568548 16dc73000 Generated table #8@1: 100000 keys, 1244909 bytes
+2026/10/16-23:42:33.568559 16dc73000 Compacted 1@1 + 1@2 files => 1244909 bytes
+2026/10/16-23:42:33.568613 16dc73000 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/10/16-23:42:33.568654 16dc73000 Delete type=2 #7
+2026/10/16-23:42:33.568810 16dc73000 Delete type=2 #5
+2026/10/16-23:42:33.569738 16dc73000 Manual compaction at level-1 from '\xff\x85\x01\x00' @ 99840 : 1 .. (end); will stop at (end)
+2026/10/16-23:42:33.853002 16dc73000 Level-0 table #10: started
+2026/10/16-23:42:33.881346 16dc73000 Level-0 table #10: 964225 bytes OK
+2026/10/16-23:42:33.881491 16dc73000 Delete type=0 #6

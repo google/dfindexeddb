@@ -67,6 +67,23 @@ def generate_test_data_100000_keys_delete():
     db.Delete(i_bytes)
 
 
+def generate_test_data_multilevel_keys():
+  db = leveldb.LevelDB("multilevel keys", error_if_exists=True)
+  for i in range(100000):
+    i_bytes = i.to_bytes(byteorder="little", length=4)
+    db.Put(key=i_bytes, value=b"test value" + i_bytes)
+
+  db.CompactRange()
+
+  for i in range(20000, 120000):
+    i_bytes = i.to_bytes(byteorder="little", length=4)
+    db.Put(key=i_bytes, value=b"updated test value" + i_bytes)
+
+  for i in range(20000, 30000, 1000):
+    i_bytes = i.to_bytes(byteorder="little", length=4)
+    db.Delete(i_bytes)
+
+
 if __name__ == "__main__":
   generate_test_data_put()
   generate_test_data_delete()
@@ -75,3 +92,4 @@ if __name__ == "__main__":
   generate_test_data_delete_large()
   generate_test_data_100000_keys()
   generate_test_data_100000_keys_delete()
+  generate_test_data_multilevel_keys()

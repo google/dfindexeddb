@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for LevelDB Manifest files."""
+
 import unittest
 
 from dfindexeddb import errors
@@ -66,26 +67,79 @@ class DescriptorTests(unittest.TestCase):
     )
     versions = list(manifest_file.GetVersions())
     self.assertEqual(len(versions), 3)
-    self.assertEqual(len(versions[0].active_files), 1)
-    self.assertIn(2, versions[0].active_files)
-    self.assertIn("000005.ldb", versions[0].active_files[2])
+
+    # Version 0: db initialized, only comparator set.
+    self.assertEqual(versions[0].active_files, {})
     self.assertEqual(versions[0].deleted_files, {})
     self.assertEqual(versions[0].current_log, None)
     self.assertEqual(versions[0].last_sequence, None)
 
-    self.assertEqual(len(versions[1].active_files), 1)
-    self.assertIn(2, versions[1].active_files)
-    self.assertIn("000005.ldb", versions[1].active_files[2])
+    # Version 1: log number 3 opened.
+    self.assertEqual(versions[1].active_files, {})
     self.assertEqual(versions[1].deleted_files, {})
     self.assertEqual(versions[1].current_log, "000003.log")
     self.assertEqual(versions[1].last_sequence, 0)
 
+    # Version 2: log number 3 compacted into 000005.ldb at level 2.
     self.assertEqual(len(versions[2].active_files), 1)
     self.assertIn(2, versions[2].active_files)
     self.assertIn("000005.ldb", versions[2].active_files[2])
     self.assertEqual(versions[2].deleted_files, {})
     self.assertEqual(versions[2].current_log, "000004.log")
     self.assertEqual(versions[2].last_sequence, 85673)
+
+    # Latest version corresponds to Version 2.
+    self.assertEqual(manifest_file.GetLatestVersion(), versions[2])
+
+  def test_versions_deleted_files(self) -> None:
+    """Tests GetVersions snapshots deleted files from compaction."""
+    manifest_file = descriptor.FileReader(
+        "./test_data/leveldb/multilevel keys/MANIFEST-000002"
+    )
+    versions = list(manifest_file.GetVersions())
+    self.assertEqual(len(versions), 6)
+
+    # Version 0: db initialized, only comparator set.
+    self.assertEqual(versions[0].active_files, {})
+    self.assertEqual(versions[0].deleted_files, {})
+    self.assertEqual(versions[0].current_log, None)
+    self.assertEqual(versions[0].last_sequence, None)
+
+    # Version 1: log number 3 opened.
+    self.assertEqual(versions[1].active_files, {})
+    self.assertEqual(versions[1].deleted_files, {})
+    self.assertEqual(versions[1].current_log, "000003.log")
+    self.assertEqual(versions[1].last_sequence, 0)
+
+    # Version 2: log number 3 compacted into 000005.ldb at level 2.
+    self.assertEqual(len(versions[2].active_files), 1)
+    self.assertIn(2, versions[2].active_files)
+    self.assertIn("000005.ldb", versions[2].active_files[2])
+    self.assertEqual(versions[2].deleted_files, {})
+    self.assertEqual(versions[2].current_log, "000004.log")
+    self.assertEqual(versions[2].last_sequence, 88008)
+
+    # Version 3: first batch of writes
+    self.assertIn("000007.ldb", versions[3].active_files[1])
+    self.assertIn("000005.ldb", versions[3].active_files[2])
+    self.assertEqual(versions[3].deleted_files, {})
+
+    # Version 4: after compaction
+    self.assertNotIn(1, versions[4].active_files)
+    self.assertIn("000008.ldb", versions[4].active_files[2])
+    self.assertIn("000007.ldb", versions[4].deleted_files[1])
+    self.assertIn("000005.ldb", versions[4].deleted_files[2])
+
+    # Version 5: second batch of writes
+    self.assertIn("000010.ldb", versions[5].active_files[1])
+    self.assertIn("000008.ldb", versions[5].active_files[2])
+    self.assertIn("000007.ldb", versions[5].deleted_files[1])
+    self.assertIn("000005.ldb", versions[5].deleted_files[2])
+    self.assertEqual(versions[5].current_log, "000009.log")
+    self.assertEqual(versions[5].last_sequence, 175061)
+
+    # Latest version corresponds to Version 5.
+    self.assertEqual(manifest_file.GetLatestVersion(), versions[5])
 
   def test_latestversion(self) -> None:
     """Tests the GetLatestVersion method."""
