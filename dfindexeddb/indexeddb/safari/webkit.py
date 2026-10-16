@@ -406,7 +406,7 @@ class SerializedScriptValueDecoder:
     pool_tag = self.PeekTag()
     while pool_tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
-      value = self.DecodeValue()
+      _, value = self.DecodeValue()
       js_map[name] = value
       pool_tag = self.PeekTag()
 
@@ -430,7 +430,7 @@ class SerializedScriptValueDecoder:
     pool_tag = self.PeekTag()
     while pool_tag != definitions.TERMINATOR_TAG:
       name = self.DecodeStringData()
-      value = self.DecodeValue()
+      _, value = self.DecodeValue()
       js_set.properties[name] = value
       pool_tag = self.PeekTag()
 
@@ -483,7 +483,7 @@ class SerializedScriptValueDecoder:
 
   def DecodeObjectReference(self) -> Any:
     """Decodes an ObjectReference value."""
-    if len(self.object_pool) < 0xFF:
+    if len(self.object_pool) <= 0xFF:
       _, object_ref = self.decoder.DecodeUint8()
     elif len(self.object_pool) < 0xFFFF:
       _, object_ref = self.decoder.DecodeUint16()
@@ -535,10 +535,8 @@ class SerializedScriptValueDecoder:
       ParserError when CurrentVersion is not found.
     """
     _, current_version = self.decoder.DecodeUint32()
-    if current_version != definitions.CURRENT_VERSION:
-      raise errors.ParserError(
-          f"{current_version} is not the expected CurrentVersion"
-      )
+    if current_version > definitions.CURRENT_VERSION:
+      raise errors.ParserError(f"{current_version} is not supported.")
     self.version = current_version
     _, value = self.DecodeValue()
     return value
@@ -627,6 +625,8 @@ class SerializedScriptValueDecoder:
     elif tag == definitions.SerializationTag.BIGINT_OBJECT:
       value = self.DecodeBigIntData()
       self.object_pool.append(value)
+    elif tag == definitions.SerializationTag.RESIZABLE_ARRAY_BUFFER:
+      value = self.DecodeResizableArrayBuffer()
     else:
       raise errors.ParserError(f"Unhandled Serialization Tag {tag.name} found.")
     return offset, value
