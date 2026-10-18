@@ -224,7 +224,7 @@ class FolderReader:
     for active_file in latest_version.active_files.get(0, {}).keys():
       current_young_filename = self.foldername / active_file
       if current_young_filename.exists():
-        young_records = list(self._GetLdbRecords(current_young_filename))
+        young_records.extend(self._GetLdbRecords(current_young_filename))
         processed_files.add(current_young_filename)
       else:
         print(
