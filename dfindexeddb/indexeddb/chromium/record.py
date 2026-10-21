@@ -20,7 +20,7 @@ import pathlib
 import sys
 import traceback
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import (
     Any,
     BinaryIO,
@@ -203,7 +203,7 @@ class IDBKey(utils.FromDecoderMixin):
         _, value = decoder.DecodeStringWithLength()
       elif key_type == definitions.IDBKeyType.DATE:
         _, raw_value = decoder.DecodeDouble()
-        value = datetime.utcfromtimestamp(raw_value / 1000.0)
+        value = datetime.fromtimestamp(raw_value / 1000.0, tz=timezone.utc)
       elif key_type == definitions.IDBKeyType.NUMBER:
         _, value = decoder.DecodeDouble()
       elif key_type == definitions.IDBKeyType.MIN_KEY:
@@ -280,7 +280,7 @@ class SortableIDBKey(utils.FromDecoderMixin):
         return (
             offset,
             definitions.IDBKeyType.DATE,
-            datetime.utcfromtimestamp(raw_date / 1000.0),
+            datetime.fromtimestamp(raw_date / 1000.0, tz=timezone.utc),
         )
       if ordered_type == definitions.OrderedIDBKeyType.STRING:
         _, value = decoder.DecodeSortableString()

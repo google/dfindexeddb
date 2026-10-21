@@ -18,7 +18,7 @@ from __future__ import annotations
 import io
 import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -453,7 +453,7 @@ class ValueDeserializer:
     next_id = self._GetNextId()
 
     _, value = self.decoder.DecodeDouble()
-    result = datetime.utcfromtimestamp(value / 1000.0)
+    result = datetime.fromtimestamp(value / 1000.0, tz=timezone.utc)
     self.objects[next_id] = result
     return result
 

@@ -24,7 +24,6 @@ from typing import Union
 
 from dfindexeddb import utils, version
 from dfindexeddb.leveldb import descriptor, ldb, log, record
-from dfindexeddb.leveldb.plugins import manager
 
 _VALID_PRINTABLE_CHARACTERS = (
     " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -82,15 +81,16 @@ def _Output(
 
 def DbCommand(args: argparse.Namespace) -> None:
   """The CLI for processing leveldb folders."""
-  if args.plugin and args.plugin == "list":
-    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
-      print(plugin)
-    return
-
+  plugin_class = None
   if args.plugin:
+    from dfindexeddb.leveldb.plugins import manager  # pylint: disable=import-outside-toplevel
+
+    if args.plugin == "list":
+      for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+        print(plugin)
+      return
+
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
-  else:
-    plugin_class = None
 
   for leveldb_record in record.FolderReader(args.source).GetRecords(
       use_manifest=args.use_manifest,
@@ -105,15 +105,16 @@ def DbCommand(args: argparse.Namespace) -> None:
 
 def LdbCommand(args: argparse.Namespace) -> None:
   """The CLI for processing ldb files."""
-  if args.plugin and args.plugin == "list":
-    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
-      print(plugin)
-    return
-
+  plugin_class = None
   if args.plugin:
+    from dfindexeddb.leveldb.plugins import manager  # pylint: disable=import-outside-toplevel
+
+    if args.plugin == "list":
+      for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+        print(plugin)
+      return
+
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
-  else:
-    plugin_class = None
 
   ldb_file = ldb.FileReader(args.source)
 
@@ -137,15 +138,16 @@ def LdbCommand(args: argparse.Namespace) -> None:
 
 def LogCommand(args: argparse.Namespace) -> None:
   """The CLI for processing log files."""
-  if args.plugin and args.plugin == "list":
-    for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
-      print(plugin)
-    return
-
+  plugin_class = None
   if args.plugin:
+    from dfindexeddb.leveldb.plugins import manager  # pylint: disable=import-outside-toplevel
+
+    if args.plugin == "list":
+      for plugin, _ in manager.LeveldbPluginManager.GetPlugins():
+        print(plugin)
+      return
+
     plugin_class = manager.LeveldbPluginManager.GetPlugin(args.plugin)
-  else:
-    plugin_class = None
 
   log_file = log.FileReader(args.source)
 

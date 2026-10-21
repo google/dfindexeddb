@@ -14,7 +14,7 @@
 # limitations under the License.
 """Unit tests for v8 serialized values."""
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from dfindexeddb.indexeddb import types
@@ -347,7 +347,7 @@ class V8Test(unittest.TestCase):
     # console.log(
     #     v8.serialize(new Date('1995-12-17T03:24:00Z')).toString('hex'))
     buffer = bytes.fromhex("ff0d44000010004cd76742")
-    expected_value = datetime(1995, 12, 17, 3, 24)
+    expected_value = datetime(1995, 12, 17, 3, 24, tzinfo=timezone.utc)
     parsed_value = v8.ValueDeserializer.FromBytes(buffer, None)
     self.assertEqual(parsed_value, expected_value)
 

@@ -14,7 +14,9 @@
 # limitations under the License.
 """Unit tests for Safari IndexedDB encoded sqlite3 databases."""
 import datetime
+import sqlite3
 import unittest
+from unittest import mock
 
 from dfindexeddb.indexeddb import types
 from dfindexeddb.indexeddb.safari import definitions, record, webkit
@@ -215,6 +217,7 @@ class SafariIndexedDBTest(unittest.TestCase):
                 minute=20,
                 second=30,
                 microsecond=456000,
+                tzinfo=datetime.timezone.utc,
             ),
         },
         object_store_id=1,
@@ -366,7 +369,9 @@ class SafariIndexedDBTest(unittest.TestCase):
             "test_boolean_true_object": True,
             "test_boolean_false_object": False,
             "test_bigint": 12300000000000001048576,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+            ),
             "test_set": expected_set,
             "test_map": {"a": 1, "b": 2, "c": 3},
             "test_regexp": types.RegExp("\\w+", ""),
@@ -391,7 +396,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=2,
         value={
             "id": 2,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 457000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 457000, tzinfo=datetime.timezone.utc
+            ),
             "test_nested_array": {
                 "level_id": 1,
                 "child": {
@@ -427,7 +434,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=3,
         value={
             "id": 3,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 458000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 458000, tzinfo=datetime.timezone.utc
+            ),
             "buffer": b"*" * 1024 + b"\x00" * 99 * 1024,
             "buffer_view": webkit.ArrayBufferView(
                 array_buffer_view_subtag=(
@@ -453,7 +462,9 @@ class SafariIndexedDBTest(unittest.TestCase):
         key=4,
         value={
             "id": 4,
-            "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 459000),
+            "test_date": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 459000, tzinfo=datetime.timezone.utc
+            ),
             "view": webkit.ArrayBufferView(
                 array_buffer_view_subtag=(
                     definitions.ArrayBufferViewSubtag.UINT8_ARRAY
@@ -475,9 +486,13 @@ class SafariIndexedDBTest(unittest.TestCase):
   def test_date_key_record(self) -> None:
     """Tests for an IndexedDB record with a date in the key."""
     expected_record = record.SafariIndexedDBRecord(
-        key=datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+        key=datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+        ),
         value={
-            "id": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+            "id": datetime.datetime(
+                2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+            ),
             "value": {},
         },
         object_store_id=1,
@@ -557,3 +572,101 @@ class SafariIndexedDBTest(unittest.TestCase):
     )
     parsed_record = self.db.RecordById(30)
     self.assertEqual(parsed_record, expected_record)
+
+  def test_records(self) -> None:
+    """Tests the Records method."""
+    records = list(self.db.Records())
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].record_id, 1)
+    self.assertEqual(records[0].blobs, [])
+
+  def test_records_without_blobs(self) -> None:
+    """Tests the Records method with load_blobs=False."""
+    records = list(self.db.Records(load_blobs=False))
+    self.assertEqual(len(records), 30)
+    self.assertIsNone(records[0].blobs)
+
+  def test_records_by_object_store_id(self) -> None:
+    """Tests the RecordsByObjectStoreId method."""
+    records = list(self.db.RecordsByObjectStoreId(1))
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].object_store_id, 1)
+
+  def test_records_by_object_store_name(self) -> None:
+    """Tests the RecordsByObjectStoreName method."""
+    records = list(self.db.RecordsByObjectStoreName("test store a"))
+    self.assertEqual(len(records), 30)
+    self.assertEqual(records[0].object_store_name, "test store a")
+
+  def test_records_single_connection(self) -> None:
+    """Tests that Records only opens a single SQLite connection."""
+    with mock.patch("sqlite3.connect", wraps=sqlite3.connect) as mock_connect:
+      records = list(self.db.Records(load_blobs=True))
+      self.assertEqual(len(records), 30)
+      self.assertEqual(mock_connect.call_count, 1)
+
+  def test_load_blobs_for_record_with_blob(self) -> None:
+    """Tests loading blobs for a record with associated blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    blobs = db_with_blob.LoadBlobsForRecordId(1)
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)
+
+  def test_records_with_blobs(self) -> None:
+    """Tests the Records method for a database containing blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    records = list(db_with_blob.Records(load_blobs=True))
+    self.assertEqual(len(records), 1)
+    blobs = records[0].blobs
+    self.assertIsNotNone(blobs)
+    assert blobs is not None
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)
+
+  def test_record_by_id_with_blobs(self) -> None:
+    """Tests the RecordById method for a record with blobs."""
+    db_with_blob = record.FileReader(
+        "./test_data/indexeddb/safari/26.2/"
+        "24E973BCEC80B4ACD88086EACA4A971E1E017EB040C5274AEB29DCCFF5EB9368/"
+        "IndexedDB.sqlite3"
+    )
+    blob_record = db_with_blob.RecordById(1, load_blobs=True)
+    self.assertIsNotNone(blob_record)
+    assert blob_record is not None
+    blobs = blob_record.blobs
+    self.assertIsNotNone(blobs)
+    assert blobs is not None
+    self.assertEqual(len(blobs), 1)
+    self.assertEqual(blobs[0].file_name, "1.blob")
+    self.assertEqual(
+        blobs[0].blob_url,
+        "blob:blobinternal:///08075e1c-534a-43bb-b876-0762158ed975",
+    )
+    blob_data = blobs[0].blob_data
+    self.assertIsNotNone(blob_data)
+    assert blob_data is not None
+    self.assertEqual(len(blob_data), 10240)

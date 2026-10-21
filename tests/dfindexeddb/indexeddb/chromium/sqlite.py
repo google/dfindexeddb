@@ -46,7 +46,9 @@ class ChromiumSQLiteIndexedDBTest(unittest.TestCase):
         "test_boolean_true_object": True,
         "test_boolean_false_object": False,
         "test_bigint": 12300000000000001048576,
-        "test_date": datetime.datetime(2023, 2, 12, 23, 20, 30, 456000),
+        "test_date": datetime.datetime(
+            2023, 2, 12, 23, 20, 30, 456000, tzinfo=datetime.timezone.utc
+        ),
         "test_set": {1, 2, 3},
         "test_map": {"a": 1, "b": 2, "c": 3},
         "test_regexp": types.RegExp("\\w+", "0"),
