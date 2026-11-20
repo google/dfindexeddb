@@ -16,11 +16,89 @@
 from __future__ import annotations
 
 import io
+import pathlib
 from dataclasses import dataclass
-from typing import BinaryIO, Generator, Iterable, Optional
+from typing import BinaryIO, Generator, Iterable, Optional, Tuple, Union
 
 from dfindexeddb import errors
 from dfindexeddb.leveldb import definitions, utils
+
+_CRC32C_POLYNOMIAL = 0x82F63B78
+_CRC32C_MASK_DELTA = 0xA282EAD8
+
+
+def _BuildCrc32cTable() -> Tuple[int, ...]:
+  """Builds the 256-entry reflected Castagnoli CRC32C lookup table."""
+  table = []
+  for index in range(256):
+    crc = index
+    for _ in range(8):
+      if crc & 1:
+        crc = (crc >> 1) ^ _CRC32C_POLYNOMIAL
+      else:
+        crc >>= 1
+    table.append(crc & 0xFFFFFFFF)
+  return tuple(table)
+
+
+_CRC32C_TABLE: Tuple[int, ...] = _BuildCrc32cTable()
+
+
+def ComputeCrc32c(data: bytes, initial_crc: int = 0) -> int:
+  """Computes the unmasked Castagnoli CRC32C checksum over bytes.
+
+  Args:
+    data: the input byte sequence.
+    initial_crc: optional initial CRC32C value for incremental updates.
+
+  Returns:
+    The 32-bit unsigned CRC32C value.
+  """
+  crc = (initial_crc ^ 0xFFFFFFFF) & 0xFFFFFFFF
+  for byte_val in data:
+    crc = _CRC32C_TABLE[(crc ^ byte_val) & 0xFF] ^ (crc >> 8)
+  return (crc ^ 0xFFFFFFFF) & 0xFFFFFFFF
+
+
+def MaskCrc32c(crc: int) -> int:
+  """Masks a raw CRC32C checksum per LevelDB's util/crc32c.h specification.
+
+  Args:
+    crc: the unmasked 32-bit CRC32C value.
+
+  Returns:
+    The masked 32-bit CRC32C value stored in LevelDB headers.
+  """
+  unsigned_crc = crc & 0xFFFFFFFF
+  rotated = (unsigned_crc >> 15) | ((unsigned_crc << 17) & 0xFFFFFFFF)
+  return (rotated + _CRC32C_MASK_DELTA) & 0xFFFFFFFF
+
+
+def UnmaskCrc32c(masked_crc: int) -> int:
+  """Unmasks a LevelDB header checksum back to its raw CRC32C value.
+
+  Args:
+    masked_crc: the masked 32-bit CRC32C value.
+
+  Returns:
+    The unmasked 32-bit CRC32C value.
+  """
+  rot = (masked_crc - _CRC32C_MASK_DELTA) & 0xFFFFFFFF
+  return ((rot >> 17) | ((rot << 15) & 0xFFFFFFFF)) & 0xFFFFFFFF
+
+
+def ComputeMaskedCrc32c(record_type: int, contents: bytes) -> int:
+  """Computes the LevelDB masked CRC32C over record_type || contents.
+
+  Args:
+    record_type: the 1-byte physical record type integer.
+    contents: the physical record payload bytes.
+
+  Returns:
+    The expected 32-bit masked CRC32C value.
+  """
+  type_crc = ComputeCrc32c(bytes([record_type & 0xFF]))
+  return MaskCrc32c(ComputeCrc32c(contents, initial_crc=type_crc))
 
 
 @dataclass
@@ -143,6 +221,7 @@ class PhysicalRecord(utils.FromDecoderMixin):
     record_type: the record type.
     contents: the record contents.
     contents_offset: the offset of where the record contents are stored.
+    is_valid_checksum: True if checksum matches LevelDB's masked CRC32C.
   """
 
   base_offset: int
@@ -152,12 +231,16 @@ class PhysicalRecord(utils.FromDecoderMixin):
   record_type: definitions.LogFilePhysicalRecordType
   contents: bytes
   contents_offset: int
+  is_valid_checksum: bool = True
 
   PHYSICAL_HEADER_LENGTH = 7
 
   @classmethod
   def FromDecoder(
-      cls, decoder: utils.LevelDBDecoder, base_offset: int = 0
+      cls,
+      decoder: utils.LevelDBDecoder,
+      base_offset: int = 0,
+      validate_checksum: bool = False,
   ) -> Optional[PhysicalRecord]:
     """Decodes a PhysicalRecord from the current position of a LevelDBDecoder.
 
@@ -165,14 +248,23 @@ class PhysicalRecord(utils.FromDecoderMixin):
       decoder: the LevelDBDecoder.
       base_offset: the base offset of the WriteBatch from which the data is
           read from.
+      validate_checksum: True to raise ParserError on a CRC32C mismatch.
 
     Returns:
       A PhysicalRecord or None if the parsed header is 0.
+
+    Raises:
+      errors.ParserError: if the record type is invalid or if
+          validate_checksum is True and the masked CRC32C check fails.
     """
     offset, checksum = decoder.DecodeUint32()
     _, length = decoder.DecodeUint16()
     _, record_type_byte = decoder.DecodeUint8()
-    if checksum == 0 or length == 0 or record_type_byte == 0:
+    if checksum == 0 and length == 0 and record_type_byte == 0:
+      return None
+    if not validate_checksum and (
+        checksum == 0 or length == 0 or record_type_byte == 0
+    ):
       return None
     try:
       record_type = definitions.LogFilePhysicalRecordType(record_type_byte)
@@ -182,6 +274,14 @@ class PhysicalRecord(utils.FromDecoderMixin):
           f"{offset + base_offset}"
       ) from error
     contents_offset, contents = decoder.ReadBytes(length)
+    expected_checksum = ComputeMaskedCrc32c(int(record_type), contents)
+    is_valid_checksum = checksum == expected_checksum
+    if validate_checksum and not is_valid_checksum:
+      raise errors.ParserError(
+          f"Checksum mismatch for Physical Record at offset "
+          f"{offset + base_offset}: stored=0x{checksum:08x}, "
+          f"expected=0x{expected_checksum:08x}"
+      )
     return cls(
         base_offset=base_offset,
         offset=offset,
@@ -190,6 +290,55 @@ class PhysicalRecord(utils.FromDecoderMixin):
         record_type=record_type,
         contents=contents,
         contents_offset=contents_offset,
+        is_valid_checksum=is_valid_checksum,
+    )
+
+  @classmethod
+  def FromStream(
+      cls,
+      stream: BinaryIO,
+      base_offset: int = 0,
+      validate_checksum: bool = False,
+  ) -> Optional[PhysicalRecord]:
+    """Decodes a PhysicalRecord from the current position of a binary stream.
+
+    Args:
+      stream: the binary stream.
+      base_offset: the base offset of the binary stream.
+      validate_checksum: True to raise ParserError on a CRC32C mismatch.
+
+    Returns:
+      A PhysicalRecord or None if the parsed header is 0.
+    """
+    decoder = utils.LevelDBDecoder(stream)
+    return cls.FromDecoder(
+        decoder=decoder,
+        base_offset=base_offset,
+        validate_checksum=validate_checksum,
+    )
+
+  @classmethod
+  def FromBytes(
+      cls,
+      raw_data: Union[bytes, bytearray],
+      base_offset: int = 0,
+      validate_checksum: bool = False,
+  ) -> Optional[PhysicalRecord]:
+    """Parses a PhysicalRecord from raw bytes.
+
+    Args:
+      raw_data: the raw data.
+      base_offset: the base offset of the raw data.
+      validate_checksum: True to raise ParserError on a CRC32C mismatch.
+
+    Returns:
+      A PhysicalRecord or None if the parsed header is 0.
+    """
+    stream = io.BytesIO(raw_data)
+    return cls.FromStream(
+        stream=stream,
+        base_offset=base_offset,
+        validate_checksum=validate_checksum,
     )
 
 
@@ -207,8 +356,13 @@ class Block:
 
   BLOCK_SIZE = 32768
 
-  def GetPhysicalRecords(self) -> Generator[PhysicalRecord, None, None]:
+  def GetPhysicalRecords(
+      self, validate_checksum: bool = False
+  ) -> Generator[PhysicalRecord, None, None]:
     """Returns a generator of LogFilePhysicalRecords from the block contents.
+
+    Args:
+      validate_checksum: True to raise ParserError on a CRC32C mismatch.
 
     Yields:
       LogFileRecord
@@ -217,7 +371,11 @@ class Block:
     buffer_length = len(self.data)
 
     while buffer.tell() + PhysicalRecord.PHYSICAL_HEADER_LENGTH < buffer_length:
-      record = PhysicalRecord.FromStream(buffer, base_offset=self.offset)
+      record = PhysicalRecord.FromStream(
+          buffer,
+          base_offset=self.offset,
+          validate_checksum=validate_checksum,
+      )
       if record:
         yield record
       else:
@@ -252,15 +410,22 @@ class FileReader:
 
   Attributes:
     filename (str): the leveldb log filename.
+    validate_checksum (bool): True to raise ParserError on CRC32C mismatches.
   """
 
-  def __init__(self, filename: str):
+  def __init__(
+      self,
+      filename: Union[str, pathlib.Path],
+      validate_checksum: bool = False,
+  ):
     """Initializes the LogFile.
 
     Args:
-      filename: the leveldb log filename
+      filename: the leveldb log filename.
+      validate_checksum: True to raise ParserError on a CRC32C mismatch.
     """
     self.filename = filename
+    self.validate_checksum = validate_checksum
 
   def GetBlocks(self) -> Generator[Block, None, None]:
     """Returns an iterator of Block instances.
@@ -285,7 +450,9 @@ class FileReader:
       PhysicalRecord
     """
     for block in self.GetBlocks():
-      yield from block.GetPhysicalRecords()
+      yield from block.GetPhysicalRecords(
+          validate_checksum=self.validate_checksum
+      )
 
   def GetWriteBatches(self) -> Generator[WriteBatch, None, None]:
     """Returns an iterator of WriteBatch instances.
