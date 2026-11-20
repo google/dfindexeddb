@@ -147,7 +147,10 @@ def LogCommand(args: argparse.Namespace) -> None:
   else:
     plugin_class = None
 
-  log_file = log.FileReader(args.source)
+  log_file = log.FileReader(
+      args.source,
+      validate_checksum=getattr(args, "validate_checksum", False),
+  )
 
   if args.structure_type == "blocks":
     # Prints block information.
@@ -274,6 +277,11 @@ def App() -> None:
           "parsed_internal_key",
       ],
       help="Parses the specified structure.  Default is parsed_internal_key.",
+  )
+  parser_log.add_argument(
+      "--validate_checksum",
+      action="store_true",
+      help="Validate masked Castagnoli CRC32C checksums on physical records.",
   )
   parser_log.set_defaults(func=LogCommand)
 
